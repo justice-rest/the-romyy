@@ -3,17 +3,15 @@
 import { useCustomer, CheckoutDialog } from "autumn-js/react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { PricingSwitch } from "@/components/ui/pricing-switch"
 
 /**
  * Pricing Cards Component for Rōmy Subscriptions
  * Based on Zero/mail design - exact replica
  *
  * Plans:
- * - Pro: $29/month or $261/year (25% off)
- * - Max: $89/month or $801/year (25% off)
- * - Ultra: $200/month or $1,800/year (25% off)
+ * - Pro: $29/month
+ * - Max: $89/month
+ * - Ultra: $200/month
  */
 
 const PRICING_CONSTANTS = {
@@ -39,11 +37,10 @@ const PRICING_CONSTANTS = {
       "h-0 self-stretch outline outline-1 outline-offset-[-0.50px] outline-white/10",
   },
   PRICING: {
-    pro: { monthly: 29, yearly: 261 },
-    max: { monthly: 89, yearly: 801 },
-    ultra: { monthly: 200, yearly: 1800 },
+    pro: 29,
+    max: 89,
+    ultra: 200,
   },
-  ANNUAL_DISCOUNT: 0.25,
 } as const
 
 const ThickCheck = () => (
@@ -105,13 +102,12 @@ const FeatureItem = ({ text, isPremium }: FeatureItemProps) => (
 export function PricingCards() {
   const { customer, checkout } = useCustomer()
   const [isLoading, setIsLoading] = useState<string | null>(null)
-  const [isAnnual, setIsAnnual] = useState(false)
 
   const handleCheckout = async (productId: string) => {
     setIsLoading(productId)
     try {
       await checkout({
-        productId: isAnnual ? `${productId}-yearly` : productId,
+        productId: productId,
         dialog: CheckoutDialog,
         successUrl: window.location.origin + "/",
       })
@@ -126,17 +122,6 @@ export function PricingCards() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-      {/* Billing Period Toggle */}
-      <div className="relative z-20 mb-8 flex items-center justify-center gap-2">
-        <PricingSwitch
-          checked={isAnnual}
-          onCheckedChange={setIsAnnual}
-        />
-        <p className="text-sm text-muted-foreground">Billed Annually</p>
-        <Badge className="border border-[#656565] bg-[#3F3F3F] text-white hover:bg-[#3F3F3F]">
-          Save 25%
-        </Badge>
-      </div>
 
       <div className="flex flex-col items-center justify-center gap-5 lg:flex-row lg:items-stretch">
         {/* Pro Plan */}
@@ -165,14 +150,11 @@ export function PricingCards() {
               <div className="flex flex-col items-start justify-start gap-2 self-stretch">
                 <div className="inline-flex items-end justify-start gap-1 self-stretch">
                   <div className="justify-center text-4xl font-semibold leading-10 text-white">
-                    $
-                    {isAnnual
-                      ? PRICING_CONSTANTS.PRICING.pro.yearly
-                      : PRICING_CONSTANTS.PRICING.pro.monthly}
+                    ${PRICING_CONSTANTS.PRICING.pro}
                   </div>
                   <div className="flex items-center justify-center gap-2.5 pb-0.5">
                     <div className="justify-center text-sm font-medium leading-tight text-white/40">
-                      {isAnnual ? "/YEAR" : "/MONTH"}
+                      /MONTH
                     </div>
                   </div>
                 </div>
@@ -192,16 +174,12 @@ export function PricingCards() {
           </div>
           <button
             onClick={() => handleCheckout("pro")}
-            disabled={
-              currentProduct === "pro" ||
-              currentProduct === "pro-yearly" ||
-              isLoading === "pro"
-            }
+            disabled={currentProduct === "pro" || isLoading === "pro"}
             className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-[#D5D5D5]">
-                {currentProduct === "pro" || currentProduct === "pro-yearly"
+                {currentProduct === "pro"
                   ? "Current Plan"
                   : isLoading === "pro"
                     ? "Loading..."
@@ -254,14 +232,11 @@ export function PricingCards() {
               <div className="flex flex-col items-start justify-start gap-2 self-stretch">
                 <div className="inline-flex items-end justify-start gap-1 self-stretch">
                   <div className="justify-center text-4xl font-semibold leading-10 text-white">
-                    $
-                    {isAnnual
-                      ? PRICING_CONSTANTS.PRICING.max.yearly
-                      : PRICING_CONSTANTS.PRICING.max.monthly}
+                    ${PRICING_CONSTANTS.PRICING.max}
                   </div>
                   <div className="flex items-center justify-center gap-2.5 pb-0.5">
                     <div className="justify-center text-sm font-medium leading-tight text-white/40">
-                      {isAnnual ? "/YEAR" : "/MONTH"}
+                      /MONTH
                     </div>
                   </div>
                 </div>
@@ -282,15 +257,11 @@ export function PricingCards() {
           <button
             className="z-30 mt-auto inline-flex h-10 cursor-pointer items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-white p-3 outline outline-1 -outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => handleCheckout("max")}
-            disabled={
-              currentProduct === "max" ||
-              currentProduct === "max-yearly" ||
-              isLoading === "max"
-            }
+            disabled={currentProduct === "max" || isLoading === "max"}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-black">
-                {currentProduct === "max" || currentProduct === "max-yearly"
+                {currentProduct === "max"
                   ? "Current Plan"
                   : isLoading === "max"
                     ? "Loading..."
@@ -324,14 +295,11 @@ export function PricingCards() {
               <div className="flex flex-col items-start justify-start gap-2 self-stretch">
                 <div className="inline-flex items-end justify-start gap-1 self-stretch">
                   <div className="justify-center text-4xl font-semibold leading-10 text-white">
-                    $
-                    {isAnnual
-                      ? PRICING_CONSTANTS.PRICING.ultra.yearly
-                      : PRICING_CONSTANTS.PRICING.ultra.monthly}
+                    ${PRICING_CONSTANTS.PRICING.ultra}
                   </div>
                   <div className="flex items-center justify-center gap-2.5 pb-0.5">
                     <div className="justify-center text-sm font-medium leading-tight text-white/40">
-                      {isAnnual ? "/YEAR" : "/MONTH"}
+                      /MONTH
                     </div>
                   </div>
                 </div>
@@ -352,15 +320,11 @@ export function PricingCards() {
           <button
             className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343] disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => handleCheckout("ultra")}
-            disabled={
-              currentProduct === "ultra" ||
-              currentProduct === "ultra-yearly" ||
-              isLoading === "ultra"
-            }
+            disabled={currentProduct === "ultra" || isLoading === "ultra"}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-[#D5D5D5]">
-                {currentProduct === "ultra" || currentProduct === "ultra-yearly"
+                {currentProduct === "ultra"
                   ? "Current Plan"
                   : isLoading === "ultra"
                     ? "Loading..."

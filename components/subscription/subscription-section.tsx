@@ -50,14 +50,14 @@ export function SubscriptionSection() {
 
   // Get current product - ensure we handle undefined customer
   const currentProduct = customer?.products?.[0]
+  const scheduledProduct = customer?.products?.find(
+    (p) => p.status === "scheduled"
+  )
   const features = customer?.features
 
   // Get plan icon and color based on product ID
   const getPlanIcon = (productId?: string) => {
-    // Handle both monthly and yearly variants
-    const planType = productId?.replace("-yearly", "")
-
-    switch (planType) {
+    switch (productId) {
       case "pro":
         return { iconSrc: "/lock.svg", bgColor: "bg-transparent", isMailIcon: false }
       case "max":
@@ -72,8 +72,12 @@ export function SubscriptionSection() {
   const { iconSrc, bgColor, isMailIcon } = getPlanIcon(currentProduct?.id)
 
   // Determine if plan has unlimited messages (Max or Ultra)
-  const planType = currentProduct?.id?.replace("-yearly", "")
+  const planType = currentProduct?.id
   const hasUnlimitedMessages = planType === "max" || planType === "ultra"
+
+  // Get scheduled plan info for notification
+  const scheduledPlanName = scheduledProduct?.name
+  const scheduledPlanType = scheduledProduct?.id
 
   // For security: Always check product status directly from the customer object
   // This prevents manipulation by checking server-side data
@@ -103,6 +107,36 @@ export function SubscriptionSection() {
 
   return (
     <div className="space-y-4">
+      {/* Scheduled Plan Notification */}
+      {scheduledProduct && scheduledPlanName && (
+        <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 rounded-full bg-blue-100 p-1 dark:bg-blue-800">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">Plan Change Scheduled</p>
+              <p className="mt-1 opacity-90">
+                Your subscription will switch to <strong>{scheduledPlanName}</strong> at
+                the end of your current billing period.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sync Issue Warning */}
       {hasPotentialSyncIssue && (
         <div className="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
@@ -236,6 +270,14 @@ export function SubscriptionSection() {
             <div>Has Active Sub: {hasActiveSubscription ? "yes" : "no"}</div>
             <div>Message Balance: {features?.messages?.balance ?? "undefined"}</div>
             <div>Unlimited: {hasUnlimitedMessages ? "yes" : "no"}</div>
+            {scheduledProduct && (
+              <>
+                <div className="mt-2 font-semibold">Scheduled Product:</div>
+                <div>Scheduled ID: {scheduledProduct?.id || "none"}</div>
+                <div>Scheduled Name: {scheduledPlanName || "none"}</div>
+                <div>Scheduled Status: {scheduledProduct?.status || "none"}</div>
+              </>
+            )}
           </div>
         )}
       </div>

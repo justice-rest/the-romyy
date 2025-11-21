@@ -3,8 +3,6 @@
 import React, { useState } from "react"
 import { useCustomer, CheckoutDialog } from "autumn-js/react"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { PricingSwitch } from "@/components/ui/pricing-switch"
 
 /**
  * Theme-aware MM Pricing Cards Component
@@ -13,6 +11,7 @@ import { PricingSwitch } from "@/components/ui/pricing-switch"
  * - Transparent background (removed bg-[#1a1520])
  * - Light/dark mode support (text-foreground instead of hardcoded colors)
  * - Integrated autumn-js checkout
+ * - Monthly billing only
  */
 
 interface PricingFeatureProps {
@@ -102,23 +101,21 @@ const PricingCard: React.FC<PricingCardProps> = ({
 
 const PRICING_CONSTANTS = {
   PRICING: {
-    pro: { monthly: 29, yearly: 261 },
-    max: { monthly: 89, yearly: 801 },
-    ultra: { monthly: 200, yearly: 1800 },
+    pro: 29,
+    max: 89,
+    ultra: 200,
   },
-  ANNUAL_DISCOUNT: 0.25,
 } as const
 
 export function MMPricingCards() {
   const { customer, checkout } = useCustomer()
   const [isLoading, setIsLoading] = useState<string | null>(null)
-  const [isAnnual, setIsAnnual] = useState(false)
 
   const handleCheckout = async (productId: string) => {
     setIsLoading(productId)
     try {
       await checkout({
-        productId: isAnnual ? `${productId}-yearly` : productId,
+        productId: productId,
         dialog: CheckoutDialog,
         successUrl: window.location.origin + "/",
       })
@@ -133,92 +130,54 @@ export function MMPricingCards() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-      {/* Billing Period Toggle */}
-      <div className="relative z-20 mb-8 flex items-center justify-center gap-2">
-        <PricingSwitch checked={isAnnual} onCheckedChange={setIsAnnual} />
-        <p className="text-sm text-muted-foreground">Billed Annually</p>
-        <Badge className="border border-[#656565] bg-[#3F3F3F] text-white hover:bg-[#3F3F3F]">
-          Save 25%
-        </Badge>
-      </div>
 
       {/* MM Pricing Component Container - Transparent background */}
       <div className="w-full overflow-hidden rounded-xl" data-id="mm-pricing">
         <div className="flex flex-col divide-y divide-border lg:flex-row lg:divide-x lg:divide-y-0">
           <PricingCard
             title="Pro"
-            price={
-              isAnnual
-                ? PRICING_CONSTANTS.PRICING.pro.yearly
-                : PRICING_CONSTANTS.PRICING.pro.monthly
-            }
-            period={isAnnual ? "/year" : "/month"}
+            price={PRICING_CONSTANTS.PRICING.pro}
+            period="/month"
             features={[
               "100 messages per month",
               "File uploads",
               "Email support",
             ]}
-            ctaText={
-              currentProduct === "pro" || currentProduct === "pro-yearly"
-                ? "Current Plan"
-                : "Get Started"
-            }
+            ctaText={currentProduct === "pro" ? "Current Plan" : "Get Started"}
             ctaVariant="outline"
             onCtaClick={() => handleCheckout("pro")}
-            disabled={
-              currentProduct === "pro" || currentProduct === "pro-yearly"
-            }
+            disabled={currentProduct === "pro"}
             isLoading={isLoading === "pro"}
           />
           <PricingCard
             title="Max"
-            price={
-              isAnnual
-                ? PRICING_CONSTANTS.PRICING.max.yearly
-                : PRICING_CONSTANTS.PRICING.max.monthly
-            }
-            period={isAnnual ? "/year" : "/month"}
+            price={PRICING_CONSTANTS.PRICING.max}
+            period="/month"
             features={[
               "Unlimited messages",
               "Dedicated support",
               "Everything in Pro",
             ]}
-            ctaText={
-              currentProduct === "max" || currentProduct === "max-yearly"
-                ? "Current Plan"
-                : "Get Started"
-            }
+            ctaText={currentProduct === "max" ? "Current Plan" : "Get Started"}
             ctaVariant="solid"
             badge="Popular"
             onCtaClick={() => handleCheckout("max")}
-            disabled={
-              currentProduct === "max" || currentProduct === "max-yearly"
-            }
+            disabled={currentProduct === "max"}
             isLoading={isLoading === "max"}
           />
           <PricingCard
             title="Ultra"
-            price={
-              isAnnual
-                ? PRICING_CONSTANTS.PRICING.ultra.yearly
-                : PRICING_CONSTANTS.PRICING.ultra.monthly
-            }
-            period={isAnnual ? "/year" : "/month"}
+            price={PRICING_CONSTANTS.PRICING.ultra}
+            period="/month"
             features={[
               "Everything in Max",
               "Fundraising consultation",
               "Access to all our AI models",
             ]}
-            ctaText={
-              currentProduct === "ultra" || currentProduct === "ultra-yearly"
-                ? "Current Plan"
-                : "Get Started"
-            }
+            ctaText={currentProduct === "ultra" ? "Current Plan" : "Get Started"}
             ctaVariant="outline"
             onCtaClick={() => handleCheckout("ultra")}
-            disabled={
-              currentProduct === "ultra" || currentProduct === "ultra-yearly"
-            }
+            disabled={currentProduct === "ultra"}
             isLoading={isLoading === "ultra"}
           />
         </div>
