@@ -50,16 +50,18 @@ export function formatOnboardingContext(data: OnboardingData): string {
 
   const sections: string[] = []
 
-  // Personal info
+  // Personal info and agent name
+  const userInfo: string[] = []
   if (data.first_name) {
-    sections.push(`USER INFORMATION:\nYou are assisting ${data.first_name}.`)
+    userInfo.push(`You are assisting ${data.first_name}.`)
   }
-
-  // Agent name
   if (data.agent_name) {
-    sections.push(
-      `Your personalized name for this user is "${data.agent_name}".`
+    userInfo.push(
+      `${data.first_name || "This user"} has named you "${data.agent_name}" - use this name when appropriate or when they address you.`
     )
+  }
+  if (userInfo.length > 0) {
+    sections.push(`USER INFORMATION:\n${userInfo.join(" ")}`)
   }
 
   // Organization details
