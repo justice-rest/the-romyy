@@ -381,7 +381,7 @@ export function MultiChat() {
             transition={{ layout: { duration: 0 } }}
           >
             <h1 className="mb-6 text-3xl font-medium tracking-tight">
-              What's on your mind?
+              Who are you looking for?
             </h1>
           </motion.div>
         ) : (
