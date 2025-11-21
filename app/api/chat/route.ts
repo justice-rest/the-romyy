@@ -3,6 +3,7 @@ import { getAllModels } from "@/lib/models"
 import { getProviderForModel } from "@/lib/openproviders/provider-map"
 import { exaSearchTool, shouldEnableExaTool } from "@/lib/tools/exa-search"
 import type { ProviderWithoutOllama } from "@/lib/user-keys"
+import { getSystemPromptWithContext } from "@/lib/onboarding-context"
 import { Attachment } from "@ai-sdk/ui-utils"
 import { Message as MessageAISDK, streamText, ToolSet } from "ai"
 import {
@@ -94,7 +95,14 @@ export async function POST(req: Request) {
       throw new Error(`Model ${model} not found`)
     }
 
-    const effectiveSystemPrompt = systemPrompt || SYSTEM_PROMPT_DEFAULT
+    // Get base system prompt (user's custom or default)
+    const baseSystemPrompt = systemPrompt || SYSTEM_PROMPT_DEFAULT
+
+    // Inject onboarding context into system prompt
+    const effectiveSystemPrompt = await getSystemPromptWithContext(
+      isAuthenticated ? userId : null,
+      baseSystemPrompt
+    )
 
     let apiKey: string | undefined
     if (isAuthenticated && userId) {
