@@ -38,6 +38,22 @@ export class UsageLimitError extends Error {
   }
 }
 
+export class SubscriptionRequiredError extends Error {
+  code: string
+  constructor(message: string) {
+    super(message)
+    this.code = "SUBSCRIPTION_REQUIRED"
+  }
+}
+
+export class ProLimitReachedError extends Error {
+  code: string
+  constructor(message: string) {
+    super(message)
+    this.code = "PRO_LIMIT_REACHED"
+  }
+}
+
 /**
  * Checks the user's daily usage and increments both overall and daily counters.
  * Resets the daily counter if a new day (UTC) is detected.

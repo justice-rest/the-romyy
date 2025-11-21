@@ -29,6 +29,19 @@ const DialogAuth = dynamic(
   { ssr: false }
 )
 
+const DialogSubscriptionRequired = dynamic(
+  () =>
+    import("./dialog-subscription-required").then(
+      (mod) => mod.DialogSubscriptionRequired
+    ),
+  { ssr: false }
+)
+
+const DialogLimitReached = dynamic(
+  () => import("./dialog-limit-reached").then((mod) => mod.DialogLimitReached),
+  { ssr: false }
+)
+
 export function Chat() {
   const { chatId } = useChatSession()
   const {
@@ -70,6 +83,9 @@ export function Chat() {
 
   // State to pass between hooks
   const [hasDialogAuth, setHasDialogAuth] = useState(false)
+  const [hasDialogSubscriptionRequired, setHasDialogSubscriptionRequired] =
+    useState(false)
+  const [hasDialogLimitReached, setHasDialogLimitReached] = useState(false)
   const isAuthenticated = useMemo(() => !!user?.id, [user?.id])
   const systemPrompt = useMemo(
     () => user?.system_prompt || SYSTEM_PROMPT_DEFAULT,
@@ -133,6 +149,8 @@ export function Chat() {
     selectedModel,
     clearDraft,
     bumpChat,
+    setHasDialogSubscriptionRequired,
+    setHasDialogLimitReached,
   })
 
   // Memoize the conversation props to prevent unnecessary rerenders
@@ -220,6 +238,14 @@ export function Chat() {
       )}
     >
       <DialogAuth open={hasDialogAuth} setOpen={setHasDialogAuth} />
+      <DialogSubscriptionRequired
+        open={hasDialogSubscriptionRequired}
+        setOpen={setHasDialogSubscriptionRequired}
+      />
+      <DialogLimitReached
+        open={hasDialogLimitReached}
+        setOpen={setHasDialogLimitReached}
+      />
 
       <AnimatePresence initial={false} mode="popLayout">
         {showOnboarding ? (

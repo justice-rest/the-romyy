@@ -5,12 +5,17 @@ import type {
   StoreAssistantMessageParams,
   SupabaseClientType,
 } from "@/app/types/api.types"
+import {
+  ProLimitReachedError,
+  SubscriptionRequiredError,
+} from "@/lib/api"
 import { FREE_MODELS_IDS, NON_AUTH_ALLOWED_MODELS } from "@/lib/config"
 import { getProviderForModel } from "@/lib/openproviders/provider-map"
 import { sanitizeUserInput } from "@/lib/sanitize"
 import { validateUserIdentity } from "@/lib/server/api"
 import {
   checkMessageAccess,
+  getCustomerData,
   trackMessageUsage,
 } from "@/lib/subscription/autumn-client"
 import { checkUsageByModel, incrementUsage } from "@/lib/usage"
@@ -56,14 +61,38 @@ export async function validateAndTrackUsage({
   // Check usage limits for the model
   await checkUsageByModel(supabase, userId, model, isAuthenticated)
 
-  // If authenticated, also check Autumn subscription limits
+  // If authenticated, check subscription status and limits
   if (isAuthenticated) {
+    // First, check if user has an active subscription
+    const customerData = await getCustomerData(userId)
+    const hasActiveSubscription =
+      customerData?.products?.[0]?.status === "active"
+
+    // If no active subscription, block access
+    if (!hasActiveSubscription) {
+      throw new SubscriptionRequiredError(
+        "You need an active subscription to use Rōmy. Please subscribe to continue."
+      )
+    }
+
+    // Check Autumn message limits
     const autumnCheck = await checkMessageAccess(userId)
 
     if (!autumnCheck.allowed) {
-      throw new Error(
-        `You've reached your message limit${autumnCheck.limit ? ` of ${autumnCheck.limit} messages` : ""}. Please upgrade your subscription to continue.`
-      )
+      // Determine if user is on Pro tier
+      const currentProductId = customerData?.products?.[0]?.id
+      const planType = currentProductId?.replace("-yearly", "")
+      const isProTier = planType === "pro"
+
+      if (isProTier) {
+        throw new ProLimitReachedError(
+          "You've reached your monthly message limit. Wait until next month or upgrade to continue."
+        )
+      } else {
+        throw new Error(
+          `You've reached your message limit${autumnCheck.limit ? ` of ${autumnCheck.limit} messages` : ""}. Please upgrade your subscription to continue.`
+        )
+      }
     }
   }
 

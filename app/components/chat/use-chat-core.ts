@@ -33,6 +33,8 @@ type UseChatCoreProps = {
   selectedModel: string
   clearDraft: () => void
   bumpChat: (chatId: string) => void
+  setHasDialogSubscriptionRequired: (value: boolean) => void
+  setHasDialogLimitReached: (value: boolean) => void
 }
 
 export function useChatCore({
@@ -51,6 +53,8 @@ export function useChatCore({
   selectedModel,
   clearDraft,
   bumpChat,
+  setHasDialogSubscriptionRequired,
+  setHasDialogLimitReached,
 }: UseChatCoreProps) {
   // State management
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -74,20 +78,41 @@ export function useChatCore({
   const { updateTitle } = useChats()
 
   // Handle errors directly in onError callback
-  const handleError = useCallback((error: Error) => {
-    console.error("Chat error:", error)
-    console.error("Error message:", error.message)
-    let errorMsg = error.message || "Something went wrong."
+  const handleError = useCallback(
+    (error: Error) => {
+      console.error("Chat error:", error)
+      console.error("Error message:", error.message)
+      let errorMsg = error.message || "Something went wrong."
 
-    if (errorMsg === "An error occurred" || errorMsg === "fetch failed") {
-      errorMsg = "Something went wrong. Please try again."
-    }
+      // Check for subscription required error
+      if (
+        errorMsg.includes("need an active subscription") ||
+        errorMsg.includes("SUBSCRIPTION_REQUIRED")
+      ) {
+        setHasDialogSubscriptionRequired(true)
+        return
+      }
 
-    toast({
-      title: errorMsg,
-      status: "error",
-    })
-  }, [])
+      // Check for pro limit reached error
+      if (
+        errorMsg.includes("monthly message limit") ||
+        errorMsg.includes("PRO_LIMIT_REACHED")
+      ) {
+        setHasDialogLimitReached(true)
+        return
+      }
+
+      if (errorMsg === "An error occurred" || errorMsg === "fetch failed") {
+        errorMsg = "Something went wrong. Please try again."
+      }
+
+      toast({
+        title: errorMsg,
+        status: "error",
+      })
+    },
+    [setHasDialogSubscriptionRequired, setHasDialogLimitReached]
+  )
 
   // Initialize useChat
   const {

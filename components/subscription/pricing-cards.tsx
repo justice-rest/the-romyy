@@ -113,6 +113,7 @@ export function PricingCards() {
       await checkout({
         productId: isAnnual ? `${productId}-yearly` : productId,
         dialog: CheckoutDialog,
+        successUrl: window.location.origin + "/",
       })
     } catch (error) {
       console.error("Checkout error:", error)

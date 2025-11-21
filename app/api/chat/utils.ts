@@ -303,6 +303,22 @@ export function createErrorResponse(error: {
   message?: string
   statusCode?: number
 }): Response {
+  // Handle subscription required
+  if (error.code === "SUBSCRIPTION_REQUIRED") {
+    return new Response(
+      JSON.stringify({ error: error.message, code: error.code }),
+      { status: 403 }
+    )
+  }
+
+  // Handle pro limit reached
+  if (error.code === "PRO_LIMIT_REACHED") {
+    return new Response(
+      JSON.stringify({ error: error.message, code: error.code }),
+      { status: 429 }
+    )
+  }
+
   // Handle daily limit first (existing logic)
   if (error.code === "DAILY_LIMIT_REACHED") {
     return new Response(
