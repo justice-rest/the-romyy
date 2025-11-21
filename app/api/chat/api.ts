@@ -61,34 +61,61 @@ export async function validateAndTrackUsage({
   // Check usage limits for the model
   await checkUsageByModel(supabase, userId, model, isAuthenticated)
 
-  // If authenticated, check subscription status and limits
+  // If authenticated, check Autumn subscription limits
   if (isAuthenticated) {
-    // First, check if user has an active subscription
-    const customerData = await getCustomerData(userId)
-    const hasActiveSubscription =
-      customerData?.products?.[0]?.status === "active"
-
-    // If no active subscription, block access
-    if (!hasActiveSubscription) {
-      throw new SubscriptionRequiredError(
-        "You need an active subscription to use Rōmy. Please subscribe to continue."
-      )
-    }
-
-    // Check Autumn message limits
+    // Check message access through Autumn
     const autumnCheck = await checkMessageAccess(userId)
 
+    // If not allowed, determine the specific reason
     if (!autumnCheck.allowed) {
-      // Determine if user is on Pro tier
+      // Get customer data to determine plan type
+      const customerData = await getCustomerData(userId)
+
+      // Debug logging for subscription issues
+      console.log("[Subscription Check] User blocked:", {
+        userId,
+        autumnAllowed: autumnCheck.allowed,
+        autumnBalance: autumnCheck.balance,
+        hasCustomerData: !!customerData,
+        productsCount: customerData?.products?.length || 0,
+        products: customerData?.products?.map((p) => ({
+          id: p.id,
+          status: p.status,
+        })),
+      })
+
+      // Check if user has any active subscription
+      const hasActiveSubscription = customerData?.products?.some(
+        (product) => product.status === "active"
+      )
+
+      // If no active subscription at all, show upgrade modal
+      if (!hasActiveSubscription) {
+        console.log(
+          "[Subscription Check] No active subscription found - showing upgrade modal"
+        )
+        throw new SubscriptionRequiredError(
+          "You need an active subscription to use Rōmy. Please subscribe to continue."
+        )
+      }
+
+      // If they have a subscription but reached limit, check which tier
       const currentProductId = customerData?.products?.[0]?.id
       const planType = currentProductId?.replace("-yearly", "")
       const isProTier = planType === "pro"
+
+      console.log("[Subscription Check] Limit reached:", {
+        planType,
+        isProTier,
+        productId: currentProductId,
+      })
 
       if (isProTier) {
         throw new ProLimitReachedError(
           "You've reached your monthly message limit. Wait until next month or upgrade to continue."
         )
       } else {
+        // For other plans that somehow hit a limit
         throw new Error(
           `You've reached your message limit${autumnCheck.limit ? ` of ${autumnCheck.limit} messages` : ""}. Please upgrade your subscription to continue.`
         )
