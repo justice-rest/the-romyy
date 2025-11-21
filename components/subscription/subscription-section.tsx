@@ -1,7 +1,7 @@
 "use client"
 
 import { useCustomer } from "autumn-js/react"
-import { TrendingUp } from "lucide-react"
+import { TrendingUp, Mail } from "lucide-react"
 import Link from "next/link"
 
 /**
@@ -34,17 +34,21 @@ export function SubscriptionSection() {
 
     switch (planType) {
       case "pro":
-        return { iconSrc: "/lock.svg", bgColor: "bg-transparent" }
+        return { iconSrc: "/lock.svg", bgColor: "bg-transparent", isMailIcon: false }
       case "max":
-        return { iconSrc: "/zap.svg", bgColor: "bg-transparent" }
+        return { iconSrc: "/zap.svg", bgColor: "bg-transparent", isMailIcon: false }
       case "ultra":
-        return { iconSrc: "/mail-pixel.svg", bgColor: "bg-transparent" }
+        return { iconSrc: "/mail-pixel.svg", bgColor: "bg-transparent", isMailIcon: true }
       default:
-        return { iconSrc: "/lock.svg", bgColor: "bg-transparent" }
+        return { iconSrc: "/lock.svg", bgColor: "bg-transparent", isMailIcon: false }
     }
   }
 
-  const { iconSrc, bgColor } = getPlanIcon(currentProduct?.id)
+  const { iconSrc, bgColor, isMailIcon } = getPlanIcon(currentProduct?.id)
+
+  // Determine if plan has unlimited messages (Max or Ultra)
+  const planType = currentProduct?.id?.replace("-yearly", "")
+  const hasUnlimitedMessages = planType === "max" || planType === "ultra"
 
   if (!customer) {
     return (
@@ -67,13 +71,17 @@ export function SubscriptionSection() {
         <div className="mb-4 flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className={`rounded-lg p-2 ${bgColor}`}>
-              <img
-                src={iconSrc}
-                alt="plan icon"
-                className="h-6 w-6"
-                height={24}
-                width={24}
-              />
+              {isMailIcon ? (
+                <Mail className="h-6 w-6 text-blue-500" />
+              ) : (
+                <img
+                  src={iconSrc}
+                  alt="plan icon"
+                  className="h-6 w-6"
+                  height={24}
+                  width={24}
+                />
+              )}
             </div>
             <div>
               <h3 className="font-semibold">
@@ -96,13 +104,16 @@ export function SubscriptionSection() {
             <div className="mb-1 flex items-center justify-between text-sm">
               <span className="font-medium">Messages</span>
               <span className="text-muted-foreground">
-                {features.messages.balance !== undefined &&
-                features.messages.balance !== null
-                  ? `${features.messages.balance} used`
-                  : "Unlimited"}
+                {hasUnlimitedMessages
+                  ? "∞ Unlimited"
+                  : features.messages.balance !== undefined &&
+                      features.messages.balance !== null
+                    ? `${features.messages.balance} used`
+                    : "Unlimited"}
               </span>
             </div>
-            {features.messages.balance !== undefined &&
+            {!hasUnlimitedMessages &&
+              features.messages.balance !== undefined &&
               features.messages.balance !== null && (
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
