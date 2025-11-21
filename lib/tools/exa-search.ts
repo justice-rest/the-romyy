@@ -20,9 +20,10 @@ import {
  */
 export const exaSearchTool = tool({
   description:
-    "Search the web using Exa's neural search engine for high-quality, relevant results. " +
-    "Use this when you need to find current information, research topics, or gather sources. " +
-    "Neural search understands context and semantics, not just keywords.",
+    "Search the web for current information, research, and real-time data. " +
+    "IMPORTANT: Use this tool whenever the user asks you to 'search', 'look up', 'find', 'research', or requests current/recent information. " +
+    "This provides high-quality results with full text content and sources. " +
+    "The search automatically optimizes queries and uses semantic understanding.",
   parameters: exaSearchParametersSchema,
   execute: async ({
     query,

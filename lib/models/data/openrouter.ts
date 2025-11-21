@@ -34,7 +34,14 @@ export const openrouterModels: ModelConfig[] = [
         apiKey: apiKey || process.env.OPENROUTER_API_KEY,
         ...(opts?.enableSearch && {
           extraBody: {
-            plugins: [{ id: "web", engine: "exa", max_results: 35 }],
+            plugins: [
+              {
+                id: "web",
+                engine: "exa",
+                max_results: 35,
+                search_type: "auto",
+              },
+            ],
           },
         }),
       }).chat("x-ai/grok-4-fast"),
@@ -72,7 +79,14 @@ export const openrouterModels: ModelConfig[] = [
         apiKey: apiKey || process.env.OPENROUTER_API_KEY,
         ...(opts?.enableSearch && {
           extraBody: {
-            plugins: [{ id: "web", engine: "exa", max_results: 35 }],
+            plugins: [
+              {
+                id: "web",
+                engine: "exa",
+                max_results: 35,
+                search_type: "auto",
+              },
+            ],
           },
         }),
       }).chat("x-ai/grok-4.1-fast"),
