@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import type { Configuration } from "webpack"
 
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
@@ -38,14 +39,16 @@ const nextConfig: NextConfig = withBundleAnalyzer({
     // @todo: remove before going live
     ignoreDuringBuilds: true,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config: Configuration, { isServer }: { isServer: boolean }) => {
     if (isServer) {
       // Externalize pdf-parse and its native dependencies for server-side
       config.externals = config.externals || []
-      config.externals.push({
-        "pdf-parse": "commonjs pdf-parse",
-        canvas: "commonjs canvas",
-      })
+      if (Array.isArray(config.externals)) {
+        config.externals.push({
+          "pdf-parse": "commonjs pdf-parse",
+          canvas: "commonjs canvas",
+        })
+      }
     }
     return config
   },
