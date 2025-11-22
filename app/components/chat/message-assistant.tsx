@@ -48,7 +48,7 @@ export function MessageAssistant({
 }: MessageAssistantProps) {
   const { preferences } = useUserPreferences()
   const sources = getSources(parts)
-  const citations = getCitations({ parts } as any) // Extract RAG citations
+  const citations = getCitations(parts) // Extract RAG citations
   const toolInvocationParts = parts?.filter(
     (part) => part.type === "tool-invocation"
   )

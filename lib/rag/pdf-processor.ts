@@ -3,8 +3,10 @@
  * Extracts text and metadata from PDF files
  */
 
-import pdf from "pdf-parse"
 import type { PDFProcessingResult } from "./types"
+
+// Dynamically import pdf-parse because of its CommonJS exports
+const pdfParse = require("pdf-parse")
 
 /**
  * Detect language from text (simple heuristic)
@@ -43,7 +45,7 @@ export async function processPDF(
 ): Promise<PDFProcessingResult> {
   try {
     // Parse PDF using pdf-parse
-    const data = await pdf(buffer)
+    const data = await pdfParse(buffer)
 
     // Extract text from all pages
     const text = data.text

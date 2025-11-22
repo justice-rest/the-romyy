@@ -47,7 +47,15 @@ export async function POST(request: Request) {
     }
 
     // Get authenticated user
-    const supabase = createClient()
+    const supabase = await createClient()
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      )
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -185,7 +193,7 @@ export async function POST(request: Request) {
       chunk_index: chunk.chunkIndex,
       content: chunk.content,
       page_number: chunk.pageNumber,
-      embedding: embeddings[index],
+      embedding: JSON.stringify(embeddings[index]), // Convert number[] to JSON string
       token_count: chunk.tokenCount,
     }))
 

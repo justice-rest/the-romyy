@@ -9,9 +9,10 @@ import { getCustomerData, normalizePlanId } from "@/lib/subscription/autumn-clie
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const documentId = params.id
 
     if (!documentId) {
@@ -21,7 +22,15 @@ export async function GET(
       )
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      )
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser()

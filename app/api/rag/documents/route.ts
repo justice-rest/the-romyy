@@ -16,7 +16,15 @@ import { getCustomerData, normalizePlanId } from "@/lib/subscription/autumn-clie
  */
 export async function GET(request: Request) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      )
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -83,7 +91,15 @@ export async function DELETE(request: Request) {
       )
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      )
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -146,7 +162,15 @@ export async function PATCH(request: Request) {
       )
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 }
+      )
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser()

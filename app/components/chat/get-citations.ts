@@ -3,7 +3,7 @@
  * Similar to get-sources.ts but for RAG tool results
  */
 
-import type { Message } from "@/app/types/api.types"
+import type { Message as MessageAISDK } from "@ai-sdk/react"
 
 export interface Citation {
   document: string
@@ -14,19 +14,23 @@ export interface Citation {
   chunkId: string
 }
 
-export function getCitations(message: Message): Citation[] {
-  if (!message.parts || message.parts.length === 0) {
+export function getCitations(parts: MessageAISDK["parts"]): Citation[] {
+  if (!parts || parts.length === 0) {
     return []
   }
 
   const citations: Citation[] = []
 
-  for (const part of message.parts) {
+  for (const part of parts) {
     // Look for tool invocation parts with rag_search tool
-    if (part.type === "tool-invocation" && part.toolName === "rag_search") {
+    if (
+      part.type === "tool-invocation" &&
+      part.toolInvocation.state === "result" &&
+      part.toolInvocation.toolName === "rag_search"
+    ) {
       try {
         // The result is stored in the tool invocation result
-        const result = part.result as any
+        const result = part.toolInvocation.result as any
 
         if (result?.success && Array.isArray(result?.results)) {
           for (const item of result.results) {

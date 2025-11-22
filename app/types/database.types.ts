@@ -419,12 +419,149 @@ export type Database = {
           },
         ]
       }
+      rag_documents: {
+        Row: {
+          id: string
+          user_id: string
+          file_name: string
+          file_url: string
+          file_size: number
+          file_type: string
+          page_count: number | null
+          word_count: number | null
+          language: string
+          tags: string[]
+          status: "uploading" | "processing" | "ready" | "failed"
+          error_message: string | null
+          created_at: string
+          processed_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          file_name: string
+          file_url: string
+          file_size: number
+          file_type?: string
+          page_count?: number | null
+          word_count?: number | null
+          language?: string
+          tags?: string[]
+          status?: "uploading" | "processing" | "ready" | "failed"
+          error_message?: string | null
+          created_at?: string
+          processed_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          file_name?: string
+          file_url?: string
+          file_size?: number
+          file_type?: string
+          page_count?: number | null
+          word_count?: number | null
+          language?: string
+          tags?: string[]
+          status?: "uploading" | "processing" | "ready" | "failed"
+          error_message?: string | null
+          created_at?: string
+          processed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rag_document_chunks: {
+        Row: {
+          id: string
+          document_id: string
+          user_id: string
+          chunk_index: number
+          content: string
+          page_number: number | null
+          embedding: string // JSON-encoded vector
+          token_count: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          document_id: string
+          user_id: string
+          chunk_index: number
+          content: string
+          page_number?: number | null
+          embedding: string
+          token_count?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          document_id?: string
+          user_id?: string
+          chunk_index?: number
+          content?: string
+          page_number?: number | null
+          embedding?: string
+          token_count?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_document_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "rag_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rag_document_chunks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_rag_chunks: {
+        Args: {
+          query_embedding: string // JSON-encoded vector
+          match_user_id: string
+          match_count?: number
+          similarity_threshold?: number
+          filter_document_ids?: string[] | null
+        }
+        Returns: Array<{
+          id: string
+          document_id: string
+          document_name: string
+          content: string
+          page_number: number | null
+          chunk_index: number
+          similarity: number
+        }>
+      }
+      get_rag_storage_usage: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: Array<{
+          document_count: number
+          total_bytes: number
+          chunk_count: number
+        }>
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: {

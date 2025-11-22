@@ -6,7 +6,11 @@
 import { tool } from "ai"
 import { z } from "zod"
 
-export const ragSearchTool = tool({
+/**
+ * Create a RAG search tool bound to a specific user
+ * @param userId - User ID to search documents for
+ */
+export const createRagSearchTool = (userId: string) => tool({
   description:
     "Search the user's uploaded documents for relevant information. Use this when the user's question relates to their uploaded PDFs (annual reports, research papers, donor data, fundraising documents, etc.). This tool performs semantic search across all documents the user has uploaded.",
   parameters: z.object({
@@ -22,7 +26,7 @@ export const ragSearchTool = tool({
         "Optional: Specific document IDs to search within. If not provided, searches across all user documents."
       ),
   }),
-  execute: async ({ query, documentIds }, { toolContext }) => {
+  execute: async ({ query, documentIds }) => {
     try {
       // Get OpenRouter API key from environment
       const openrouterKey = process.env.OPENROUTER_API_KEY
@@ -38,28 +42,17 @@ export const ragSearchTool = tool({
       const { generateEmbedding } = await import("@/lib/rag/embeddings")
       const { searchDocumentChunks } = await import("@/lib/rag/search")
 
-      // Get user ID from tool context (provided by chat API)
-      const userId = (toolContext as any)?.userId
-
-      if (!userId) {
-        return {
-          success: false,
-          error: "User authentication required for RAG search",
-          results: [],
-        }
-      }
-
       // Generate embedding for the search query
       const embeddingResponse = await generateEmbedding(query, openrouterKey)
 
-      // Search for similar chunks
+      // Search for similar chunks using the bound userId
       const results = await searchDocumentChunks(
         embeddingResponse.embedding,
-        userId,
+        userId, // Use the userId bound to this tool instance
         {
           maxResults: 5,
           similarityThreshold: 0.7,
-          documentIds: documentIds || null,
+          documentIds: documentIds || undefined,
         }
       )
 

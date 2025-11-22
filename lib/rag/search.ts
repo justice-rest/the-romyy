@@ -30,7 +30,11 @@ export async function searchDocumentChunks(
     documentIds?: string[]
   } = {}
 ): Promise<RAGSearchResult[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
+
+  if (!supabase) {
+    throw new Error("Database not configured")
+  }
 
   const {
     maxResults = RAG_MAX_RESULTS,
@@ -41,7 +45,7 @@ export async function searchDocumentChunks(
   try {
     // Call the search_rag_chunks function from Supabase
     const { data, error } = await supabase.rpc("search_rag_chunks", {
-      query_embedding: queryEmbedding,
+      query_embedding: JSON.stringify(queryEmbedding), // Convert array to JSON string
       match_user_id: userId,
       match_count: maxResults,
       similarity_threshold: similarityThreshold,
@@ -70,7 +74,11 @@ export async function searchDocumentChunks(
 export async function getStorageUsage(
   userId: string
 ): Promise<RAGStorageUsage> {
-  const supabase = createClient()
+  const supabase = await createClient()
+
+  if (!supabase) {
+    throw new Error("Database not configured")
+  }
 
   try {
     const { data, error } = await supabase.rpc("get_rag_storage_usage", {
@@ -133,7 +141,12 @@ export async function checkUploadLimit(
   }
 
   // Check daily upload limit
-  const supabase = createClient()
+  const supabase = await createClient()
+
+  if (!supabase) {
+    throw new Error("Database not configured")
+  }
+
   const startOfToday = new Date()
   startOfToday.setUTCHours(0, 0, 0, 0)
 
@@ -161,7 +174,11 @@ export async function checkUploadLimit(
  * @returns Array of user's RAG documents
  */
 export async function getUserDocuments(userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
+
+  if (!supabase) {
+    throw new Error("Database not configured")
+  }
 
   const { data, error } = await supabase
     .from("rag_documents")
@@ -184,7 +201,11 @@ export async function getUserDocuments(userId: string) {
  * @returns Document data
  */
 export async function getDocument(documentId: string, userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
+
+  if (!supabase) {
+    throw new Error("Database not configured")
+  }
 
   const { data, error } = await supabase
     .from("rag_documents")
@@ -207,7 +228,11 @@ export async function getDocument(documentId: string, userId: string) {
  * @param userId - User ID (for security check)
  */
 export async function deleteDocument(documentId: string, userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
+
+  if (!supabase) {
+    throw new Error("Database not configured")
+  }
 
   // Get document to get file URL for storage deletion
   const document = await getDocument(documentId, userId)
@@ -261,7 +286,11 @@ export async function updateDocumentTags(
   userId: string,
   tags: string[]
 ) {
-  const supabase = createClient()
+  const supabase = await createClient()
+
+  if (!supabase) {
+    throw new Error("Database not configured")
+  }
 
   const { error } = await supabase
     .from("rag_documents")
@@ -282,7 +311,11 @@ export async function updateDocumentTags(
  * @returns Matching documents
  */
 export async function searchDocuments(userId: string, query: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
+
+  if (!supabase) {
+    throw new Error("Database not configured")
+  }
 
   const { data, error } = await supabase
     .from("rag_documents")

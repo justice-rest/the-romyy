@@ -8,12 +8,11 @@ import { formatBytes } from "@/lib/rag/config"
 import { DocumentUpload } from "./document-upload"
 import { DocumentList } from "./document-list"
 import { UpgradePrompt } from "./upgrade-prompt"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "@/components/ui/toast"
 import type { RAGDocument, RAGStorageUsage } from "@/lib/rag/types"
 
 export function DataSection() {
   const { customer } = useCustomer()
-  const { toast } = useToast()
 
   const [documents, setDocuments] = useState<RAGDocument[]>([])
   const [usage, setUsage] = useState<RAGStorageUsage>({
@@ -49,7 +48,7 @@ export function DataSection() {
       toast({
         title: "Error",
         description: "Failed to load documents",
-        variant: "destructive",
+        status: "error",
       })
     } finally {
       setIsLoading(false)
@@ -92,7 +91,7 @@ export function DataSection() {
       toast({
         title: "Upload failed",
         description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
+        status: "error",
       })
       throw error // Re-throw to let DocumentUpload handle it
     } finally {
@@ -124,7 +123,7 @@ export function DataSection() {
       toast({
         title: "Delete failed",
         description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
+        status: "error",
       })
     }
   }
@@ -156,7 +155,7 @@ export function DataSection() {
       toast({
         title: "Download failed",
         description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
+        status: "error",
       })
     }
   }
