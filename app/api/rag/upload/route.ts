@@ -17,13 +17,18 @@ export const runtime = "nodejs"
 export const maxDuration = 300 // 5 minutes for large PDF processing
 
 export async function POST(request: Request) {
+  console.log("[RAG Upload] POST request received")
+
   try {
     // Parse form data
     const formData = await request.formData()
     const file = formData.get("file") as File | null
     const tags = formData.get("tags") as string | null
 
+    console.log(`[RAG Upload] File received: ${file?.name}, size: ${file?.size}`)
+
     if (!file) {
+      console.log("[RAG Upload] No file provided")
       return NextResponse.json(
         { error: "No file provided" },
         { status: 400 }
@@ -82,16 +87,21 @@ export async function POST(request: Request) {
     await checkUploadLimit(user.id, file.size)
 
     // Read file buffer
+    console.log("[RAG Upload] Reading file buffer...")
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
+    console.log(`[RAG Upload] Buffer created: ${buffer.length} bytes`)
 
     // Validate PDF magic bytes
+    console.log("[RAG Upload] Validating PDF format...")
     if (!isValidPDF(buffer)) {
+      console.log("[RAG Upload] Invalid PDF file (magic bytes check failed)")
       return NextResponse.json(
         { error: "Invalid PDF file" },
         { status: 400 }
       )
     }
+    console.log("[RAG Upload] PDF validation passed")
 
     // Parse tags
     const tagArray = tags
@@ -102,6 +112,7 @@ export async function POST(request: Request) {
       : []
 
     // Upload file to Supabase storage
+    console.log("[RAG Upload] Uploading to Supabase storage...")
     const fileName = `${user.id}/${Date.now()}-${file.name}`
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("rag-documents")
@@ -111,8 +122,10 @@ export async function POST(request: Request) {
       })
 
     if (uploadError) {
+      console.log("[RAG Upload] Storage upload failed:", uploadError)
       throw new Error(`Failed to upload file: ${uploadError.message}`)
     }
+    console.log("[RAG Upload] File uploaded to storage successfully")
 
     // Get public URL
     const {
@@ -120,6 +133,7 @@ export async function POST(request: Request) {
     } = supabase.storage.from("rag-documents").getPublicUrl(fileName)
 
     // Create document record with 'processing' status
+    console.log("[RAG Upload] Creating document record...")
     const { data: document, error: docError } = await supabase
       .from("rag_documents")
       .insert({
@@ -135,13 +149,17 @@ export async function POST(request: Request) {
       .single()
 
     if (docError) {
+      console.log("[RAG Upload] Failed to create document record:", docError)
       throw new Error(`Failed to create document record: ${docError.message}`)
     }
+    console.log(`[RAG Upload] Document record created: ${document.id}`)
 
     // Process PDF (extract text and metadata)
+    console.log("[RAG Upload] Starting PDF processing...")
     let pdfData
     try {
       pdfData = await processPDF(buffer)
+      console.log("[RAG Upload] PDF processing completed successfully")
     } catch (error) {
       // Update document status to failed
       await supabase

@@ -9,7 +9,15 @@ import type { PDFProcessingResult } from "./types"
 let pdfParse: any = null
 async function getPdfParse() {
   if (!pdfParse) {
-    pdfParse = require("pdf-parse")
+    try {
+      pdfParse = require("pdf-parse")
+      console.log("[PDF Processor] pdf-parse loaded successfully")
+    } catch (error) {
+      console.error("[PDF Processor] Failed to load pdf-parse:", error)
+      throw new Error(
+        `Failed to load PDF parsing library: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
   }
   return pdfParse
 }
@@ -49,10 +57,17 @@ function countWords(text: string): number {
 export async function processPDF(
   buffer: Buffer | Uint8Array
 ): Promise<PDFProcessingResult> {
+  console.log(`[PDF Processor] Starting PDF processing, buffer size: ${buffer.length} bytes`)
+
   try {
     // Parse PDF using pdf-parse (lazy loaded)
+    console.log("[PDF Processor] Loading pdf-parse library...")
     const parser = await getPdfParse()
+
+    console.log("[PDF Processor] Parsing PDF buffer...")
     const data = await parser(buffer)
+
+    console.log(`[PDF Processor] PDF parsed successfully, pages: ${data.numpages}`)
 
     // Extract text from all pages
     const text = data.text
@@ -68,9 +83,11 @@ export async function processPDF(
 
     // Count words
     const wordCount = countWords(text)
+    console.log(`[PDF Processor] Text extracted: ${wordCount} words`)
 
     // Detect language
     const language = detectLanguage(text)
+    console.log(`[PDF Processor] Language detected: ${language}`)
 
     return {
       text,
@@ -79,6 +96,9 @@ export async function processPDF(
       language,
     }
   } catch (error) {
+    console.error("[PDF Processor] Processing failed:", error)
+    console.error("[PDF Processor] Error stack:", error instanceof Error ? error.stack : "No stack")
+
     // Re-throw with more context
     if (error instanceof Error) {
       throw new Error(`PDF processing failed: ${error.message}`)

@@ -10,7 +10,14 @@ const nextConfig: NextConfig = withBundleAnalyzer({
     optimizePackageImports: ["@phosphor-icons/react"],
     nodeMiddleware: true,
   },
-  serverExternalPackages: ["shiki", "vscode-oniguruma"],
+  serverExternalPackages: [
+    "shiki",
+    "vscode-oniguruma",
+    // PDF parsing dependencies - must be externalized for Node.js
+    "pdf-parse",
+    "canvas",
+    "pdfjs-dist",
+  ],
   images: {
     remotePatterns: [
       {
@@ -30,6 +37,17 @@ const nextConfig: NextConfig = withBundleAnalyzer({
   eslint: {
     // @todo: remove before going live
     ignoreDuringBuilds: true,
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Externalize pdf-parse and its native dependencies for server-side
+      config.externals = config.externals || []
+      config.externals.push({
+        "pdf-parse": "commonjs pdf-parse",
+        canvas: "commonjs canvas",
+      })
+    }
+    return config
   },
 })
 
