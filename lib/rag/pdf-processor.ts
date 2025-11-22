@@ -5,11 +5,45 @@
 
 import type { PDFProcessingResult } from "./types"
 
+// Set up DOM polyfills for Node.js environment (required by @napi-rs/canvas)
+let domPolyfillsInitialized = false
+function initializeDOMPolyfills() {
+  if (domPolyfillsInitialized || typeof window !== "undefined") {
+    return // Already initialized or running in browser
+  }
+
+  try {
+    // Use jsdom to provide DOM APIs for canvas/pdfjs-dist
+    const { JSDOM } = require("jsdom")
+    const dom = new JSDOM("<!DOCTYPE html>")
+
+    // Polyfill DOMMatrix and other required DOM APIs
+    if (typeof globalThis.DOMMatrix === "undefined") {
+      globalThis.DOMMatrix = dom.window.DOMMatrix
+    }
+    if (typeof globalThis.DOMRect === "undefined") {
+      globalThis.DOMRect = dom.window.DOMRect
+    }
+    if (typeof globalThis.DOMPoint === "undefined") {
+      globalThis.DOMPoint = dom.window.DOMPoint
+    }
+
+    domPolyfillsInitialized = true
+    console.log("[PDF Processor] DOM polyfills initialized successfully")
+  } catch (error) {
+    console.warn("[PDF Processor] Failed to initialize DOM polyfills:", error)
+    // Continue anyway - canvas might work without them
+  }
+}
+
 // Lazy load pdf-parse to avoid module resolution issues
 let pdfParse: any = null
 async function getPdfParse() {
   if (!pdfParse) {
     try {
+      // Initialize DOM polyfills before loading pdf-parse
+      initializeDOMPolyfills()
+
       pdfParse = require("pdf-parse")
       console.log("[PDF Processor] pdf-parse loaded successfully")
     } catch (error) {

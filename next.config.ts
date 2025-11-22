@@ -17,6 +17,7 @@ const nextConfig: NextConfig = withBundleAnalyzer({
     // PDF parsing dependencies - must be externalized for Node.js
     "pdf-parse",
     "canvas",
+    "@napi-rs/canvas",
     "pdfjs-dist",
   ],
   images: {
@@ -46,7 +47,9 @@ const nextConfig: NextConfig = withBundleAnalyzer({
       if (Array.isArray(config.externals)) {
         config.externals.push({
           "pdf-parse": "commonjs pdf-parse",
-          canvas: "commonjs canvas",
+          "canvas": "commonjs canvas",
+          "@napi-rs/canvas": "commonjs @napi-rs/canvas",
+          "pdfjs-dist": "commonjs pdfjs-dist",
         })
       }
     }
