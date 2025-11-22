@@ -25,7 +25,6 @@ const PRICING_CONSTANTS = {
   ULTRA_FEATURES: [
     "everything in max",
     "fundraising consultation",
-    "access to all our AI models",
   ],
   CARD_STYLES: {
     base: "relative flex-1 min-w-[280px] max-w-[384px] min-h-[630px] flex flex-col items-start justify-between overflow-hidden rounded-2xl border border-[#2D2D2D] bg-[#18181a] p-5",

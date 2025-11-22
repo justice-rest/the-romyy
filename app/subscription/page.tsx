@@ -99,11 +99,11 @@ export default function SubscriptionPage() {
               <a href="mailto:howard@getromy.app">
                 <Button
                   variant="outline"
-                  className="text-muted-foreground group flex h-12 w-full max-w-44 items-center justify-between rounded-full py-2 pr-2 pl-4 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="group flex h-12 items-center justify-between rounded-full border-gray-900 bg-gray-900 py-2 pr-2 pl-6 text-white shadow-sm transition-all hover:scale-[1.02] hover:bg-white hover:text-gray-900 active:scale-[0.98]"
                 >
                   Contact Us{" "}
-                  <div className="rounded-full bg-black/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-black/30">
-                    <ArrowUpRight className="h-4 w-4 text-white" />
+                  <div className="ml-2 rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-gray-900">
+                    <ArrowUpRight className="h-4 w-4 text-white" weight="bold" />
                   </div>
                 </Button>
               </a>
