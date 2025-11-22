@@ -24,7 +24,7 @@ export const RAG_MAX_CHUNK_SIZE = 800 // Safety limit for embedding API
 // ============================================================================
 
 export const RAG_MAX_RESULTS = 5 // Number of chunks to return per search
-export const RAG_SIMILARITY_THRESHOLD = 0.7 // Minimum cosine similarity (0-1)
+export const RAG_SIMILARITY_THRESHOLD = 0.5 // Minimum cosine similarity (0-1) - 0.5 allows broader matches
 
 // ============================================================================
 // EMBEDDING MODEL CONFIGURATION

@@ -45,7 +45,7 @@ export async function searchDocumentChunks(
   try {
     // Call the search_rag_chunks function from Supabase
     const { data, error } = await supabase.rpc("search_rag_chunks", {
-      query_embedding: JSON.stringify(queryEmbedding), // Convert array to JSON string
+      query_embedding: queryEmbedding, // Pass as array - Supabase converts to vector(1536)
       match_user_id: userId,
       match_count: maxResults,
       similarity_threshold: similarityThreshold,

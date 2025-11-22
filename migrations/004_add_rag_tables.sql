@@ -174,7 +174,7 @@ CREATE OR REPLACE FUNCTION search_rag_chunks(
   query_embedding vector(1536),
   match_user_id UUID,
   match_count INT DEFAULT 5,
-  similarity_threshold FLOAT DEFAULT 0.7,
+  similarity_threshold FLOAT DEFAULT 0.5,
   filter_document_ids UUID[] DEFAULT NULL
 )
 RETURNS TABLE (

@@ -51,7 +51,7 @@ export const createRagSearchTool = (userId: string) => tool({
         userId, // Use the userId bound to this tool instance
         {
           maxResults: 5,
-          similarityThreshold: 0.7,
+          similarityThreshold: 0.5, // Lower threshold for broader matches
           documentIds: documentIds || undefined,
         }
       )

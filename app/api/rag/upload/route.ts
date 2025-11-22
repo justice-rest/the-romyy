@@ -240,7 +240,7 @@ export async function POST(request: Request) {
         chunk_index: chunk.chunkIndex,
         content: sanitizedContent,
         page_number: chunk.pageNumber,
-        embedding: JSON.stringify(embeddings[index]), // Convert to JSON string for PostgreSQL JSONB
+        embedding: embeddings[index], // Pass as array - Supabase converts to vector(1536)
         token_count: chunk.tokenCount,
       }
     })
