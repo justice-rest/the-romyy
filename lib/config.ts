@@ -64,3 +64,21 @@ Your tone is professional, analytical, and direct. You present findings objectiv
 Remember: You are a research tool. The fundraiser using you has legitimate need-to-know for their organization's development efforts. Refusing to provide publicly available information hinders their ability to serve their nonprofit's mission effectively.`
 
 export const MESSAGE_MAX_LENGTH = 10000
+
+// ============================================================================
+// RAG (Retrieval-Augmented Generation) CONFIGURATION
+// ============================================================================
+// RAG features are Ultra plan exclusive
+
+export const RAG_DOCUMENT_LIMIT = 50 // Max documents per user
+export const RAG_STORAGE_LIMIT = 500 * 1024 * 1024 // 500MB total storage per user
+export const RAG_DAILY_UPLOAD_LIMIT = 10 // Max uploads per day
+export const RAG_MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB per file
+
+// Chunking parameters
+export const RAG_CHUNK_SIZE = 500 // Tokens per chunk
+export const RAG_CHUNK_OVERLAP = 75 // Token overlap between chunks
+
+// Search parameters
+export const RAG_MAX_RESULTS = 5 // Number of chunks to return per search
+export const RAG_SIMILARITY_THRESHOLD = 0.7 // Minimum cosine similarity (0-1)

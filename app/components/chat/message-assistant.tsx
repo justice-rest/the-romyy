@@ -10,10 +10,12 @@ import type { Message as MessageAISDK } from "@ai-sdk/react"
 import { ArrowClockwise, Check, Copy } from "@phosphor-icons/react"
 import { useCallback, useRef } from "react"
 import { getSources } from "./get-sources"
+import { getCitations } from "./get-citations"
 import { QuoteButton } from "./quote-button"
 import { Reasoning } from "./reasoning"
 import { SearchImages } from "./search-images"
 import { SourcesList } from "./sources-list"
+import { CitationSources } from "./citation-sources"
 import { ToolInvocation } from "./tool-invocation"
 import { useAssistantMessageSelection } from "./useAssistantMessageSelection"
 
@@ -46,6 +48,7 @@ export function MessageAssistant({
 }: MessageAssistantProps) {
   const { preferences } = useUserPreferences()
   const sources = getSources(parts)
+  const citations = getCitations({ parts } as any) // Extract RAG citations
   const toolInvocationParts = parts?.filter(
     (part) => part.type === "tool-invocation"
   )
@@ -129,6 +132,10 @@ export function MessageAssistant({
         )}
 
         {sources && sources.length > 0 && <SourcesList sources={sources} />}
+
+        {citations && citations.length > 0 && (
+          <CitationSources citations={citations} />
+        )}
 
         {Boolean(isLastStreaming || contentNullOrEmpty) ? null : (
           <MessageActions

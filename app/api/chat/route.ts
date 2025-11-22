@@ -2,6 +2,7 @@ import { SYSTEM_PROMPT_DEFAULT } from "@/lib/config"
 import { getAllModels } from "@/lib/models"
 import { getProviderForModel } from "@/lib/openproviders/provider-map"
 import { exaSearchTool, shouldEnableExaTool } from "@/lib/tools/exa-search"
+import { ragSearchTool } from "@/lib/tools/rag-search"
 import type { ProviderWithoutOllama } from "@/lib/user-keys"
 import { getSystemPromptWithContext } from "@/lib/onboarding-context"
 import { Attachment } from "@ai-sdk/ui-utils"
@@ -114,10 +115,11 @@ export async function POST(req: Request) {
     }
 
     // Build tools object - include Exa search tool if enabled and API key is configured
-    const tools: ToolSet =
-      enableSearch && shouldEnableExaTool()
-        ? { searchWeb: exaSearchTool }
-        : ({} as ToolSet)
+    // Also include RAG search tool for authenticated users (always available, AI decides when to use it)
+    const tools: ToolSet = {
+      ...(enableSearch && shouldEnableExaTool() ? { searchWeb: exaSearchTool } : {}),
+      ...(isAuthenticated ? { rag_search: ragSearchTool } : {}),
+    } as ToolSet
 
     const result = streamText({
       model: modelConfig.apiSdk(apiKey, { enableSearch }),
@@ -125,6 +127,10 @@ export async function POST(req: Request) {
       messages: messages,
       tools,
       maxSteps: 10,
+      // Pass userId through toolContext so RAG search can filter by user
+      experimental_toolContext: {
+        userId: isAuthenticated ? userId : null,
+      },
       onError: (err: unknown) => {
         console.error("Streaming error occurred:", err)
         // Don't set streamError anymore - let the AI SDK handle it through the stream

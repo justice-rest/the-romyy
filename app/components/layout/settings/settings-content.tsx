@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { isSupabaseEnabled } from "@/lib/supabase/config"
 import { cn, isDev } from "@/lib/utils"
 import {
+  DatabaseIcon,
   GearSixIcon,
   PaintBrushIcon,
   PlugsConnectedIcon,
@@ -23,12 +24,13 @@ import { OllamaSection } from "./connections/ollama-section"
 import { AccountManagement } from "./general/account-management"
 import { OnboardingDataSection } from "./general/onboarding-data"
 import { UserProfile } from "./general/user-profile"
+import { DataSection } from "./data/data-section"
 
 type SettingsContentProps = {
   isDrawer?: boolean
 }
 
-type TabType = "general" | "appearance" | "subscription" | "connections"
+type TabType = "general" | "appearance" | "data" | "subscription" | "connections"
 
 export function SettingsContent({
   isDrawer = false,
@@ -82,6 +84,15 @@ export function SettingsContent({
                 </TabsTrigger>
                 {isSupabaseEnabled && (
                   <TabsTrigger
+                    value="data"
+                    className="flex shrink-0 items-center gap-2"
+                  >
+                    <DatabaseIcon className="size-4" />
+                    <span>Data</span>
+                  </TabsTrigger>
+                )}
+                {isSupabaseEnabled && (
+                  <TabsTrigger
                     value="subscription"
                     className="flex shrink-0 items-center gap-2"
                   >
@@ -114,6 +125,10 @@ export function SettingsContent({
               <ThemeSelection />
               <LayoutSettings />
               <InteractionPreferences />
+            </TabsContent>
+
+            <TabsContent value="data" className="space-y-6 px-6">
+              {isSupabaseEnabled && <DataSection />}
             </TabsContent>
 
             <TabsContent value="subscription" className="space-y-6 px-6">
@@ -150,6 +165,18 @@ export function SettingsContent({
                     <span>Appearance</span>
                   </div>
                 </TabsTrigger>
+
+                {isSupabaseEnabled && (
+                  <TabsTrigger
+                    value="data"
+                    className="w-full justify-start rounded-md px-3 py-2 text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <DatabaseIcon className="size-4" />
+                      <span>Data</span>
+                    </div>
+                  </TabsTrigger>
+                )}
 
                 {isSupabaseEnabled && (
                   <TabsTrigger
@@ -191,6 +218,10 @@ export function SettingsContent({
                 <ThemeSelection />
                 <LayoutSettings />
                 <InteractionPreferences />
+              </TabsContent>
+
+              <TabsContent value="data" className="mt-0 space-y-6">
+                {isSupabaseEnabled && <DataSection />}
               </TabsContent>
 
               <TabsContent value="subscription" className="mt-0 space-y-6">
