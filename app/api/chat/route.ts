@@ -2,6 +2,7 @@ import { SYSTEM_PROMPT_DEFAULT } from "@/lib/config"
 import { getAllModels, normalizeModelId } from "@/lib/models"
 import { getProviderForModel } from "@/lib/openproviders/provider-map"
 import { exaSearchTool, shouldEnableExaTool } from "@/lib/tools/exa-search"
+import { createListDocumentsTool } from "@/lib/tools/list-documents"
 import { createRagSearchTool } from "@/lib/tools/rag-search"
 import type { ProviderWithoutOllama } from "@/lib/user-keys"
 import { getSystemPromptWithContext } from "@/lib/onboarding-context"
@@ -118,10 +119,15 @@ export async function POST(req: Request) {
     }
 
     // Build tools object - include Exa search tool if enabled and API key is configured
-    // Also include RAG search tool for authenticated users (always available, AI decides when to use it)
+    // Also include RAG tools for authenticated users (always available, AI decides when to use them)
     const tools: ToolSet = {
       ...(enableSearch && shouldEnableExaTool() ? { searchWeb: exaSearchTool } : {}),
-      ...(isAuthenticated ? { rag_search: createRagSearchTool(userId) } : {}),
+      ...(isAuthenticated
+        ? {
+            list_documents: createListDocumentsTool(userId),
+            rag_search: createRagSearchTool(userId),
+          }
+        : {}),
     } as ToolSet
 
     const result = streamText({
