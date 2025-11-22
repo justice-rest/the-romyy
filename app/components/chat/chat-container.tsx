@@ -4,7 +4,17 @@ import { MultiChat } from "@/app/components/multi-chat/multi-chat"
 import { useUserPreferences } from "@/lib/user-preference-store/provider"
 import { Chat } from "./chat"
 
-export function ChatContainer() {
+interface ChatContainerProps {
+  showWelcome?: boolean
+  firstName?: string | null
+  onWelcomeDismiss?: () => void
+}
+
+export function ChatContainer({
+  showWelcome,
+  firstName,
+  onWelcomeDismiss,
+}: ChatContainerProps) {
   const { preferences } = useUserPreferences()
   const multiModelEnabled = preferences.multiModelEnabled
 
@@ -12,5 +22,11 @@ export function ChatContainer() {
     return <MultiChat />
   }
 
-  return <Chat />
+  return (
+    <Chat
+      showWelcome={showWelcome}
+      firstName={firstName}
+      onWelcomeDismiss={onWelcomeDismiss}
+    />
+  )
 }

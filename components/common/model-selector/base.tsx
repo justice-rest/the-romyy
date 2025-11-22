@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/tooltip"
 import { useModel } from "@/lib/model-store/provider"
 import { filterAndSortModels } from "@/lib/model-store/utils"
+import { getModelNameById } from "@/lib/models"
 import { ModelConfig } from "@/lib/models/types"
 import { PROVIDERS } from "@/lib/providers"
 import { useUserPreferences } from "@/lib/user-preference-store/provider"
@@ -134,6 +135,9 @@ export function ModelSelector({
     isModelHidden
   )
 
+  // Get model name immediately from static models if available
+  const displayName = currentModel?.name || getModelNameById(selectedModelId) || "Select model"
+
   const trigger = (
     <Button
       variant="outline"
@@ -142,7 +146,7 @@ export function ModelSelector({
     >
       <div className="flex items-center gap-2">
         {currentProvider?.icon && <currentProvider.icon className="size-5" />}
-        <span>{currentModel?.name || "Select model"}</span>
+        <span>{displayName}</span>
       </div>
       <CaretDownIcon className="size-4 opacity-50" />
     </Button>

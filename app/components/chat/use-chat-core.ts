@@ -176,6 +176,19 @@ export function useChatCore({
       return
     }
 
+    // CHECK RATE LIMITS BEFORE adding optimistic message to prevent delay
+    try {
+      const allowed = await checkLimitsAndNotify(uid)
+      if (!allowed) {
+        setIsSubmitting(false)
+        return
+      }
+    } catch (err) {
+      console.error("Rate limit check failed:", err)
+      setIsSubmitting(false)
+      return
+    }
+
     const optimisticId = `optimistic-${Date.now().toString()}`
     const optimisticAttachments =
       files.length > 0 ? createOptimisticAttachments(files) : []
@@ -196,12 +209,6 @@ export function useChatCore({
     setFiles([])
 
     try {
-      const allowed = await checkLimitsAndNotify(uid)
-      if (!allowed) {
-        setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
-        cleanupOptimisticAttachments(optimisticMessage.experimental_attachments)
-        return
-      }
 
       const currentChatId = await ensureChatExists(uid, input)
       if (!currentChatId) {

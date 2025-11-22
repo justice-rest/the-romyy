@@ -42,7 +42,17 @@ const DialogLimitReached = dynamic(
   { ssr: false }
 )
 
-export function Chat() {
+interface ChatProps {
+  showWelcome?: boolean
+  firstName?: string | null
+  onWelcomeDismiss?: () => void
+}
+
+export function Chat({
+  showWelcome,
+  firstName,
+  onWelcomeDismiss,
+}: ChatProps = {}) {
   const { chatId } = useChatSession()
   const {
     createNewChat,
@@ -194,6 +204,9 @@ export function Chat() {
       setEnableSearch,
       enableSearch,
       quotedText,
+      showWelcome,
+      firstName,
+      onWelcomeDismiss,
     }),
     [
       input,
@@ -212,6 +225,9 @@ export function Chat() {
       setEnableSearch,
       enableSearch,
       quotedText,
+      showWelcome,
+      firstName,
+      onWelcomeDismiss,
     ]
   )
 

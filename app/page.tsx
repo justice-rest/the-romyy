@@ -10,6 +10,8 @@ import { useEffect, useState } from "react"
 export default function Home() {
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(false)
+  const [firstName, setFirstName] = useState<string | null>(null)
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -36,6 +38,20 @@ export default function Home() {
           router.push("/onboarding")
           return
         }
+
+        // Check if user just completed onboarding (show welcome once)
+        const hasSeenWelcome = localStorage.getItem("hasSeenWelcome")
+        if (userData?.onboarding_completed && !hasSeenWelcome) {
+          // Fetch first name from onboarding data
+          const { data: onboardingData } = await supabase
+            .from("onboarding_data")
+            .select("first_name")
+            .eq("user_id", user.id)
+            .single()
+
+          setFirstName(onboardingData?.first_name || null)
+          setShowWelcome(true)
+        }
       }
 
       setIsChecking(false)
@@ -51,7 +67,14 @@ export default function Home() {
   return (
     <MessagesProvider>
       <LayoutApp>
-        <ChatContainer />
+        <ChatContainer
+          showWelcome={showWelcome}
+          firstName={firstName}
+          onWelcomeDismiss={() => {
+            setShowWelcome(false)
+            localStorage.setItem("hasSeenWelcome", "true")
+          }}
+        />
       </LayoutApp>
     </MessagesProvider>
   )

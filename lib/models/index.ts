@@ -5,6 +5,12 @@ import { ModelConfig } from "./types"
 // Static models (always available)
 const STATIC_MODELS: ModelConfig[] = [...openrouterModels]
 
+// Helper to get model name from ID immediately (without async fetch)
+export function getModelNameById(modelId: string): string | null {
+  const model = STATIC_MODELS.find((m) => m.id === modelId)
+  return model?.name || null
+}
+
 // Dynamic models cache
 let dynamicModelsCache: ModelConfig[] | null = null
 let lastFetchTime = 0
