@@ -53,6 +53,12 @@ export async function searchDocumentChunks(
     })
 
     if (error) {
+      // If the function doesn't exist, provide a helpful error message
+      if (error.message.includes("does not exist") || error.message.includes("function")) {
+        throw new Error(
+          `Database function 'search_rag_chunks' not found. Please run the RAG migration (migrations/004_add_rag_tables.sql) in your Supabase dashboard.`
+        )
+      }
       throw new Error(`Vector search failed: ${error.message}`)
     }
 
@@ -86,6 +92,12 @@ export async function getStorageUsage(
     })
 
     if (error) {
+      // If the function doesn't exist, provide a helpful error message
+      if (error.message.includes("does not exist") || error.message.includes("function")) {
+        throw new Error(
+          `Database function 'get_rag_storage_usage' not found. Please run the RAG migration (migrations/004_add_rag_tables.sql) in your Supabase dashboard.`
+        )
+      }
       throw new Error(`Failed to get storage usage: ${error.message}`)
     }
 
