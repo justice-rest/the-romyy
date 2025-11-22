@@ -30,7 +30,7 @@ export function PopoverContentWelcome({
       />
       <div className="p-3">
         <p className="text-primary mb-1 text-base font-medium">
-          Welcome{firstName ? `, ${firstName}` : ""}! 🎉
+          Welcome{firstName ? `, ${firstName}` : ""}!
         </p>
         <p className="text-muted-foreground mb-5 text-base">
           You're all set up. Ask me anything about prospect research, donor
@@ -43,7 +43,7 @@ export function PopoverContentWelcome({
         >
           Get Started{" "}
           <div className="ml-2 rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-gray-900">
-            <ArrowUpRight className="h-4 w-4 text-white" weight="bold" />
+            <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" weight="bold" />
           </div>
         </Button>
       </div>

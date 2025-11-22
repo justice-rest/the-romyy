@@ -58,7 +58,7 @@ export default function Article({
             >
               Ask Rōmy{" "}
               <div className="rounded-full bg-black/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-black/30">
-                <ArrowUpRight className="h-4 w-4 text-white" />
+                <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" />
               </div>
             </Button>
           </Link>

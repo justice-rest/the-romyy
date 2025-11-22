@@ -24,7 +24,7 @@ export function UpgradePrompt() {
       />
       <div className="p-3">
         <p className="text-primary mb-1 text-base font-medium">
-          Ultra Plan Required 🚀
+          Ultra Plan Required
         </p>
         <p className="text-muted-foreground mb-5 text-base">
           Upload and search your own documents with AI-powered RAG. Unlock
@@ -37,7 +37,7 @@ export function UpgradePrompt() {
         >
           Upgrade to Ultra{" "}
           <div className="ml-2 rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-gray-900">
-            <ArrowUpRight className="h-4 w-4 text-white" weight="bold" />
+            <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" weight="bold" />
           </div>
         </Button>
       </div>

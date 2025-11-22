@@ -103,7 +103,7 @@ export default function SubscriptionPage() {
                 >
                   Contact Us{" "}
                   <div className="ml-2 rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-gray-900">
-                    <ArrowUpRight className="h-4 w-4 text-white" weight="bold" />
+                    <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" weight="bold" />
                   </div>
                 </Button>
               </a>
