@@ -43,9 +43,12 @@ export async function searchDocumentChunks(
   } = options
 
   try {
+    // Format embedding as pgvector string: [0.1,0.2,0.3]
+    const embeddingString = `[${queryEmbedding.join(',')}]`
+
     // Call the search_rag_chunks function from Supabase
     const { data, error } = await supabase.rpc("search_rag_chunks", {
-      query_embedding: queryEmbedding, // Pass as array - Supabase converts to vector(1536)
+      query_embedding: embeddingString,
       match_user_id: userId,
       match_count: maxResults,
       similarity_threshold: similarityThreshold,

@@ -240,7 +240,7 @@ export async function POST(request: Request) {
         chunk_index: chunk.chunkIndex,
         content: sanitizedContent,
         page_number: chunk.pageNumber,
-        embedding: embeddings[index], // Pass as array - Supabase converts to vector(1536)
+        embedding: `[${embeddings[index].join(',')}]`, // Format as pgvector string: [0.1,0.2,0.3]
         token_count: chunk.tokenCount,
       }
     })
