@@ -5,8 +5,12 @@
 
 import type { PDFProcessingResult } from "./types"
 
-// Set up DOM polyfills for Node.js environment (required by @napi-rs/canvas)
-// Initialize immediately to ensure they're available before any dependencies load
+// Module-scoped jsdom instance to keep DOM APIs alive across function calls
+// This prevents the polyfills from becoming invalid when jsdom goes out of scope
+let jsdomInstance: any = null
+
+// Set up DOM polyfills for Node.js environment (required by pdfjs-dist)
+// Uses a multi-layer strategy: @napi-rs/canvas → jsdom → fail with clear error
 function initializeDOMPolyfills() {
   // Only run in Node.js (server-side)
   if (typeof window !== "undefined") {
@@ -19,131 +23,126 @@ function initializeDOMPolyfills() {
   }
 
   try {
-    // Try jsdom first for full DOM support
+    // Strategy 1: Try @napi-rs/canvas first (provides native DOMMatrix + Canvas)
     try {
-      const { JSDOM } = require("jsdom")
-      const dom = new JSDOM("<!DOCTYPE html>", {
-        url: "http://localhost",
-        pretendToBeVisual: true,
-      })
+      const Canvas = require("@napi-rs/canvas")
 
-      // Install polyfills using jsdom's implementations
-      const domApis = ["DOMMatrix", "DOMRect", "DOMPoint", "DOMQuad"] as const
+      // Check if @napi-rs/canvas provides DOMMatrix
+      if (Canvas.DOMMatrix && typeof globalThis.DOMMatrix === "undefined") {
+        ;(globalThis as any).DOMMatrix = Canvas.DOMMatrix
+        console.log("[PDF Processor] Using DOMMatrix from @napi-rs/canvas")
+      }
 
-      for (const apiName of domApis) {
-        if (typeof globalThis[apiName] === "undefined" && dom.window[apiName]) {
-          // Get the constructor from jsdom
-          const JSDOMConstructor = dom.window[apiName]
-
-          // Create a proper wrapper function
-          const PolyfillConstructor = function (this: any, ...args: any[]) {
-            // Handle both 'new' and direct calls
-            if (new.target) {
-              // Called with 'new' - create instance
-              const instance = Reflect.construct(JSDOMConstructor, args, new.target)
-              // Copy properties to 'this'
-              Object.setPrototypeOf(this, instance as object)
-              return this
-            } else {
-              // Called without 'new' - call original constructor
-              return JSDOMConstructor(...args)
+      // Set up Canvas factory for pdfjs-dist
+      if (Canvas.createCanvas) {
+        const canvasFactory = {
+          create: (width: number, height: number) => {
+            const canvas = Canvas.createCanvas(width, height)
+            return {
+              canvas,
+              context: canvas.getContext("2d"),
             }
+          },
+          reset: (canvasAndContext: any, width: number, height: number) => {
+            canvasAndContext.canvas.width = width
+            canvasAndContext.canvas.height = height
+          },
+          destroy: (canvasAndContext: any) => {
+            canvasAndContext.canvas.width = 0
+            canvasAndContext.canvas.height = 0
+            canvasAndContext.canvas = null
+            canvasAndContext.context = null
+          },
+        }
+
+        // Store for pdfjs-dist to use
+        ;(globalThis as any).__PDF_CANVAS_FACTORY__ = canvasFactory
+        console.log("[PDF Processor] Canvas factory from @napi-rs/canvas configured")
+      }
+    } catch (canvasError) {
+      console.warn("[PDF Processor] @napi-rs/canvas not available:", canvasError instanceof Error ? canvasError.message : String(canvasError))
+      // Continue to fallback strategies
+    }
+
+    // Strategy 2: Use jsdom for DOM APIs if still needed
+    // Keep instance in module scope so DOM APIs remain valid
+    if (typeof globalThis.DOMMatrix === "undefined") {
+      try {
+        const { JSDOM } = require("jsdom")
+
+        // Create jsdom instance and keep it alive in module scope
+        jsdomInstance = new JSDOM("<!DOCTYPE html>", {
+          url: "http://localhost",
+          pretendToBeVisual: true,
+        })
+
+        console.log("[PDF Processor] jsdom instance created")
+
+        // Direct assignment of DOM APIs (no complex wrappers)
+        // This is simpler and more reliable than creating wrapper functions
+        const domApis = ["DOMMatrix", "DOMRect", "DOMPoint", "DOMQuad"] as const
+
+        for (const apiName of domApis) {
+          if (typeof globalThis[apiName] === "undefined" && jsdomInstance.window[apiName]) {
+            // Direct assignment - jsdom constructors work fine in global scope
+            // as long as the jsdom instance stays alive (which it does in module scope)
+            ;(globalThis as any)[apiName] = jsdomInstance.window[apiName]
+            console.log(`[PDF Processor] Installed ${apiName} from jsdom`)
           }
-
-          // Set up prototype chain
-          PolyfillConstructor.prototype = JSDOMConstructor.prototype
-
-          // Copy static methods
-          for (const key of Object.getOwnPropertyNames(JSDOMConstructor)) {
-            if (key !== "prototype" && key !== "length" && key !== "name") {
-              try {
-                ;(PolyfillConstructor as any)[key] = (JSDOMConstructor as any)[key]
-              } catch (e) {
-                // Ignore non-writable properties
-              }
-            }
-          }
-
-          // Install the polyfill
-          ;(globalThis as any)[apiName] = PolyfillConstructor
         }
-      }
 
-      // Additional global properties that might be needed
-      if (typeof globalThis.document === "undefined") {
-        ;(globalThis as any).document = dom.window.document
-      }
-
-      console.log("[PDF Processor] jsdom polyfills installed successfully")
-    } catch (jsdomError) {
-      console.warn("[PDF Processor] jsdom initialization failed, using minimal polyfills:", jsdomError)
-
-      // Fallback: Create minimal polyfills that just satisfy basic requirements
-      // pdfjs-dist might just be checking that these constructors exist
-      if (typeof globalThis.DOMMatrix === "undefined") {
-        ;(globalThis as any).DOMMatrix = class DOMMatrix {
-          a = 1; b = 0; c = 0; d = 1; e = 0; f = 0
-          m11 = 1; m12 = 0; m13 = 0; m14 = 0
-          m21 = 0; m22 = 1; m23 = 0; m24 = 0
-          m31 = 0; m32 = 0; m33 = 1; m34 = 0
-          m41 = 0; m42 = 0; m43 = 0; m44 = 1
-          is2D = true
-          isIdentity = true
-
-          constructor(init?: any) {
-            if (Array.isArray(init)) {
-              if (init.length === 6) {
-                [this.a, this.b, this.c, this.d, this.e, this.f] = init
-                this.m11 = this.a; this.m12 = this.b
-                this.m21 = this.c; this.m22 = this.d
-                this.m41 = this.e; this.m42 = this.f
-              }
-            }
-          }
-
-          translate(tx: number, ty: number) { return this }
-          scale(sx: number, sy?: number) { return this }
-          rotate(angle: number) { return this }
-          multiply(other: any) { return this }
+        // Add document if needed
+        if (typeof globalThis.document === "undefined") {
+          ;(globalThis as any).document = jsdomInstance.window.document
         }
-      }
 
-      if (typeof globalThis.DOMRect === "undefined") {
-        ;(globalThis as any).DOMRect = class DOMRect {
-          constructor(
-            public x = 0,
-            public y = 0,
-            public width = 0,
-            public height = 0
-          ) {}
-          get top() { return this.y }
-          get bottom() { return this.y + this.height }
-          get left() { return this.x }
-          get right() { return this.x + this.width }
+        console.log("[PDF Processor] jsdom polyfills installed successfully")
+      } catch (jsdomError) {
+        // If both @napi-rs/canvas and jsdom fail, we have a critical error
+        const errorMsg = jsdomError instanceof Error ? jsdomError.message : String(jsdomError)
+        console.error("[PDF Processor] jsdom initialization failed:", errorMsg)
+        throw new Error(
+          `Cannot initialize DOM polyfills. Both @napi-rs/canvas and jsdom failed. ` +
+          `Ensure dependencies are installed: npm install. Error: ${errorMsg}`
+        )
+      }
+    }
+
+    // Verify DOMMatrix is actually functional (not just defined)
+    if (typeof globalThis.DOMMatrix !== "undefined") {
+      try {
+        // Test instantiation with 6-element array (common pdfjs-dist usage)
+        const testMatrix = new (globalThis as any).DOMMatrix([1, 0, 0, 1, 0, 0])
+
+        // Verify the matrix has the expected properties
+        if (typeof testMatrix.a !== "number" || testMatrix.a !== 1) {
+          throw new Error("DOMMatrix polyfill is non-functional (properties missing)")
         }
-      }
 
-      if (typeof globalThis.DOMPoint === "undefined") {
-        ;(globalThis as any).DOMPoint = class DOMPoint {
-          constructor(
-            public x = 0,
-            public y = 0,
-            public z = 0,
-            public w = 1
-          ) {}
-        }
+        console.log("[PDF Processor] DOMMatrix verification passed")
+      } catch (verifyError) {
+        const errorMsg = verifyError instanceof Error ? verifyError.message : String(verifyError)
+        console.error("[PDF Processor] DOMMatrix verification failed:", errorMsg)
+        throw new Error(
+          `DOMMatrix polyfill installed but non-functional: ${errorMsg}. ` +
+          `This may indicate a dependency issue. Try: npm install`
+        )
       }
-
-      console.log("[PDF Processor] Minimal polyfills installed")
+    } else {
+      throw new Error(
+        "Failed to install DOMMatrix polyfill. PDF processing requires either " +
+        "@napi-rs/canvas or jsdom. Ensure dependencies are installed: npm install"
+      )
     }
 
     // Mark as initialized
     ;(globalThis as any).__DOM_POLYFILLS_READY__ = true
 
-    console.log("[PDF Processor] DOM polyfills ready")
+    console.log("[PDF Processor] DOM polyfills ready and verified")
   } catch (error) {
     console.error("[PDF Processor] Critical error initializing polyfills:", error)
-    // Continue anyway
+    // Re-throw with context - this is a fatal error
+    throw error
   }
 }
 
@@ -155,51 +154,27 @@ let pdfParse: any = null
 async function getPdfParse() {
   if (!pdfParse) {
     try {
-      // Ensure polyfills are initialized (in case module was loaded in different context)
+      // Ensure polyfills are initialized
+      // This is idempotent - safe to call multiple times
       initializeDOMPolyfills()
 
-      // Verify critical polyfills are available
-      console.log("[PDF Processor] Checking polyfills...")
+      // Verify polyfills are ready
+      console.log("[PDF Processor] Pre-flight check before loading pdf-parse...")
       console.log(`  DOMMatrix available: ${typeof globalThis.DOMMatrix !== "undefined"}`)
-      console.log(`  DOMMatrix is constructor: ${typeof globalThis.DOMMatrix === "function"}`)
+      console.log(`  DOMMatrix is function: ${typeof globalThis.DOMMatrix === "function"}`)
+      console.log(`  Canvas factory ready: ${typeof (globalThis as any).__PDF_CANVAS_FACTORY__ !== "undefined"}`)
 
-      // Set up canvas for Node.js environment
-      // pdfjs-dist (used by pdf-parse) needs a canvas implementation
-      try {
-        const Canvas = require("@napi-rs/canvas")
-
-        // Create canvas factory for pdfjs-dist
-        if (!globalThis.document?.createElement) {
-          const canvasFactory = {
-            create: (width: number, height: number) => {
-              const canvas = Canvas.createCanvas(width, height)
-              return {
-                canvas,
-                context: canvas.getContext("2d"),
-              }
-            },
-            reset: (canvasAndContext: any, width: number, height: number) => {
-              canvasAndContext.canvas.width = width
-              canvasAndContext.canvas.height = height
-            },
-            destroy: (canvasAndContext: any) => {
-              canvasAndContext.canvas.width = 0
-              canvasAndContext.canvas.height = 0
-              canvasAndContext.canvas = null
-              canvasAndContext.context = null
-            },
-          }
-
-          // Store for pdfjs-dist to use
-          ;(globalThis as any).__PDF_CANVAS_FACTORY__ = canvasFactory
-        }
-
-        console.log("[PDF Processor] Canvas setup completed")
-      } catch (canvasError) {
-        console.warn("[PDF Processor] Canvas setup failed:", canvasError)
-        // Continue - pdf-parse might work without full canvas support
+      // Verify DOMMatrix can be instantiated
+      if (typeof globalThis.DOMMatrix === "undefined") {
+        throw new Error(
+          "DOMMatrix is not available. Polyfill initialization may have failed. " +
+          "Check console logs above for errors."
+        )
       }
 
+      // Load pdf-parse (which will load pdfjs-dist)
+      // At this point, all polyfills should be ready
+      console.log("[PDF Processor] Loading pdf-parse library...")
       pdfParse = require("pdf-parse")
       console.log("[PDF Processor] pdf-parse loaded successfully")
     } catch (error) {
