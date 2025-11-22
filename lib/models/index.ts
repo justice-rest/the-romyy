@@ -5,6 +5,26 @@ import { ModelConfig } from "./types"
 // Static models (always available)
 const STATIC_MODELS: ModelConfig[] = [...openrouterModels]
 
+/**
+ * Model ID migrations for backwards compatibility
+ * Maps old/deprecated model IDs to their current versions
+ */
+const MODEL_ID_MIGRATIONS: Record<string, string> = {
+  // Grok 4-fast → 4.1-fast (OpenRouter model ID update)
+  "openrouter:x-ai/grok-4-fast": "openrouter:x-ai/grok-4.1-fast",
+}
+
+/**
+ * Normalize model ID to handle deprecated/old model IDs
+ * Automatically converts old model IDs to their current versions
+ *
+ * @param modelId - The model ID to normalize (may be old or current)
+ * @returns The current/canonical model ID
+ */
+export function normalizeModelId(modelId: string): string {
+  return MODEL_ID_MIGRATIONS[modelId] || modelId
+}
+
 // Helper to get model name from ID immediately (without async fetch)
 export function getModelNameById(modelId: string): string | null {
   const model = STATIC_MODELS.find((m) => m.id === modelId)

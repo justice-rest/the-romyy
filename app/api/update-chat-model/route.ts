@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { normalizeModelId } from "@/lib/models"
 
 export async function POST(request: Request) {
   try {
@@ -18,9 +19,12 @@ export async function POST(request: Request) {
       return new Response(JSON.stringify({ success: true }), { status: 200 })
     }
 
+    // Normalize model ID for backwards compatibility (e.g., grok-4-fast → grok-4.1-fast)
+    const normalizedModel = normalizeModelId(model)
+
     const { error } = await supabase
       .from("chats")
-      .update({ model })
+      .update({ model: normalizedModel })
       .eq("id", chatId)
 
     if (error) {

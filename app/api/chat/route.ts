@@ -1,5 +1,5 @@
 import { SYSTEM_PROMPT_DEFAULT } from "@/lib/config"
-import { getAllModels } from "@/lib/models"
+import { getAllModels, normalizeModelId } from "@/lib/models"
 import { getProviderForModel } from "@/lib/openproviders/provider-map"
 import { exaSearchTool, shouldEnableExaTool } from "@/lib/tools/exa-search"
 import { createRagSearchTool } from "@/lib/tools/rag-search"
@@ -50,9 +50,12 @@ export async function POST(req: Request) {
       )
     }
 
+    // Normalize model ID for backwards compatibility (e.g., grok-4-fast → grok-4.1-fast)
+    const normalizedModel = normalizeModelId(model)
+
     const supabase = await validateAndTrackUsage({
       userId,
-      model,
+      model: normalizedModel,
       isAuthenticated,
     })
 
@@ -83,17 +86,17 @@ export async function POST(req: Request) {
         chatId,
         content: userMessage.content,
         attachments: userMessage.experimental_attachments as Attachment[],
-        model,
+        model: normalizedModel,
         isAuthenticated,
         message_group_id,
       })
     }
 
     const allModels = await getAllModels()
-    const modelConfig = allModels.find((m) => m.id === model)
+    const modelConfig = allModels.find((m) => m.id === normalizedModel)
 
     if (!modelConfig || !modelConfig.apiSdk) {
-      throw new Error(`Model ${model} not found`)
+      throw new Error(`Model ${normalizedModel} not found`)
     }
 
     // Get base system prompt (user's custom or default)
@@ -108,7 +111,7 @@ export async function POST(req: Request) {
     let apiKey: string | undefined
     if (isAuthenticated && userId) {
       const { getEffectiveApiKey } = await import("@/lib/user-keys")
-      const provider = getProviderForModel(model)
+      const provider = getProviderForModel(normalizedModel)
       apiKey =
         (await getEffectiveApiKey(userId, provider as ProviderWithoutOllama)) ||
         undefined
@@ -140,7 +143,7 @@ export async function POST(req: Request) {
             messages:
               response.messages as unknown as import("@/app/types/api.types").Message[],
             message_group_id,
-            model,
+            model: normalizedModel,
           })
         }
       },

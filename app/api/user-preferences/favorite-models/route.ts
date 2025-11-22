@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { normalizeModelId } from "@/lib/models"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
@@ -42,11 +43,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Normalize model IDs for backwards compatibility (e.g., grok-4-fast → grok-4.1-fast)
+    const normalizedFavoriteModels = favorite_models.map((modelId: string) =>
+      normalizeModelId(modelId)
+    )
+
     // Update the user's favorite models
     const { data, error } = await supabase
       .from("users")
       .update({
-        favorite_models,
+        favorite_models: normalizedFavoriteModels,
       })
       .eq("id", user.id)
       .select("favorite_models")
@@ -109,8 +115,13 @@ export async function GET() {
       )
     }
 
+    // Normalize model IDs for backwards compatibility
+    const normalizedFavoriteModels = (data.favorite_models || []).map(
+      (modelId: string) => normalizeModelId(modelId)
+    )
+
     return NextResponse.json({
-      favorite_models: data.favorite_models || [],
+      favorite_models: normalizedFavoriteModels,
     })
   } catch (error) {
     console.error("Error in favorite-models GET API:", error)

@@ -1,3 +1,4 @@
+import { normalizeModelId } from "@/lib/models"
 import { validateUserIdentity } from "@/lib/server/api"
 import { checkUsageByModel } from "@/lib/usage"
 
@@ -16,19 +17,22 @@ export async function createChatInDb({
   isAuthenticated,
   projectId,
 }: CreateChatInput) {
+  // Normalize model ID for backwards compatibility (e.g., grok-4-fast → grok-4.1-fast)
+  const normalizedModel = normalizeModelId(model)
+
   const supabase = await validateUserIdentity(userId, isAuthenticated)
   if (!supabase) {
     return {
       id: crypto.randomUUID(),
       user_id: userId,
       title,
-      model,
+      model: normalizedModel,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
   }
 
-  await checkUsageByModel(supabase, userId, model, isAuthenticated)
+  await checkUsageByModel(supabase, userId, normalizedModel, isAuthenticated)
 
   const insertData: {
     user_id: string
@@ -38,7 +42,7 @@ export async function createChatInDb({
   } = {
     user_id: userId,
     title: title || "New Chat",
-    model,
+    model: normalizedModel,
   }
 
   if (projectId) {
