@@ -16,5 +16,9 @@ import { AutumnProvider } from "autumn-js/react"
  * with the Autumn handler at /api/autumn/*
  */
 export function AutumnWrapper({ children }: { children: React.ReactNode }) {
-  return <AutumnProvider backendUrl="">{children}</AutumnProvider>
+  return (
+    <AutumnProvider backendUrl="" includeCredentials={true}>
+      {children}
+    </AutumnProvider>
+  )
 }
