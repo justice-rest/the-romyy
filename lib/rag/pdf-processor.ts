@@ -27,10 +27,48 @@ function initializeDOMPolyfills() {
     try {
       const Canvas = require("@napi-rs/canvas")
 
-      // Check if @napi-rs/canvas provides DOMMatrix
-      if (Canvas.DOMMatrix && typeof globalThis.DOMMatrix === "undefined") {
-        ;(globalThis as any).DOMMatrix = Canvas.DOMMatrix
-        console.log("[PDF Processor] Using DOMMatrix from @napi-rs/canvas")
+      // Install DOM APIs from @napi-rs/canvas with proper wrappers
+      // We need wrappers to ensure they work correctly when called from different contexts
+      const domApis = ["DOMMatrix", "DOMRect", "DOMPoint"] as const
+
+      for (const apiName of domApis) {
+        if (Canvas[apiName] && typeof globalThis[apiName] === "undefined") {
+          const OriginalConstructor = Canvas[apiName]
+
+          // Create a wrapper that properly handles constructor calls
+          // This ensures the constructor works when called from pdfjs-dist
+          const WrappedConstructor = function (this: any, ...args: any[]) {
+            // Handle both 'new' and direct calls
+            if (new.target) {
+              // Called with 'new' - create instance and return it
+              return new OriginalConstructor(...args)
+            } else {
+              // Called without 'new' - also create instance
+              return new OriginalConstructor(...args)
+            }
+          }
+
+          // Preserve prototype chain and static methods
+          Object.setPrototypeOf(WrappedConstructor, OriginalConstructor)
+          WrappedConstructor.prototype = OriginalConstructor.prototype
+
+          // Copy any static methods/properties
+          Object.getOwnPropertyNames(OriginalConstructor).forEach((key) => {
+            if (key !== "prototype" && key !== "length" && key !== "name") {
+              try {
+                const descriptor = Object.getOwnPropertyDescriptor(OriginalConstructor, key)
+                if (descriptor) {
+                  Object.defineProperty(WrappedConstructor, key, descriptor)
+                }
+              } catch (e) {
+                // Ignore non-configurable properties
+              }
+            }
+          })
+
+          ;(globalThis as any)[apiName] = WrappedConstructor
+          console.log(`[PDF Processor] Installed ${apiName} from @napi-rs/canvas`)
+        }
       }
 
       // Set up Canvas factory for pdfjs-dist
@@ -78,15 +116,41 @@ function initializeDOMPolyfills() {
 
         console.log("[PDF Processor] jsdom instance created")
 
-        // Direct assignment of DOM APIs (no complex wrappers)
-        // This is simpler and more reliable than creating wrapper functions
+        // Install DOM APIs with proper wrappers
         const domApis = ["DOMMatrix", "DOMRect", "DOMPoint", "DOMQuad"] as const
 
         for (const apiName of domApis) {
           if (typeof globalThis[apiName] === "undefined" && jsdomInstance.window[apiName]) {
-            // Direct assignment - jsdom constructors work fine in global scope
-            // as long as the jsdom instance stays alive (which it does in module scope)
-            ;(globalThis as any)[apiName] = jsdomInstance.window[apiName]
+            const OriginalConstructor = jsdomInstance.window[apiName]
+
+            // Create a wrapper that properly forwards to jsdom constructor
+            const WrappedConstructor = function (this: any, ...args: any[]) {
+              if (new.target) {
+                return new OriginalConstructor(...args)
+              } else {
+                return new OriginalConstructor(...args)
+              }
+            }
+
+            // Preserve prototype chain
+            Object.setPrototypeOf(WrappedConstructor, OriginalConstructor)
+            WrappedConstructor.prototype = OriginalConstructor.prototype
+
+            // Copy static methods
+            Object.getOwnPropertyNames(OriginalConstructor).forEach((key) => {
+              if (key !== "prototype" && key !== "length" && key !== "name") {
+                try {
+                  const descriptor = Object.getOwnPropertyDescriptor(OriginalConstructor, key)
+                  if (descriptor) {
+                    Object.defineProperty(WrappedConstructor, key, descriptor)
+                  }
+                } catch (e) {
+                  // Ignore non-configurable properties
+                }
+              }
+            })
+
+            ;(globalThis as any)[apiName] = WrappedConstructor
             console.log(`[PDF Processor] Installed ${apiName} from jsdom`)
           }
         }
@@ -149,10 +213,10 @@ function initializeDOMPolyfills() {
 // Initialize polyfills immediately when module loads
 initializeDOMPolyfills()
 
-// Lazy load pdf-parse to avoid module resolution issues
-let pdfParse: any = null
-async function getPdfParse() {
-  if (!pdfParse) {
+// Lazy load PDFParse class to avoid module resolution issues
+let PDFParseClass: any = null
+async function getPDFParseClass() {
+  if (!PDFParseClass) {
     try {
       // Ensure polyfills are initialized
       // This is idempotent - safe to call multiple times
@@ -172,11 +236,19 @@ async function getPdfParse() {
         )
       }
 
-      // Load pdf-parse (which will load pdfjs-dist)
+      // Load pdf-parse v2.x (which will load pdfjs-dist)
       // At this point, all polyfills should be ready
       console.log("[PDF Processor] Loading pdf-parse library...")
-      pdfParse = require("pdf-parse")
-      console.log("[PDF Processor] pdf-parse loaded successfully")
+      const pdfParseModule = require("pdf-parse")
+
+      // pdf-parse v2.x exports PDFParse as a class
+      PDFParseClass = pdfParseModule.PDFParse
+
+      if (!PDFParseClass || typeof PDFParseClass !== "function") {
+        throw new Error("PDFParse class not found in pdf-parse module")
+      }
+
+      console.log("[PDF Processor] pdf-parse v2.x loaded successfully")
     } catch (error) {
       console.error("[PDF Processor] Failed to load pdf-parse:", error)
       console.error("[PDF Processor] Error details:", {
@@ -189,7 +261,7 @@ async function getPdfParse() {
       )
     }
   }
-  return pdfParse
+  return PDFParseClass
 }
 
 /**
@@ -230,17 +302,24 @@ export async function processPDF(
   console.log(`[PDF Processor] Starting PDF processing, buffer size: ${buffer.length} bytes`)
 
   try {
-    // Parse PDF using pdf-parse (lazy loaded)
-    console.log("[PDF Processor] Loading pdf-parse library...")
-    const parser = await getPdfParse()
+    // Get PDFParse class (lazy loaded)
+    console.log("[PDF Processor] Loading PDFParse class...")
+    const PDFParse = await getPDFParseClass()
 
-    console.log("[PDF Processor] Parsing PDF buffer...")
-    const data = await parser(buffer)
+    // Create parser instance with buffer data
+    // pdf-parse v2.x uses a class-based API
+    console.log("[PDF Processor] Creating PDFParse instance...")
+    const parser = new PDFParse({ data: buffer })
 
-    console.log(`[PDF Processor] PDF parsed successfully, pages: ${data.numpages}`)
+    // Extract text using the getText() method
+    console.log("[PDF Processor] Extracting text from PDF...")
+    const result = await parser.getText()
 
-    // Extract text from all pages
-    const text = data.text
+    console.log(`[PDF Processor] PDF parsed successfully, pages: ${result.total}`)
+
+    // Extract text from result
+    // result.text contains all text, result.pages is an array of page objects
+    const text = result.text
 
     if (!text || text.trim().length === 0) {
       throw new Error(
@@ -248,16 +327,21 @@ export async function processPDF(
       )
     }
 
-    // Get page count from PDF metadata
-    const pageCount = data.numpages
+    // Get page count from result
+    const pageCount = result.total || result.pages?.length || 1
 
     // Count words
     const wordCount = countWords(text)
-    console.log(`[PDF Processor] Text extracted: ${wordCount} words`)
+    console.log(`[PDF Processor] Text extracted: ${wordCount} words from ${pageCount} page(s)`)
 
     // Detect language
     const language = detectLanguage(text)
     console.log(`[PDF Processor] Language detected: ${language}`)
+
+    // Clean up parser resources
+    await parser.destroy().catch(() => {
+      // Ignore cleanup errors
+    })
 
     return {
       text,
@@ -268,12 +352,15 @@ export async function processPDF(
   } catch (error) {
     console.error("[PDF Processor] Processing failed:", error)
     console.error("[PDF Processor] Error stack:", error instanceof Error ? error.stack : "No stack")
+    console.error("[PDF Processor] Error type:", error instanceof Error ? error.constructor.name : typeof error)
 
-    // Re-throw with more context
+    // Re-throw with more context including stack trace
     if (error instanceof Error) {
-      throw new Error(`PDF processing failed: ${error.message}`)
+      const detailedError = new Error(`PDF processing failed: ${error.message}`)
+      detailedError.stack = error.stack
+      throw detailedError
     }
-    throw new Error("PDF processing failed: Unknown error")
+    throw new Error(`PDF processing failed: ${String(error)}`)
   }
 }
 
