@@ -6,29 +6,54 @@
 import type { PDFProcessingResult } from "./types"
 
 // Set up DOM polyfills for Node.js environment (required by @napi-rs/canvas)
-let domPolyfillsInitialized = false
+// Initialize immediately to ensure they're available before any dependencies load
 function initializeDOMPolyfills() {
-  if (domPolyfillsInitialized || typeof window !== "undefined") {
-    return // Already initialized or running in browser
+  // Only run in Node.js (server-side)
+  if (typeof window !== "undefined") {
+    return // Running in browser, no polyfills needed
   }
 
   try {
     // Use jsdom to provide DOM APIs for canvas/pdfjs-dist
     const { JSDOM } = require("jsdom")
-    const dom = new JSDOM("<!DOCTYPE html>")
+    const dom = new JSDOM("<!DOCTYPE html>", {
+      url: "http://localhost",
+      pretendToBeVisual: true,
+    })
 
-    // Polyfill DOMMatrix and other required DOM APIs
-    if (typeof globalThis.DOMMatrix === "undefined") {
-      globalThis.DOMMatrix = dom.window.DOMMatrix
-    }
-    if (typeof globalThis.DOMRect === "undefined") {
-      globalThis.DOMRect = dom.window.DOMRect
-    }
-    if (typeof globalThis.DOMPoint === "undefined") {
-      globalThis.DOMPoint = dom.window.DOMPoint
+    // Polyfill DOM APIs with proper constructor binding
+    const domApis = [
+      "DOMMatrix",
+      "DOMRect",
+      "DOMPoint",
+      "DOMQuad",
+      "Image",
+      "ImageData",
+      "HTMLCanvasElement",
+      "CanvasRenderingContext2D",
+      "Path2D",
+    ] as const
+
+    for (const api of domApis) {
+      if (typeof globalThis[api] === "undefined" && dom.window[api]) {
+        // Bind the constructor properly to ensure 'new' works correctly
+        const Constructor = dom.window[api]
+
+        // Create a wrapper that properly binds the constructor
+        Object.defineProperty(globalThis, api, {
+          value: Constructor,
+          writable: true,
+          enumerable: false,
+          configurable: true,
+        })
+      }
     }
 
-    domPolyfillsInitialized = true
+    // Additional global properties that might be needed
+    if (typeof globalThis.document === "undefined") {
+      globalThis.document = dom.window.document
+    }
+
     console.log("[PDF Processor] DOM polyfills initialized successfully")
   } catch (error) {
     console.warn("[PDF Processor] Failed to initialize DOM polyfills:", error)
@@ -36,13 +61,50 @@ function initializeDOMPolyfills() {
   }
 }
 
+// Initialize polyfills immediately when module loads
+initializeDOMPolyfills()
+
 // Lazy load pdf-parse to avoid module resolution issues
 let pdfParse: any = null
 async function getPdfParse() {
   if (!pdfParse) {
     try {
-      // Initialize DOM polyfills before loading pdf-parse
-      initializeDOMPolyfills()
+      // Set up canvas for Node.js environment
+      // pdfjs-dist (used by pdf-parse) needs a canvas implementation
+      try {
+        const Canvas = require("@napi-rs/canvas")
+
+        // Create canvas factory for pdfjs-dist
+        if (!globalThis.document?.createElement) {
+          const canvasFactory = {
+            create: (width: number, height: number) => {
+              const canvas = Canvas.createCanvas(width, height)
+              return {
+                canvas,
+                context: canvas.getContext("2d"),
+              }
+            },
+            reset: (canvasAndContext: any, width: number, height: number) => {
+              canvasAndContext.canvas.width = width
+              canvasAndContext.canvas.height = height
+            },
+            destroy: (canvasAndContext: any) => {
+              canvasAndContext.canvas.width = 0
+              canvasAndContext.canvas.height = 0
+              canvasAndContext.canvas = null
+              canvasAndContext.context = null
+            },
+          }
+
+          // Store for pdfjs-dist to use
+          ;(globalThis as any).__PDF_CANVAS_FACTORY__ = canvasFactory
+        }
+
+        console.log("[PDF Processor] Canvas setup completed")
+      } catch (canvasError) {
+        console.warn("[PDF Processor] Canvas setup failed:", canvasError)
+        // Continue - pdf-parse might work without full canvas support
+      }
 
       pdfParse = require("pdf-parse")
       console.log("[PDF Processor] pdf-parse loaded successfully")
