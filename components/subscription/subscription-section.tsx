@@ -2,6 +2,8 @@
 
 import { useCustomer } from "autumn-js/react"
 import { TrendingUp, Mail, RefreshCcw } from "lucide-react"
+import { DiamondsFour } from "@phosphor-icons/react"
+import NumberFlow from "@number-flow/react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 
@@ -14,12 +16,14 @@ import { useState, useEffect } from "react"
 export function SubscriptionSection() {
   const { customer, openBillingPortal, refetch } = useCustomer()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [dataLoadedAt, setDataLoadedAt] = useState<number>(Date.now())
 
   // Auto-refresh subscription data on mount to ensure fresh data
   useEffect(() => {
     const refreshData = async () => {
       try {
         await refetch()
+        setDataLoadedAt(Date.now())
       } catch (error) {
         console.error("Auto-refresh failed:", error)
       }
@@ -31,6 +35,7 @@ export function SubscriptionSection() {
     setIsRefreshing(true)
     try {
       await refetch()
+      setDataLoadedAt(Date.now())
     } catch (error) {
       console.error("Error refreshing subscription data:", error)
     } finally {
@@ -50,9 +55,16 @@ export function SubscriptionSection() {
 
   // Get current product - ensure we handle undefined customer
   const currentProduct = customer?.products?.[0]
-  const scheduledProduct = customer?.products?.find(
+  const scheduledProducts = customer?.products?.filter(
     (p) => p.status === "scheduled"
-  )
+  ) || []
+
+  // Get the most recent scheduled product (last in array)
+  // If multiple scheduled changes exist, show the final one
+  const scheduledProduct = scheduledProducts.length > 0
+    ? scheduledProducts[scheduledProducts.length - 1]
+    : undefined
+
   const features = customer?.features
 
   // Get plan icon and color based on product ID
@@ -78,6 +90,7 @@ export function SubscriptionSection() {
   // Get scheduled plan info for notification
   const scheduledPlanName = scheduledProduct?.name
   const scheduledPlanType = scheduledProduct?.id
+  const hasMultipleScheduled = scheduledProducts.length > 1
 
   // For security: Always check product status directly from the customer object
   // This prevents manipulation by checking server-side data
@@ -88,8 +101,14 @@ export function SubscriptionSection() {
   const hasValidFeatures = features !== undefined
 
   // Detect potential data staleness or sync issues
+  // Only show warning after 5 minutes to avoid false positives after checkout
+  const SYNC_WARNING_DELAY = 5 * 60 * 1000 // 5 minutes in milliseconds
+  const timeSinceLoad = Date.now() - dataLoadedAt
   const hasPotentialSyncIssue =
-    isProductActive && hasValidProduct && !hasValidFeatures
+    isProductActive &&
+    hasValidProduct &&
+    !hasValidFeatures &&
+    timeSinceLoad > SYNC_WARNING_DELAY
 
   if (!customer) {
     return (
@@ -131,6 +150,11 @@ export function SubscriptionSection() {
               <p className="mt-1 opacity-90">
                 Your subscription will switch to <strong>{scheduledPlanName}</strong> at
                 the end of your current billing period.
+                {hasMultipleScheduled && (
+                  <span className="ml-1">
+                    ({scheduledProducts.length} plan changes pending)
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -202,13 +226,24 @@ export function SubscriptionSection() {
           <div className="mb-4 rounded-lg bg-muted/50 p-4">
             <div className="mb-1 flex items-center justify-between text-sm">
               <span className="font-medium">Messages</span>
-              <span className="text-muted-foreground">
-                {hasUnlimitedMessages
-                  ? "∞ Unlimited"
-                  : features?.messages?.balance !== undefined
-                    ? `${features.messages.balance} used`
-                    : "0 used"}
-              </span>
+              <div className="flex items-center gap-1">
+                <DiamondsFour size={14} weight="fill" className="text-primary" />
+                <span className="text-muted-foreground font-semibold">
+                  {hasUnlimitedMessages ? (
+                    "∞ Unlimited"
+                  ) : features?.messages?.balance !== undefined ? (
+                    <>
+                      <NumberFlow
+                        value={features.messages.balance ?? 0}
+                        className="inline"
+                      />
+                      /100
+                    </>
+                  ) : (
+                    "0/100"
+                  )}
+                </span>
+              </div>
             </div>
             {!hasUnlimitedMessages && (
               <div className="h-2 overflow-hidden rounded-full bg-muted">

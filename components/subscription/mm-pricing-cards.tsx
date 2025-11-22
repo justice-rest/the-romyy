@@ -3,6 +3,8 @@
 import React, { useState } from "react"
 import { useCustomer, CheckoutDialog } from "autumn-js/react"
 import { cn } from "@/lib/utils"
+import { useUser } from "@/lib/user-store/provider"
+import Link from "next/link"
 
 /**
  * Theme-aware MM Pricing Cards Component
@@ -88,8 +90,8 @@ const PricingCard: React.FC<PricingCardProps> = ({
           className={cn(
             "w-full rounded-md py-4 text-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50",
             ctaVariant === "outline"
-              ? "border border-red-600 bg-transparent text-red-500 hover:border-red-700 hover:bg-red-700 hover:text-white"
-              : "border border-red-700 bg-red-700 text-white hover:border-red-600 hover:bg-transparent hover:text-red-500"
+              ? "border border-foreground/20 bg-transparent text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
+              : "border border-foreground bg-foreground text-background hover:border-foreground/20 hover:bg-transparent hover:text-foreground"
           )}
         >
           {isLoading ? "Loading..." : ctaText}
@@ -109,9 +111,18 @@ const PRICING_CONSTANTS = {
 
 export function MMPricingCards() {
   const { customer, checkout } = useCustomer()
+  const { user } = useUser()
   const [isLoading, setIsLoading] = useState<string | null>(null)
 
+  // Check if user is a guest (anonymous user)
+  const isGuest = user?.anonymous === true || !user
+
   const handleCheckout = async (productId: string) => {
+    // Prevent checkout for guest users
+    if (isGuest) {
+      return
+    }
+
     setIsLoading(productId)
     try {
       await checkout({
@@ -143,7 +154,7 @@ export function MMPricingCards() {
               "File uploads",
               "Email support",
             ]}
-            ctaText={currentProduct === "pro" ? "Current Plan" : "Get Started"}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "pro" ? "Current Plan" : "Get Started")}
             ctaVariant="outline"
             onCtaClick={() => handleCheckout("pro")}
             disabled={currentProduct === "pro"}
@@ -158,7 +169,7 @@ export function MMPricingCards() {
               "Dedicated support",
               "Everything in Pro",
             ]}
-            ctaText={currentProduct === "max" ? "Current Plan" : "Get Started"}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "max" ? "Current Plan" : "Get Started")}
             ctaVariant="solid"
             badge="Popular"
             onCtaClick={() => handleCheckout("max")}
@@ -174,7 +185,7 @@ export function MMPricingCards() {
               "Fundraising consultation",
               "Access to all our AI models",
             ]}
-            ctaText={currentProduct === "ultra" ? "Current Plan" : "Get Started"}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "ultra" ? "Current Plan" : "Get Started")}
             ctaVariant="outline"
             onCtaClick={() => handleCheckout("ultra")}
             disabled={currentProduct === "ultra"}

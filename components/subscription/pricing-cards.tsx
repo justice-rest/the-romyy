@@ -3,6 +3,7 @@
 import { useCustomer, CheckoutDialog } from "autumn-js/react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useUser } from "@/lib/user-store/provider"
 
 /**
  * Pricing Cards Component for Rōmy Subscriptions
@@ -101,9 +102,18 @@ const FeatureItem = ({ text, isPremium }: FeatureItemProps) => (
 
 export function PricingCards() {
   const { customer, checkout } = useCustomer()
+  const { user } = useUser()
   const [isLoading, setIsLoading] = useState<string | null>(null)
 
+  // Check if user is a guest (anonymous user)
+  const isGuest = user?.anonymous === true || !user
+
   const handleCheckout = async (productId: string) => {
+    // Prevent checkout for guest users
+    if (isGuest) {
+      return
+    }
+
     setIsLoading(productId)
     try {
       await checkout({
@@ -183,7 +193,9 @@ export function PricingCards() {
                   ? "Current Plan"
                   : isLoading === "pro"
                     ? "Loading..."
-                    : "Subscribe"}
+                    : isGuest
+                      ? "Sign In to Subscribe"
+                      : "Subscribe"}
               </div>
             </div>
           </button>
@@ -265,7 +277,9 @@ export function PricingCards() {
                   ? "Current Plan"
                   : isLoading === "max"
                     ? "Loading..."
-                    : "Subscribe"}
+                    : isGuest
+                      ? "Sign In to Subscribe"
+                      : "Subscribe"}
               </div>
             </div>
           </button>
@@ -328,7 +342,9 @@ export function PricingCards() {
                   ? "Current Plan"
                   : isLoading === "ultra"
                     ? "Loading..."
-                    : "Subscribe"}
+                    : isGuest
+                      ? "Sign In to Subscribe"
+                      : "Subscribe"}
               </div>
             </div>
           </button>

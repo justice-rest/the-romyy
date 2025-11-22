@@ -16,6 +16,7 @@ import { validateUserIdentity } from "@/lib/server/api"
 import {
   checkMessageAccess,
   getCustomerData,
+  normalizePlanId,
   trackMessageUsage,
 } from "@/lib/subscription/autumn-client"
 import { checkUsageByModel, incrementUsage } from "@/lib/usage"
@@ -63,8 +64,17 @@ export async function validateAndTrackUsage({
 
   // If authenticated, check Autumn subscription limits
   if (isAuthenticated) {
-    // Check message access through Autumn
-    const autumnCheck = await checkMessageAccess(userId)
+    // Fetch user's daily message count for circuit breaker degraded mode
+    const { data: userData } = await supabase
+      .from("users")
+      .select("daily_message_count")
+      .eq("id", userId)
+      .single()
+
+    const dailyMessageCount = userData?.daily_message_count || 0
+
+    // Check message access through Autumn (with circuit breaker support)
+    const autumnCheck = await checkMessageAccess(userId, dailyMessageCount)
 
     // If not allowed, determine the specific reason
     if (!autumnCheck.allowed) {
@@ -84,6 +94,20 @@ export async function validateAndTrackUsage({
         })),
       })
 
+      // Check if payment is past due
+      const hasPastDueSubscription = customerData?.products?.some(
+        (product) => product.status === "past_due"
+      )
+
+      if (hasPastDueSubscription) {
+        console.log(
+          "[Subscription Check] Payment past due - blocking access"
+        )
+        throw new SubscriptionRequiredError(
+          "Your payment is past due. Please update your payment method to continue using Rōmy."
+        )
+      }
+
       // Check if user has any active subscription
       const hasActiveSubscription = customerData?.products?.some(
         (product) => product.status === "active"
@@ -101,7 +125,7 @@ export async function validateAndTrackUsage({
 
       // If they have a subscription but reached limit, check which tier
       const currentProductId = customerData?.products?.[0]?.id
-      const planType = currentProductId?.replace("-yearly", "")
+      const planType = normalizePlanId(currentProductId)
       const isProTier = planType === "pro"
 
       console.log("[Subscription Check] Limit reached:", {
