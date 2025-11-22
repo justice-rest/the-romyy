@@ -17,11 +17,14 @@ export function AccountManagement() {
 
   const handleSignOut = async () => {
     try {
+      // Immediately redirect to login page to avoid showing guest UI
+      router.push("/auth")
+
+      // Then clean up state and storage in the background
       await resetMessages()
       await resetChats()
       await signOut()
       await clearAllIndexedDBStores()
-      router.push("/")
     } catch (e) {
       console.error("Sign out failed:", e)
       toast({ title: "Failed to sign out", status: "error" })

@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useEffect } from "react"
 import { PixelatedBackground } from "@/components/ui/pixelated-bg"
+import { Button } from "@/components/ui/button"
+import { ArrowUpRight } from "@phosphor-icons/react"
 
 /**
  * Subscription Page
@@ -105,6 +107,21 @@ export default function SubscriptionPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Fixed Contact Us Button */}
+        <div className="fixed bottom-6 left-0 z-50 flex w-full justify-center">
+          <a href="mailto:howard@getromy.app">
+            <Button
+              variant="outline"
+              className="text-muted-foreground group flex h-12 w-full max-w-44 items-center justify-between rounded-full py-2 pr-2 pl-4 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Contact Us{" "}
+              <div className="rounded-full bg-black/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-black/30">
+                <ArrowUpRight className="h-4 w-4 text-white" />
+              </div>
+            </Button>
+          </a>
         </div>
       </main>
     </div>
