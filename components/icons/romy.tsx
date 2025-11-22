@@ -8,7 +8,6 @@ export function RomyIcon(props: SVGProps<SVGSVGElement>) {
       width={80}
       height={80}
       viewBox="0 0 80 80"
-      className="bg-primary"
       fill="none"
       {...props}
     >

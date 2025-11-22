@@ -1,7 +1,5 @@
 "use client"
 
-import { MultiChat } from "@/app/components/multi-chat/multi-chat"
-import { useUserPreferences } from "@/lib/user-preference-store/provider"
 import { Chat } from "./chat"
 
 interface ChatContainerProps {
@@ -15,13 +13,6 @@ export function ChatContainer({
   firstName,
   onWelcomeDismiss,
 }: ChatContainerProps) {
-  const { preferences } = useUserPreferences()
-  const multiModelEnabled = preferences.multiModelEnabled
-
-  if (multiModelEnabled) {
-    return <MultiChat />
-  }
-
   return (
     <Chat
       showWelcome={showWelcome}

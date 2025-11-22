@@ -28,7 +28,6 @@ interface UserPreferencesContextType {
   setPromptSuggestions: (enabled: boolean) => void
   setShowToolInvocations: (enabled: boolean) => void
   setShowConversationPreviews: (enabled: boolean) => void
-  setMultiModelEnabled: (enabled: boolean) => void
   toggleModelVisibility: (modelId: string) => void
   isModelHidden: (modelId: string) => boolean
   setOnboardingData: (data: OnboardingData) => void
@@ -209,10 +208,6 @@ export function UserPreferencesProvider({
     updatePreferences({ showConversationPreviews: enabled })
   }
 
-  const setMultiModelEnabled = (enabled: boolean) => {
-    updatePreferences({ multiModelEnabled: enabled })
-  }
-
   const toggleModelVisibility = (modelId: string) => {
     const currentHidden = preferences.hiddenModels || []
     const isHidden = currentHidden.includes(modelId)
@@ -239,7 +234,6 @@ export function UserPreferencesProvider({
         setPromptSuggestions,
         setShowToolInvocations,
         setShowConversationPreviews,
-        setMultiModelEnabled,
         toggleModelVisibility,
         isModelHidden,
         setOnboardingData,
