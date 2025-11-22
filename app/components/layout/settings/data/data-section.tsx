@@ -69,23 +69,64 @@ export function DataSection() {
       formData.append("file", file)
       formData.append("tags", tags.join(","))
 
-      const response = await fetch("/api/rag/upload", {
-        method: "POST",
-        body: formData,
-      })
+      // Create abort controller for timeout handling (5 minute timeout)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Upload failed")
+      try {
+        const response = await fetch("/api/rag/upload", {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+        })
+
+        clearTimeout(timeoutId)
+
+        // Handle response with defensive parsing
+        let errorMessage = "Upload failed"
+
+        if (!response.ok) {
+          try {
+            const error = await response.json()
+            errorMessage = error.error || errorMessage
+          } catch (parseError) {
+            // If JSON parsing fails, try to get text response
+            const text = await response.text().catch(() => "")
+            errorMessage = text || `Server error: ${response.status} ${response.statusText}`
+          }
+          throw new Error(errorMessage)
+        }
+
+        // Parse success response defensively
+        try {
+          await response.json()
+        } catch (parseError) {
+          // If JSON parsing fails on success response, check if it's a timeout issue
+          console.error("Failed to parse upload response:", parseError)
+          throw new Error(
+            "Upload may have timed out. Please check if the document appears in your list below. If not, try uploading a smaller file or try again later."
+          )
+        }
+
+        toast({
+          title: "Success",
+          description: "Document uploaded and processed successfully",
+        })
+
+        // Refresh document list
+        await fetchDocuments()
+      } catch (fetchError) {
+        clearTimeout(timeoutId)
+
+        // Handle abort/timeout
+        if (fetchError instanceof Error && fetchError.name === "AbortError") {
+          throw new Error(
+            "Upload timed out after 5 minutes. Please try uploading a smaller file or check your connection."
+          )
+        }
+
+        throw fetchError
       }
-
-      toast({
-        title: "Success",
-        description: "Document uploaded and processed successfully",
-      })
-
-      // Refresh document list
-      await fetchDocuments()
     } catch (error) {
       console.error("Upload error:", error)
       toast({
@@ -129,7 +170,7 @@ export function DataSection() {
   }
 
   // Handle preview
-  const handlePreview = (documentId: string) => {
+  const handlePreview = (_documentId: string) => {
     // TODO: Implement preview modal
     toast({
       title: "Preview",
@@ -146,7 +187,7 @@ export function DataSection() {
         throw new Error("Download failed")
       }
 
-      const { url, fileName } = await response.json()
+      const { url } = await response.json()
 
       // Open in new tab
       window.open(url, "_blank")

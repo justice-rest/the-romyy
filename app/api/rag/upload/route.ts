@@ -179,12 +179,31 @@ export async function POST(request: Request) {
     }
 
     // Generate embeddings for all chunks
-    const chunkTexts = chunks.map((c) => c.content)
-    const embeddings = await generateEmbeddingsInBatches(
-      chunkTexts,
-      openrouterKey,
-      RAG_EMBEDDING_BATCH_SIZE
-    )
+    let embeddings: number[][]
+    try {
+      const chunkTexts = chunks.map((c) => c.content)
+      embeddings = await generateEmbeddingsInBatches(
+        chunkTexts,
+        openrouterKey,
+        RAG_EMBEDDING_BATCH_SIZE
+      )
+    } catch (error) {
+      // Update document status to failed
+      await supabase
+        .from("rag_documents")
+        .update({
+          status: "failed",
+          error_message:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate embeddings",
+        })
+        .eq("id", document.id)
+
+      throw new Error(
+        `Failed to generate embeddings: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
+    }
 
     // Insert chunks with embeddings into database
     const chunkRecords = chunks.map((chunk, index) => ({
@@ -202,6 +221,15 @@ export async function POST(request: Request) {
       .insert(chunkRecords)
 
     if (chunksError) {
+      // Update document status to failed
+      await supabase
+        .from("rag_documents")
+        .update({
+          status: "failed",
+          error_message: `Failed to save chunks: ${chunksError.message}`,
+        })
+        .eq("id", document.id)
+
       throw new Error(`Failed to insert chunks: ${chunksError.message}`)
     }
 
@@ -223,21 +251,38 @@ export async function POST(request: Request) {
       throw new Error(`Failed to update document: ${updateError.message}`)
     }
 
-    return NextResponse.json({
+    // Return success response with explicit JSON serialization
+    const responseData = {
       document: finalDocument,
       chunks_created: chunks.length,
       message: "Document uploaded and processed successfully",
+    }
+
+    return new NextResponse(JSON.stringify(responseData), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
     })
   } catch (error) {
     console.error("RAG upload error:", error)
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to upload document",
+
+    // Ensure error response is always valid JSON
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to upload document"
+
+    const errorResponse = {
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+    }
+
+    return new NextResponse(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
       },
-      { status: 500 }
-    )
+    })
   }
 }
