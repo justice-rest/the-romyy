@@ -15,7 +15,7 @@ const nextConfig: NextConfig = withBundleAnalyzer({
     "shiki",
     "vscode-oniguruma",
     // PDF parsing dependencies - must be externalized for Node.js
-    "pdf-parse",
+    "unpdf",
     "canvas",
     "@napi-rs/canvas",
     "pdfjs-dist",
@@ -42,11 +42,11 @@ const nextConfig: NextConfig = withBundleAnalyzer({
   },
   webpack: (config: Configuration, { isServer }: { isServer: boolean }) => {
     if (isServer) {
-      // Externalize pdf-parse and its native dependencies for server-side
+      // Externalize unpdf and its native dependencies for server-side
       config.externals = config.externals || []
       if (Array.isArray(config.externals)) {
         config.externals.push({
-          "pdf-parse": "commonjs pdf-parse",
+          "unpdf": "commonjs unpdf",
           "canvas": "commonjs canvas",
           "@napi-rs/canvas": "commonjs @napi-rs/canvas",
           "pdfjs-dist": "commonjs pdfjs-dist",
