@@ -166,6 +166,7 @@ export function MMPricingCards() {
             period="/month"
             features={[
               "Unlimited messages",
+              "Upload & search your own documents (RAG)",
               "Dedicated support",
               "Everything in Pro",
             ]}
