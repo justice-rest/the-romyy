@@ -23,7 +23,9 @@ export const exaSearchTool = tool({
     "Search the web for current information, research, and real-time data. " +
     "IMPORTANT: Use this tool whenever the user asks you to 'search', 'look up', 'find', 'research', or requests current/recent information. " +
     "This provides high-quality results with full text content and sources. " +
-    "The search automatically optimizes queries and uses semantic understanding.",
+    "The search automatically optimizes queries and uses semantic understanding. " +
+    "CRITICAL: After receiving search results, you MUST synthesize the information and provide a comprehensive answer to the user's question. " +
+    "Do not just call the tool - analyze the results and respond with relevant insights.",
   parameters: exaSearchParametersSchema,
   execute: async ({
     query,

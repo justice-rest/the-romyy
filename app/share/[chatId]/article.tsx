@@ -1,5 +1,8 @@
 import { getSources } from "@/app/components/chat/get-sources"
+import { Reasoning } from "@/app/components/chat/reasoning"
+import { SearchImages } from "@/app/components/chat/search-images"
 import { SourcesList } from "@/app/components/chat/sources-list"
+import { ToolInvocation } from "@/app/components/chat/tool-invocation"
 import type { Tables } from "@/app/types/database.types"
 import { Message, MessageContent } from "@/components/prompt-kit/message"
 import { Button } from "@/components/ui/button"
@@ -65,31 +68,82 @@ export default function Article({
             const parts = message?.parts as MessageAISDK["parts"]
             const sources = getSources(parts)
 
+            // Extract different types of parts for proper rendering
+            const toolInvocationParts = parts?.filter(
+              (part) => part.type === "tool-invocation"
+            )
+            const reasoningParts = parts?.find((part) => part.type === "reasoning")
+            const searchImageResults =
+              parts
+                ?.filter(
+                  (part) =>
+                    part.type === "tool-invocation" &&
+                    part.toolInvocation?.state === "result" &&
+                    part.toolInvocation?.toolName === "imageSearch" &&
+                    part.toolInvocation?.result?.content?.[0]?.type === "images"
+                )
+                .flatMap((part) =>
+                  part.type === "tool-invocation" &&
+                  part.toolInvocation?.state === "result" &&
+                  part.toolInvocation?.toolName === "imageSearch" &&
+                  part.toolInvocation?.result?.content?.[0]?.type === "images"
+                    ? (part.toolInvocation?.result?.content?.[0]?.results ?? [])
+                    : []
+                ) ?? []
+
+            const contentNullOrEmpty = !message.content || message.content === ""
+
             return (
-              <div key={message.id}>
+              <div key={message.id} className="mb-8">
                 <Message
-                  key={message.id}
                   className={cn(
                     "mb-4 flex flex-col gap-0",
                     message.role === "assistant" && "w-full items-start",
                     message.role === "user" && "w-full items-end"
                   )}
                 >
-                  <MessageContent
-                    markdown={true}
-                    className={cn(
-                      message.role === "user" && "bg-blue-600 text-white",
-                      message.role === "assistant" &&
-                        "w-full min-w-full bg-transparent",
-                      "prose-h1:scroll-m-20 prose-h1:text-2xl prose-h1:font-semibold prose-h2:mt-8 prose-h2:scroll-m-20 prose-h2:text-xl prose-h2:mb-3 prose-h2:font-medium prose-h3:scroll-m-20 prose-h3:text-base prose-h3:font-medium prose-h4:scroll-m-20 prose-h5:scroll-m-20 prose-h6:scroll-m-20 prose-strong:font-medium prose-table:block prose-table:overflow-y-auto"
+                  <div className="flex min-w-full flex-col gap-2">
+                    {/* Render reasoning for assistant messages */}
+                    {message.role === "assistant" && reasoningParts && reasoningParts.reasoning && (
+                      <Reasoning
+                        reasoning={reasoningParts.reasoning}
+                        isStreaming={false}
+                      />
                     )}
-                  >
-                    {message.content!}
-                  </MessageContent>
+
+                    {/* Render tool invocations for assistant messages - always show in share view */}
+                    {message.role === "assistant" &&
+                      toolInvocationParts &&
+                      toolInvocationParts.length > 0 && (
+                        <ToolInvocation toolInvocations={toolInvocationParts} />
+                      )}
+
+                    {/* Render search images for assistant messages */}
+                    {message.role === "assistant" && searchImageResults.length > 0 && (
+                      <SearchImages results={searchImageResults} />
+                    )}
+
+                    {/* Render message content if not empty */}
+                    {!contentNullOrEmpty && (
+                      <MessageContent
+                        markdown={true}
+                        className={cn(
+                          message.role === "user" && "bg-blue-600 text-white",
+                          message.role === "assistant" &&
+                            "prose dark:prose-invert w-full min-w-full bg-transparent",
+                          "prose-h1:scroll-m-20 prose-h1:text-2xl prose-h1:font-semibold prose-h2:mt-8 prose-h2:scroll-m-20 prose-h2:text-xl prose-h2:mb-3 prose-h2:font-medium prose-h3:scroll-m-20 prose-h3:text-base prose-h3:font-medium prose-h4:scroll-m-20 prose-h5:scroll-m-20 prose-h6:scroll-m-20 prose-strong:font-medium prose-table:block prose-table:overflow-y-auto"
+                        )}
+                      >
+                        {message.content!}
+                      </MessageContent>
+                    )}
+
+                    {/* Render sources for assistant messages */}
+                    {message.role === "assistant" && sources && sources.length > 0 && (
+                      <SourcesList sources={sources} />
+                    )}
+                  </div>
                 </Message>
-                {sources && sources.length > 0 && (
-                  <SourcesList sources={sources} />
-                )}
               </div>
             )
           })}
