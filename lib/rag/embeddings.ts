@@ -98,7 +98,7 @@ export async function generateEmbedding(
           "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${apiKey}`,
           "HTTP-Referer": process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000",
-          "X-Title": "Rōmy RAG Embeddings",
+          "X-Title": "Romy RAG Embeddings", // ASCII-only (HTTP headers must be ASCII)
         },
         body: JSON.stringify({
           model,
@@ -207,7 +207,7 @@ export async function generateEmbeddings(
           "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${apiKey}`,
           "HTTP-Referer": process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000",
-          "X-Title": "Rōmy RAG Embeddings",
+          "X-Title": "Romy RAG Embeddings", // ASCII-only (HTTP headers must be ASCII)
         },
         body: JSON.stringify({
           model,
