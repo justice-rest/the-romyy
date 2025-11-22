@@ -226,15 +226,24 @@ export async function POST(request: Request) {
     }
 
     // Insert chunks with embeddings into database
-    const chunkRecords = chunks.map((chunk, index) => ({
-      document_id: document.id,
-      user_id: user.id,
-      chunk_index: chunk.chunkIndex,
-      content: chunk.content,
-      page_number: chunk.pageNumber,
-      embedding: JSON.stringify(embeddings[index]), // Convert number[] to JSON string
-      token_count: chunk.tokenCount,
-    }))
+    const chunkRecords = chunks.map((chunk, index) => {
+      // Sanitize content to remove problematic characters that PostgreSQL rejects
+      let sanitizedContent = chunk.content
+        // Remove null bytes (PostgreSQL doesn't allow \u0000 in text fields)
+        .replace(/\u0000/g, "")
+        // Remove other problematic control characters
+        .replace(/[\u0001-\u0008\u000B-\u000C\u000E-\u001F\u007F]/g, "")
+
+      return {
+        document_id: document.id,
+        user_id: user.id,
+        chunk_index: chunk.chunkIndex,
+        content: sanitizedContent,
+        page_number: chunk.pageNumber,
+        embedding: JSON.stringify(embeddings[index]), // Convert to JSON string for PostgreSQL JSONB
+        token_count: chunk.tokenCount,
+      }
+    })
 
     const { error: chunksError } = await supabase
       .from("rag_document_chunks")
