@@ -16,9 +16,12 @@ import { getCustomerData, normalizePlanId } from "@/lib/subscription/autumn-clie
  */
 export async function GET(request: Request) {
   try {
+    console.log("[RAG Documents] Starting GET request")
+
     const supabase = await createClient()
 
     if (!supabase) {
+      console.log("[RAG Documents] Supabase not configured")
       return NextResponse.json(
         { error: "Database not configured" },
         { status: 503 }
@@ -30,13 +33,18 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser()
 
     if (!user) {
+      console.log("[RAG Documents] User not authenticated")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    console.log(`[RAG Documents] User ID: ${user.id}`)
 
     // Check if user has Ultra plan
     const customerData = await getCustomerData(user.id)
     const currentProductId = customerData?.products?.[0]?.id
     const planType = normalizePlanId(currentProductId)
+
+    console.log(`[RAG Documents] Plan type: ${planType}`)
 
     if (planType !== "ultra") {
       return NextResponse.json(
@@ -49,20 +57,28 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q")
 
+    console.log(`[RAG Documents] Fetching documents${query ? ` with query: ${query}` : ""}`)
+
     // Get documents (with optional search)
     const documents = query
       ? await searchDocuments(user.id, query)
       : await getUserDocuments(user.id)
 
+    console.log(`[RAG Documents] Found ${documents.length} documents`)
+
     // Get storage usage
+    console.log("[RAG Documents] Fetching storage usage...")
     const usage = await getStorageUsage(user.id)
+    console.log(`[RAG Documents] Storage usage: ${JSON.stringify(usage)}`)
 
     return NextResponse.json({
       documents,
       usage,
     })
   } catch (error) {
-    console.error("Get documents error:", error)
+    console.error("[RAG Documents] Error details:", error)
+    console.error("[RAG Documents] Error stack:", error instanceof Error ? error.stack : "No stack")
+
     return NextResponse.json(
       {
         error:

@@ -12,6 +12,8 @@ import {
 } from "@/lib/rag"
 import { getCustomerData, normalizePlanId } from "@/lib/subscription/autumn-client"
 
+// Ensure Node.js runtime for long-running operations
+export const runtime = "nodejs"
 export const maxDuration = 300 // 5 minutes for large PDF processing
 
 export async function POST(request: Request) {

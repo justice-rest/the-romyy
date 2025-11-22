@@ -5,8 +5,14 @@
 
 import type { PDFProcessingResult } from "./types"
 
-// Dynamically import pdf-parse because of its CommonJS exports
-const pdfParse = require("pdf-parse")
+// Lazy load pdf-parse to avoid module resolution issues
+let pdfParse: any = null
+async function getPdfParse() {
+  if (!pdfParse) {
+    pdfParse = require("pdf-parse")
+  }
+  return pdfParse
+}
 
 /**
  * Detect language from text (simple heuristic)
@@ -44,8 +50,9 @@ export async function processPDF(
   buffer: Buffer | Uint8Array
 ): Promise<PDFProcessingResult> {
   try {
-    // Parse PDF using pdf-parse
-    const data = await pdfParse(buffer)
+    // Parse PDF using pdf-parse (lazy loaded)
+    const parser = await getPdfParse()
+    const data = await parser(buffer)
 
     // Extract text from all pages
     const text = data.text
