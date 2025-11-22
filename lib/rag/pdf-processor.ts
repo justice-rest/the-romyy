@@ -215,6 +215,8 @@ initializeDOMPolyfills()
 
 // Lazy load PDFParse class to avoid module resolution issues
 let PDFParseClass: any = null
+let workerConfigured = false
+
 async function getPDFParseClass() {
   if (!PDFParseClass) {
     try {
@@ -249,6 +251,29 @@ async function getPDFParseClass() {
       }
 
       console.log("[PDF Processor] pdf-parse v2.x loaded successfully")
+
+      // Configure worker for Node.js environment
+      // pdf-parse tries to load a worker file but the path is not exported in package.json
+      // We need to set it manually with an absolute path
+      if (!workerConfigured && typeof PDFParseClass.setWorker === "function") {
+        try {
+          const path = require("path")
+
+          // Find the pdf-parse module directory
+          // This works in both development and production (including serverless)
+          const pdfParseDir = require.resolve("pdf-parse").split("node_modules")[0] + "node_modules/pdf-parse"
+          const workerPath = path.join(pdfParseDir, "dist/pdf-parse/cjs/pdf.worker.mjs")
+
+          console.log("[PDF Processor] Configuring worker path:", workerPath)
+          PDFParseClass.setWorker(workerPath)
+          workerConfigured = true
+          console.log("[PDF Processor] Worker configured successfully")
+        } catch (workerError) {
+          console.warn("[PDF Processor] Failed to configure worker:", workerError)
+          console.warn("[PDF Processor] PDF parsing will attempt to continue without worker configuration")
+          // Non-fatal - pdf-parse should still work
+        }
+      }
     } catch (error) {
       console.error("[PDF Processor] Failed to load pdf-parse:", error)
       console.error("[PDF Processor] Error details:", {
@@ -301,15 +326,59 @@ export async function processPDF(
 ): Promise<PDFProcessingResult> {
   console.log(`[PDF Processor] Starting PDF processing, buffer size: ${buffer.length} bytes`)
 
+  let parser: any = null
+
   try {
     // Get PDFParse class (lazy loaded)
     console.log("[PDF Processor] Loading PDFParse class...")
     const PDFParse = await getPDFParseClass()
 
-    // Create parser instance with buffer data
-    // pdf-parse v2.x uses a class-based API
-    console.log("[PDF Processor] Creating PDFParse instance...")
-    const parser = new PDFParse({ data: buffer })
+    // Try multiple strategies to create parser instance
+    // Strategy 1: Default with pre-configured worker (should work in most cases)
+    console.log("[PDF Processor] Strategy 1: Creating PDFParse with default config...")
+    try {
+      parser = new PDFParse({ data: buffer })
+      console.log("[PDF Processor] ✓ Strategy 1 succeeded")
+    } catch (strategy1Error) {
+      console.warn("[PDF Processor] ✗ Strategy 1 failed:",
+        strategy1Error instanceof Error ? strategy1Error.message : String(strategy1Error))
+
+      // Strategy 2: Explicitly disable worker fetch
+      console.log("[PDF Processor] Strategy 2: Disabling worker fetch...")
+      try {
+        parser = new PDFParse({
+          data: buffer,
+          useWorkerFetch: false,
+        })
+        console.log("[PDF Processor] ✓ Strategy 2 succeeded")
+      } catch (strategy2Error) {
+        console.warn("[PDF Processor] ✗ Strategy 2 failed:",
+          strategy2Error instanceof Error ? strategy2Error.message : String(strategy2Error))
+
+        // Strategy 3: Full worker disable + minimal options
+        console.log("[PDF Processor] Strategy 3: Full worker disable...")
+        try {
+          parser = new PDFParse({
+            data: buffer,
+            useWorkerFetch: false,
+            isEvalSupported: false,
+            useSystemFonts: true,
+          })
+          console.log("[PDF Processor] ✓ Strategy 3 succeeded")
+        } catch (strategy3Error) {
+          console.error("[PDF Processor] ✗ All strategies failed")
+          console.error("[PDF Processor] Strategy 3 error:",
+            strategy3Error instanceof Error ? strategy3Error.message : String(strategy3Error))
+
+          // Re-throw the most recent error
+          throw strategy3Error
+        }
+      }
+    }
+
+    if (!parser) {
+      throw new Error("Failed to create PDFParse instance after trying all strategies")
+    }
 
     // Extract text using the getText() method
     console.log("[PDF Processor] Extracting text from PDF...")
@@ -339,9 +408,11 @@ export async function processPDF(
     console.log(`[PDF Processor] Language detected: ${language}`)
 
     // Clean up parser resources
-    await parser.destroy().catch(() => {
-      // Ignore cleanup errors
-    })
+    if (parser && typeof parser.destroy === "function") {
+      await parser.destroy().catch((destroyError: unknown) => {
+        console.warn("[PDF Processor] Cleanup warning:", destroyError)
+      })
+    }
 
     return {
       text,
@@ -353,6 +424,13 @@ export async function processPDF(
     console.error("[PDF Processor] Processing failed:", error)
     console.error("[PDF Processor] Error stack:", error instanceof Error ? error.stack : "No stack")
     console.error("[PDF Processor] Error type:", error instanceof Error ? error.constructor.name : typeof error)
+
+    // Attempt cleanup even on error
+    if (parser && typeof parser.destroy === "function") {
+      await parser.destroy().catch(() => {
+        // Ignore cleanup errors when already in error state
+      })
+    }
 
     // Re-throw with more context including stack trace
     if (error instanceof Error) {
