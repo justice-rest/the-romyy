@@ -56,3 +56,6 @@ bun.lockb
 bun.lock
 
 /.cursor
+
+# chaterface directory
+/chaterface
