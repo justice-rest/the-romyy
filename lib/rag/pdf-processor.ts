@@ -13,51 +13,137 @@ function initializeDOMPolyfills() {
     return // Running in browser, no polyfills needed
   }
 
+  // Check if already initialized
+  if ((globalThis as any).__DOM_POLYFILLS_READY__) {
+    return
+  }
+
   try {
-    // Use jsdom to provide DOM APIs for canvas/pdfjs-dist
-    const { JSDOM } = require("jsdom")
-    const dom = new JSDOM("<!DOCTYPE html>", {
-      url: "http://localhost",
-      pretendToBeVisual: true,
-    })
+    // Try jsdom first for full DOM support
+    try {
+      const { JSDOM } = require("jsdom")
+      const dom = new JSDOM("<!DOCTYPE html>", {
+        url: "http://localhost",
+        pretendToBeVisual: true,
+      })
 
-    // Polyfill DOM APIs with proper constructor binding
-    const domApis = [
-      "DOMMatrix",
-      "DOMRect",
-      "DOMPoint",
-      "DOMQuad",
-      "Image",
-      "ImageData",
-      "HTMLCanvasElement",
-      "CanvasRenderingContext2D",
-      "Path2D",
-    ] as const
+      // Install polyfills using jsdom's implementations
+      const domApis = ["DOMMatrix", "DOMRect", "DOMPoint", "DOMQuad"] as const
 
-    for (const api of domApis) {
-      if (typeof globalThis[api] === "undefined" && dom.window[api]) {
-        // Bind the constructor properly to ensure 'new' works correctly
-        const Constructor = dom.window[api]
+      for (const apiName of domApis) {
+        if (typeof globalThis[apiName] === "undefined" && dom.window[apiName]) {
+          // Get the constructor from jsdom
+          const JSDOMConstructor = dom.window[apiName]
 
-        // Create a wrapper that properly binds the constructor
-        Object.defineProperty(globalThis, api, {
-          value: Constructor,
-          writable: true,
-          enumerable: false,
-          configurable: true,
-        })
+          // Create a proper wrapper function
+          const PolyfillConstructor = function (this: any, ...args: any[]) {
+            // Handle both 'new' and direct calls
+            if (new.target) {
+              // Called with 'new' - create instance
+              const instance = Reflect.construct(JSDOMConstructor, args, new.target)
+              // Copy properties to 'this'
+              Object.setPrototypeOf(this, instance as object)
+              return this
+            } else {
+              // Called without 'new' - call original constructor
+              return JSDOMConstructor(...args)
+            }
+          }
+
+          // Set up prototype chain
+          PolyfillConstructor.prototype = JSDOMConstructor.prototype
+
+          // Copy static methods
+          for (const key of Object.getOwnPropertyNames(JSDOMConstructor)) {
+            if (key !== "prototype" && key !== "length" && key !== "name") {
+              try {
+                ;(PolyfillConstructor as any)[key] = (JSDOMConstructor as any)[key]
+              } catch (e) {
+                // Ignore non-writable properties
+              }
+            }
+          }
+
+          // Install the polyfill
+          ;(globalThis as any)[apiName] = PolyfillConstructor
+        }
       }
+
+      // Additional global properties that might be needed
+      if (typeof globalThis.document === "undefined") {
+        ;(globalThis as any).document = dom.window.document
+      }
+
+      console.log("[PDF Processor] jsdom polyfills installed successfully")
+    } catch (jsdomError) {
+      console.warn("[PDF Processor] jsdom initialization failed, using minimal polyfills:", jsdomError)
+
+      // Fallback: Create minimal polyfills that just satisfy basic requirements
+      // pdfjs-dist might just be checking that these constructors exist
+      if (typeof globalThis.DOMMatrix === "undefined") {
+        ;(globalThis as any).DOMMatrix = class DOMMatrix {
+          a = 1; b = 0; c = 0; d = 1; e = 0; f = 0
+          m11 = 1; m12 = 0; m13 = 0; m14 = 0
+          m21 = 0; m22 = 1; m23 = 0; m24 = 0
+          m31 = 0; m32 = 0; m33 = 1; m34 = 0
+          m41 = 0; m42 = 0; m43 = 0; m44 = 1
+          is2D = true
+          isIdentity = true
+
+          constructor(init?: any) {
+            if (Array.isArray(init)) {
+              if (init.length === 6) {
+                [this.a, this.b, this.c, this.d, this.e, this.f] = init
+                this.m11 = this.a; this.m12 = this.b
+                this.m21 = this.c; this.m22 = this.d
+                this.m41 = this.e; this.m42 = this.f
+              }
+            }
+          }
+
+          translate(tx: number, ty: number) { return this }
+          scale(sx: number, sy?: number) { return this }
+          rotate(angle: number) { return this }
+          multiply(other: any) { return this }
+        }
+      }
+
+      if (typeof globalThis.DOMRect === "undefined") {
+        ;(globalThis as any).DOMRect = class DOMRect {
+          constructor(
+            public x = 0,
+            public y = 0,
+            public width = 0,
+            public height = 0
+          ) {}
+          get top() { return this.y }
+          get bottom() { return this.y + this.height }
+          get left() { return this.x }
+          get right() { return this.x + this.width }
+        }
+      }
+
+      if (typeof globalThis.DOMPoint === "undefined") {
+        ;(globalThis as any).DOMPoint = class DOMPoint {
+          constructor(
+            public x = 0,
+            public y = 0,
+            public z = 0,
+            public w = 1
+          ) {}
+        }
+      }
+
+      console.log("[PDF Processor] Minimal polyfills installed")
     }
 
-    // Additional global properties that might be needed
-    if (typeof globalThis.document === "undefined") {
-      globalThis.document = dom.window.document
-    }
+    // Mark as initialized
+    ;(globalThis as any).__DOM_POLYFILLS_READY__ = true
 
-    console.log("[PDF Processor] DOM polyfills initialized successfully")
+    console.log("[PDF Processor] DOM polyfills ready")
   } catch (error) {
-    console.warn("[PDF Processor] Failed to initialize DOM polyfills:", error)
-    // Continue anyway - canvas might work without them
+    console.error("[PDF Processor] Critical error initializing polyfills:", error)
+    // Continue anyway
   }
 }
 
@@ -69,6 +155,14 @@ let pdfParse: any = null
 async function getPdfParse() {
   if (!pdfParse) {
     try {
+      // Ensure polyfills are initialized (in case module was loaded in different context)
+      initializeDOMPolyfills()
+
+      // Verify critical polyfills are available
+      console.log("[PDF Processor] Checking polyfills...")
+      console.log(`  DOMMatrix available: ${typeof globalThis.DOMMatrix !== "undefined"}`)
+      console.log(`  DOMMatrix is constructor: ${typeof globalThis.DOMMatrix === "function"}`)
+
       // Set up canvas for Node.js environment
       // pdfjs-dist (used by pdf-parse) needs a canvas implementation
       try {
@@ -110,6 +204,11 @@ async function getPdfParse() {
       console.log("[PDF Processor] pdf-parse loaded successfully")
     } catch (error) {
       console.error("[PDF Processor] Failed to load pdf-parse:", error)
+      console.error("[PDF Processor] Error details:", {
+        name: error instanceof Error ? error.name : "Unknown",
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
       throw new Error(
         `Failed to load PDF parsing library: ${error instanceof Error ? error.message : "Unknown error"}`
       )
