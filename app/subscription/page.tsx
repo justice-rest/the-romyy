@@ -93,19 +93,6 @@ export default function SubscriptionPage() {
             <div className="flex justify-center">
               <MMPricingCards />
             </div>
-
-            {/* FAQ or Additional Info */}
-            <div className="mt-16 pb-16 text-center">
-              <p className="text-sm text-foreground/70">
-                Need help choosing? Contact us at{" "}
-                <a
-                  href="mailto:howard@getromy.app"
-                  className="text-[#B183FF] hover:underline"
-                >
-                  howard@getromy.app
-                </a>
-              </p>
-            </div>
           </div>
         </div>
 
