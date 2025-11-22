@@ -24,6 +24,12 @@ export function DialogSubscriptionRequired({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="w-[90%] max-w-[300px] overflow-hidden rounded-xl p-0 sm:max-w-[300px]">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Upgrade to use Rōmy</DialogTitle>
+          <DialogDescription>
+            Subscribe to start chatting with AI models and unlock all features.
+          </DialogDescription>
+        </DialogHeader>
         <div>
           <Image
             src="/banner_forest.jpg"
@@ -33,15 +39,13 @@ export function DialogSubscriptionRequired({
             className="h-32 w-full object-cover"
           />
           <div className="p-4">
-            <DialogHeader>
-              <DialogTitle className="text-primary mb-1 text-base font-medium">
-                Upgrade to use Rōmy
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground mb-5 text-base">
-                Subscribe to start chatting with AI models and unlock all
-                features.
-              </DialogDescription>
-            </DialogHeader>
+            <div className="text-primary mb-1 text-base font-medium">
+              Upgrade to use Rōmy
+            </div>
+            <p className="text-muted-foreground mb-5 text-base">
+              Subscribe to start chatting with AI models and unlock all
+              features.
+            </p>
             <Link href="/subscription" className="block w-full">
               <Button
                 variant="secondary"

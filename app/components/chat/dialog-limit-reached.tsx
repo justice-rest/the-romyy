@@ -24,6 +24,12 @@ export function DialogLimitReached({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="w-[90%] max-w-[300px] overflow-hidden rounded-xl p-0 sm:max-w-[300px]">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Monthly message limit reached</DialogTitle>
+          <DialogDescription>
+            Wait until next month or upgrade to Max/Ultra to continue your workflow.
+          </DialogDescription>
+        </DialogHeader>
         <div>
           <Image
             src="/banner_forest.jpg"
@@ -33,15 +39,13 @@ export function DialogLimitReached({
             className="h-32 w-full object-cover"
           />
           <div className="p-4">
-            <DialogHeader>
-              <DialogTitle className="text-primary mb-1 text-base font-medium">
-                Monthly message limit reached
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground mb-5 text-base">
-                Wait until next month or upgrade to Max/Ultra to continue your
-                workflow.
-              </DialogDescription>
-            </DialogHeader>
+            <div className="text-primary mb-1 text-base font-medium">
+              Monthly message limit reached
+            </div>
+            <p className="text-muted-foreground mb-5 text-base">
+              Wait until next month or upgrade to Max/Ultra to continue your
+              workflow.
+            </p>
             <Link href="/subscription" className="block w-full">
               <Button
                 variant="secondary"
