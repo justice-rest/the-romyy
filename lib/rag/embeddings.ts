@@ -21,6 +21,31 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
+ * Sanitize text for embedding API
+ * Removes or replaces characters that could cause encoding issues
+ */
+function sanitizeTextForEmbedding(text: string): string {
+  if (!text) return ""
+
+  // Normalize Unicode characters to their composed form (NFC)
+  // This ensures consistent encoding across platforms
+  let sanitized = text.normalize("NFC")
+
+  // Replace problematic characters that might cause ByteString issues
+  // These are characters outside the Basic Multilingual Plane or control characters
+  sanitized = sanitized.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // Control characters
+
+  // Replace any remaining problematic high Unicode characters
+  // Keep common extended characters like accented letters, but remove rare ones
+  sanitized = sanitized.replace(/[\uD800-\uDFFF]/g, "") // Remove surrogate pairs that aren't matched
+
+  // Collapse multiple spaces into one
+  sanitized = sanitized.replace(/\s+/g, " ").trim()
+
+  return sanitized
+}
+
+/**
  * Truncate embedding vector to specified dimensions
  * Gemini embeddings support Matryoshka truncation without quality loss
  */
@@ -57,20 +82,27 @@ export async function generateEmbedding(
 
   let lastError: Error | null = null
 
+  // Sanitize text before sending to API
+  const sanitizedText = sanitizeTextForEmbedding(text)
+
+  if (!sanitizedText || sanitizedText.trim().length === 0) {
+    throw new Error("Cannot generate embedding for empty text after sanitization")
+  }
+
   // Retry logic with exponential backoff
   for (let attempt = 0; attempt < RAG_EMBEDDING_MAX_RETRIES; attempt++) {
     try {
       const response = await fetch(`${OPENROUTER_API_URL}/embeddings`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${apiKey}`,
           "HTTP-Referer": process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000",
           "X-Title": "Rōmy RAG Embeddings",
         },
         body: JSON.stringify({
           model,
-          input: text,
+          input: sanitizedText,
         }),
       })
 
@@ -154,20 +186,32 @@ export async function generateEmbeddings(
 
   let lastError: Error | null = null
 
+  // Sanitize all texts before sending to API
+  // Don't filter - preserve array length to maintain index mapping
+  const sanitizedTexts = texts.map((text) => {
+    const sanitized = sanitizeTextForEmbedding(text)
+    // If text becomes empty after sanitization, use a placeholder
+    return sanitized.trim().length > 0 ? sanitized : "[empty content]"
+  })
+
+  if (sanitizedTexts.every((t) => t === "[empty content]")) {
+    throw new Error("All texts are empty after sanitization")
+  }
+
   // Retry logic with exponential backoff
   for (let attempt = 0; attempt < RAG_EMBEDDING_MAX_RETRIES; attempt++) {
     try {
       const response = await fetch(`${OPENROUTER_API_URL}/embeddings`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${apiKey}`,
           "HTTP-Referer": process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000",
           "X-Title": "Rōmy RAG Embeddings",
         },
         body: JSON.stringify({
           model,
-          input: texts, // Send array for batch processing
+          input: sanitizedTexts, // Send array for batch processing
         }),
       })
 
