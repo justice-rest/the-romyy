@@ -82,11 +82,19 @@ export default function LoginPage() {
       <footer className="text-muted-foreground py-6 text-center text-sm">
         <p>
           By continuing, you agree to our{" "}
-          <Link href="/terms" className="text-foreground hover:underline">
+          <Link
+            href="/terms"
+            className="text-foreground underline hover:text-primary transition-colors cursor-pointer"
+            target="_blank"
+          >
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="text-foreground hover:underline">
+          <Link
+            href="/privacy"
+            className="text-foreground underline hover:text-primary transition-colors cursor-pointer"
+            target="_blank"
+          >
             Privacy Policy
           </Link>
         </p>
