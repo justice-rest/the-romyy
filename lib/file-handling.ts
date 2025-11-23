@@ -11,6 +11,7 @@ const ALLOWED_FILE_TYPES = [
   "image/jpeg",
   "image/png",
   "image/gif",
+  "image/webp",
   "application/pdf",
   "text/plain",
   "text/markdown",
@@ -19,6 +20,9 @@ const ALLOWED_FILE_TYPES = [
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]
+
+// Text-based extensions that don't have magic bytes
+const TEXT_EXTENSIONS = [".txt", ".md", ".json", ".csv"]
 
 export type Attachment = {
   name: string
@@ -29,6 +33,7 @@ export type Attachment = {
 export async function validateFile(
   file: File
 ): Promise<{ isValid: boolean; error?: string }> {
+  // Check file size
   if (file.size > MAX_FILE_SIZE) {
     return {
       isValid: false,
@@ -36,19 +41,46 @@ export async function validateFile(
     }
   }
 
-  const buffer = await file.arrayBuffer()
-  const type = await fileType.fileTypeFromBuffer(
-    Buffer.from(buffer.slice(0, 4100))
-  )
+  // Check if it's a text-based file by extension (these don't have magic bytes)
+  const fileName = file.name.toLowerCase()
+  const isTextFile = TEXT_EXTENSIONS.some(ext => fileName.endsWith(ext))
 
-  if (!type || !ALLOWED_FILE_TYPES.includes(type.mime)) {
-    return {
-      isValid: false,
-      error: "File type not supported or doesn't match its extension",
+  if (isTextFile) {
+    // For text files, validate by MIME type and extension
+    if (
+      file.type === "text/plain" ||
+      file.type === "text/markdown" ||
+      file.type === "application/json" ||
+      file.type === "text/csv" ||
+      file.type === ""  // Empty MIME type is ok for .txt, .md files
+    ) {
+      return { isValid: true }
     }
   }
 
-  return { isValid: true }
+  // For binary files (images, PDFs, Excel), check magic bytes
+  try {
+    const buffer = await file.arrayBuffer()
+    const type = await fileType.fileTypeFromBuffer(
+      Buffer.from(buffer.slice(0, 4100))
+    )
+
+    if (type && ALLOWED_FILE_TYPES.includes(type.mime)) {
+      return { isValid: true }
+    }
+
+    // If magic bytes detection failed but MIME type is allowed, trust the MIME type
+    if (ALLOWED_FILE_TYPES.includes(file.type)) {
+      return { isValid: true }
+    }
+  } catch (error) {
+    console.error("File validation error:", error)
+  }
+
+  return {
+    isValid: false,
+    error: "File type not supported. Supported types: Images (JPG, PNG, GIF, WebP), PDF, and text files (TXT, MD, JSON, CSV)",
+  }
 }
 
 export async function uploadFile(
@@ -87,45 +119,90 @@ export async function processFiles(
   chatId: string,
   userId: string
 ): Promise<Attachment[]> {
-  const supabase = isSupabaseEnabled ? createClient() : null
+  if (!isSupabaseEnabled) {
+    toast({
+      title: "File upload not available",
+      description: "File uploads require Supabase to be enabled",
+      status: "error",
+    })
+    return []
+  }
+
+  const supabase = createClient()
+  if (!supabase) {
+    toast({
+      title: "File upload failed",
+      description: "Could not connect to storage service",
+      status: "error",
+    })
+    return []
+  }
+
   const attachments: Attachment[] = []
+  const errors: string[] = []
 
   for (const file of files) {
+    // Validate file
     const validation = await validateFile(file)
     if (!validation.isValid) {
       console.warn(`File ${file.name} validation failed:`, validation.error)
-      toast({
-        title: "File validation failed",
-        description: validation.error,
-        status: "error",
-      })
+      errors.push(`${file.name}: ${validation.error}`)
       continue
     }
 
     try {
-      const url = supabase
-        ? await uploadFile(supabase, file)
-        : URL.createObjectURL(file)
+      // Upload file to Supabase storage
+      const url = await uploadFile(supabase, file)
 
-      if (supabase) {
-        const { error } = await supabase.from("chat_attachments").insert({
-          chat_id: chatId,
-          user_id: userId,
-          file_url: url,
-          file_name: file.name,
-          file_type: file.type,
-          file_size: file.size,
-        })
-
-        if (error) {
-          throw new Error(`Database insertion failed: ${error.message}`)
-        }
+      if (!url) {
+        throw new Error("Upload failed - no URL returned")
       }
 
+      // Save metadata to chat_attachments table
+      const { error: dbError } = await supabase.from("chat_attachments").insert({
+        chat_id: chatId,
+        user_id: userId,
+        file_url: url,
+        file_name: file.name,
+        file_type: file.type || "application/octet-stream",
+        file_size: file.size,
+      })
+
+      if (dbError) {
+        console.error("Database insertion failed:", dbError)
+        // Try to clean up uploaded file
+        try {
+          const filePath = url.split("/").slice(-2).join("/")
+          await supabase.storage.from("chat-attachments").remove([filePath])
+        } catch (cleanupError) {
+          console.error("Cleanup failed:", cleanupError)
+        }
+        throw new Error(`Database insertion failed: ${dbError.message}`)
+      }
+
+      // Successfully uploaded and saved
       attachments.push(createAttachment(file, url))
     } catch (error) {
       console.error(`Error processing file ${file.name}:`, error)
+      errors.push(`${file.name}: Upload failed`)
     }
+  }
+
+  // Show summary of errors if any
+  if (errors.length > 0) {
+    toast({
+      title: `${errors.length} file(s) failed to upload`,
+      description: errors.join("\n"),
+      status: "error",
+    })
+  }
+
+  // Show success message if at least one file uploaded
+  if (attachments.length > 0) {
+    toast({
+      title: `${attachments.length} file(s) uploaded successfully`,
+      status: "success",
+    })
   }
 
   return attachments

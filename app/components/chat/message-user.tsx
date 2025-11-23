@@ -28,9 +28,41 @@ import {
 import Image from "next/image"
 import React, { useEffect, useRef, useState } from "react"
 
-const getTextFromDataUrl = (dataUrl: string) => {
-  const base64 = dataUrl.split(",")[1]
-  return base64
+const getTextPreview = (url: string, fileName: string) => {
+  // If it's a data URL, extract base64
+  if (url.startsWith("data:")) {
+    const base64 = url.split(",")[1]
+    try {
+      return atob(base64).substring(0, 200) + "..."
+    } catch {
+      return "Text file: " + fileName
+    }
+  }
+  // For regular URLs, just show file name
+  return "Text file: " + fileName
+}
+
+const getFileIcon = (contentType: string) => {
+  if (contentType === "application/pdf") {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    )
+  }
+  if (contentType?.startsWith("text") || contentType === "application/json") {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    )
+  }
+  // Excel/CSV
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  )
 }
 
 export type MessageUserProps = {
@@ -112,62 +144,80 @@ export function MessageUser({
         className
       )}
     >
-      {attachments?.map((attachment, index) => (
-        <div
-          className="flex flex-row gap-2"
-          key={`${attachment.name}-${index}`}
-        >
-          {attachment.contentType?.startsWith("image") ? (
-            <MorphingDialog
-              transition={{
-                type: "spring",
-                stiffness: 280,
-                damping: 18,
-                mass: 0.3,
-              }}
-            >
-              <MorphingDialogTrigger className="z-10">
-                <Image
-                  className="mb-1 w-40 rounded-md"
-                  key={attachment.name}
-                  src={attachment.url}
-                  alt={attachment.name || "Attachment"}
-                  width={160}
-                  height={120}
-                />
-              </MorphingDialogTrigger>
-              <MorphingDialogContainer>
-                <MorphingDialogContent className="relative rounded-lg">
-                  <MorphingDialogImage
+      {attachments?.map((attachment, index) => {
+        const isImage = attachment.contentType?.startsWith("image")
+        const isTextFile = attachment.contentType?.startsWith("text") ||
+                          attachment.contentType === "application/json" ||
+                          attachment.contentType === "text/csv"
+        const isPDF = attachment.contentType === "application/pdf"
+        const isSpreadsheet = attachment.contentType?.includes("spreadsheet") ||
+                             attachment.contentType?.includes("excel")
+
+        return (
+          <div
+            className="flex flex-row gap-2"
+            key={`${attachment.name}-${index}`}
+          >
+            {isImage ? (
+              <MorphingDialog
+                transition={{
+                  type: "spring",
+                  stiffness: 280,
+                  damping: 18,
+                  mass: 0.3,
+                }}
+              >
+                <MorphingDialogTrigger className="z-10">
+                  <Image
+                    className="mb-1 w-40 rounded-md object-cover"
+                    key={attachment.name}
                     src={attachment.url}
-                    alt={attachment.name || ""}
-                    className="max-h-[90vh] max-w-[90vw] object-contain"
+                    alt={attachment.name || "Attachment"}
+                    width={160}
+                    height={120}
+                    unoptimized={attachment.url.startsWith("blob:")}
                   />
-                </MorphingDialogContent>
-                <MorphingDialogClose className="text-primary" />
-              </MorphingDialogContainer>
-            </MorphingDialog>
-          ) : attachment.contentType?.startsWith("text") ? (
-            <div className="text-primary mb-3 h-24 w-40 overflow-hidden rounded-md border p-2 text-xs">
-              {getTextFromDataUrl(attachment.url)}
-            </div>
-          ) : attachment.contentType === "application/pdf" ? (
-            <a
-              href={attachment.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary mb-3 flex h-24 w-40 items-center justify-center rounded-md border p-2 text-xs hover:bg-accent"
-            >
-              <div className="flex flex-col items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <span className="truncate w-full text-center">{attachment.name}</span>
-              </div>
-            </a>
-          ) : null}
-        </div>
-      ))}
+                </MorphingDialogTrigger>
+                <MorphingDialogContainer>
+                  <MorphingDialogContent className="relative rounded-lg">
+                    <MorphingDialogImage
+                      src={attachment.url}
+                      alt={attachment.name || ""}
+                      className="max-h-[90vh] max-w-[90vw] object-contain"
+                    />
+                  </MorphingDialogContent>
+                  <MorphingDialogClose className="text-primary" />
+                </MorphingDialogContainer>
+              </MorphingDialog>
+            ) : isTextFile || isPDF || isSpreadsheet ? (
+              <a
+                href={attachment.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={attachment.name}
+                className="text-primary mb-3 flex h-24 w-40 items-center justify-center rounded-md border p-2 text-xs hover:bg-accent transition-colors"
+                onClick={(e) => {
+                  // For blob URLs, force download instead of navigation
+                  if (attachment.url.startsWith("blob:")) {
+                    e.preventDefault()
+                    const link = document.createElement("a")
+                    link.href = attachment.url
+                    link.download = attachment.name || "file"
+                    link.click()
+                  }
+                }}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  {getFileIcon(attachment.contentType || "")}
+                  <span className="truncate w-full text-center font-medium">
+                    {attachment.name}
+                  </span>
+                </div>
+              </a>
+            ) : null}
+          </div>
+        )
+      })}
       {isEditing ? (
         <div
           className="bg-accent relative flex w-full max-w-xl min-w-[180px] flex-col gap-2 rounded-3xl px-5 py-2.5"
