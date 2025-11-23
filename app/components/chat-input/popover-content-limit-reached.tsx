@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { PopoverContent } from "@/components/ui/popover"
 import { APP_NAME } from "@/lib/config"
+import { ArrowUpRight } from "@phosphor-icons/react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -30,10 +31,11 @@ export function PopoverContentLimitReached() {
         <Link href="/subscription" className="block w-full">
           <Button
             variant="secondary"
-            className="w-full text-base"
+            className="group w-full text-base"
             size="lg"
           >
             <span>Upgrade Plan</span>
+            <ArrowUpRight className="ml-2 h-4 w-4 rotate-45 transition-transform duration-300 group-hover:rotate-90" weight="bold" />
           </Button>
         </Link>
       </div>
