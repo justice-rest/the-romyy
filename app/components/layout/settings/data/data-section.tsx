@@ -206,26 +206,23 @@ export function DataSection() {
     return (
       <div>
         <h3 className="mb-3 text-sm font-medium">Documents</h3>
-        <Popover>
-          <PopoverTrigger asChild>
-            <div className="cursor-not-allowed opacity-50">
-              <div className="border-border rounded-lg border-2 border-dashed p-8">
-                <div className="flex flex-col items-center gap-3 text-center">
-                  <p className="text-muted-foreground text-sm">
-                    RAG document management is an Ultra plan feature
-                  </p>
-                  <button
-                    className="text-primary hover:underline text-sm font-medium"
-                    onClick={(e) => e.preventDefault()}
-                  >
+        <div className="cursor-not-allowed opacity-50">
+          <div className="border-border rounded-lg border-2 border-dashed p-8">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <p className="text-muted-foreground text-sm">
+                RAG document management is an Ultra plan feature
+              </p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="text-primary hover:underline text-sm font-medium cursor-pointer opacity-100">
                     Click to learn more
                   </button>
-                </div>
-              </div>
+                </PopoverTrigger>
+                <UpgradePrompt />
+              </Popover>
             </div>
-          </PopoverTrigger>
-          <UpgradePrompt />
-        </Popover>
+          </div>
+        </div>
       </div>
     )
   }
