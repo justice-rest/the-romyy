@@ -96,15 +96,6 @@ export default function PrivacyPolicy() {
           </ul>
 
           <p>
-            <strong>API Keys (BYOK):</strong> If you provide your own API keys for third-party AI providers:
-          </p>
-          <ul>
-            <li>We encrypt and store your API keys using AES-256 encryption</li>
-            <li>Keys are stored in our database with end-to-end encryption</li>
-            <li>You retain full ownership and control of your keys</li>
-          </ul>
-
-          <p>
             <strong>User Preferences:</strong> We collect your settings and preferences, including:
           </p>
           <ul>
@@ -154,7 +145,7 @@ export default function PrivacyPolicy() {
             <strong>Authentication Provider (Google):</strong> We receive basic profile information when you sign in with Google.
           </p>
           <p>
-            <strong>AI Service Providers:</strong> When you use AI models, your prompts and content are processed by third-party providers (OpenAI, Anthropic, Google, Mistral, Perplexity, XAI, OpenRouter, or local Ollama models). Each provider has its own privacy policy governing their data practices.
+            <strong>AI Service Provider:</strong> When you use AI models, your prompts and content are processed by xAI (Grok). xAI has its own privacy policy governing their data practices.
           </p>
 
           <h2>3. How We Use Your Information</h2>
@@ -213,15 +204,10 @@ export default function PrivacyPolicy() {
           </p>
 
           <h2>5. How We Share Your Information</h2>
-          <h3>5.1 Third-Party AI Providers</h3>
+          <h3>5.1 Third-Party AI Provider</h3>
           <p>
-            When you use AI models, your prompts and content are sent to third-party providers:
+            When you use AI models, your prompts and content are sent to xAI (Grok) for processing. Your content is sent using our service infrastructure, subject to xAI's privacy policies.
           </p>
-          <ul>
-            <li><strong>With BYOK:</strong> Your content is sent directly to the provider using your API key, governed by their terms</li>
-            <li><strong>Without BYOK:</strong> Your content is sent using our API keys (when available), subject to provider privacy policies</li>
-            <li>Supported providers: OpenAI, Anthropic (Claude), Google (Gemini), Mistral, Perplexity, XAI (Grok), OpenRouter, and local Ollama models</li>
-          </ul>
 
           <h3>5.2 Service Providers</h3>
           <p>We may share data with trusted service providers who assist us in operating the Service:</p>
@@ -286,13 +272,19 @@ export default function PrivacyPolicy() {
 
           <h3>6.4 How to Exercise Your Rights</h3>
           <p>
-            To exercise any of these rights, please contact us at <a href="mailto:solomon@getromy.app" className="text-foreground hover:underline">solomon@getromy.app</a> or <a href="mailto:howard@getromy.app" className="text-foreground hover:underline">howard@getromy.app</a>. We will respond within the timeframes required by applicable law (typically 30-45 days).
+            To exercise any of these rights, please contact:
+          </p>
+          <ul>
+            <li>CEO: <a href="mailto:howard@getromy.app" className="text-foreground hover:underline">howard@getromy.app</a></li>
+            <li>VP of Product: <a href="mailto:solomon@getromy.app" className="text-foreground hover:underline">solomon@getromy.app</a></li>
+          </ul>
+          <p>
+            We will respond within the timeframes required by applicable law (typically 30-45 days).
           </p>
 
           <h2>7. Data Security</h2>
           <p>We implement industry-standard security measures to protect your information:</p>
           <ul>
-            <li><strong>Encryption:</strong> API keys are encrypted using AES-256 encryption with a secure encryption key</li>
             <li><strong>HTTPS:</strong> All data transmitted between your browser and our servers uses TLS encryption</li>
             <li><strong>Authentication:</strong> Secure OAuth 2.0 authentication via Google</li>
             <li><strong>CSRF Protection:</strong> Cross-Site Request Forgery tokens on all state-changing requests</li>
@@ -348,16 +340,11 @@ export default function PrivacyPolicy() {
           <h2>11. AI-Specific Privacy Considerations</h2>
           <h3>11.1 AI Training</h3>
           <p>
-            <strong>Our Service:</strong> We do not use your conversations to train our own AI models. Rōmy is a platform that connects you to third-party AI providers.
+            <strong>Our Service:</strong> We do not use your conversations to train our own AI models. Rōmy is a platform that connects you to xAI's Grok model.
           </p>
           <p>
-            <strong>Third-Party Providers:</strong> Each AI provider has different policies on data usage for model training:
+            <strong>xAI (Grok):</strong> xAI has its own policies on data usage for model training. Please review xAI's privacy policy for details on their training practices and data usage policies.
           </p>
-          <ul>
-            <li>Some providers may use your data for training unless you opt out or use specific API settings</li>
-            <li>When using BYOK, you are subject to the provider's data usage policies</li>
-            <li>Review each provider's privacy policy for details on their training practices</li>
-          </ul>
 
           <h3>11.2 Automated Decision-Making</h3>
           <p>
@@ -412,8 +399,8 @@ export default function PrivacyPolicy() {
             For privacy-related inquiries, you may contact our team at:
           </p>
           <ul>
-            <li>Email: <a href="mailto:solomon@getromy.app" className="text-foreground hover:underline">solomon@getromy.app</a></li>
-            <li>Email: <a href="mailto:howard@getromy.app" className="text-foreground hover:underline">howard@getromy.app</a></li>
+            <li>CEO: <a href="mailto:howard@getromy.app" className="text-foreground hover:underline">howard@getromy.app</a></li>
+            <li>VP of Product: <a href="mailto:solomon@getromy.app" className="text-foreground hover:underline">solomon@getromy.app</a></li>
           </ul>
 
           <h2>16. Open Source Transparency</h2>
@@ -431,8 +418,8 @@ export default function PrivacyPolicy() {
             If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:
           </p>
           <ul>
-            <li>Email: <a href="mailto:solomon@getromy.app" className="text-foreground hover:underline">solomon@getromy.app</a></li>
-            <li>Email: <a href="mailto:howard@getromy.app" className="text-foreground hover:underline">howard@getromy.app</a></li>
+            <li>CEO: <a href="mailto:howard@getromy.app" className="text-foreground hover:underline">howard@getromy.app</a></li>
+            <li>VP of Product: <a href="mailto:solomon@getromy.app" className="text-foreground hover:underline">solomon@getromy.app</a></li>
           </ul>
 
           <div className="mt-12 border-t border-border pt-6 text-sm text-muted-foreground">

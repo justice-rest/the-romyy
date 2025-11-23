@@ -110,10 +110,10 @@ export default function SubscriptionPage() {
           <div className="container mx-auto mt-12 px-4 py-1 md:mt-40">
             {/* Title Section */}
             <div className="mb-12 text-center">
-              <h1 className="mb-4 text-4xl font-bold text-foreground md:text-5xl">
+              <h1 className="mb-4 text-4xl font-medium tracking-tight text-foreground md:text-5xl">
                 Simple, Transparent Pricing
               </h1>
-              <p className="mx-auto max-w-2xl text-lg text-foreground/70">
+              <p className="text-foreground mx-auto max-w-2xl text-lg">
                 Unlock the full potential of AI with Rōmy. Select the plan that
                 fits your needs.
               </p>
