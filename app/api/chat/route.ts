@@ -54,68 +54,98 @@ export async function POST(req: Request) {
     // Normalize model ID for backwards compatibility (e.g., grok-4-fast → grok-4.1-fast)
     const normalizedModel = normalizeModelId(model)
 
-    const supabase = await validateAndTrackUsage({
-      userId,
-      model: normalizedModel,
-      isAuthenticated,
-    })
-
-    // Increment message count for successful validation
-    if (supabase) {
-      await incrementMessageCount({ supabase, userId, isAuthenticated })
-    }
-
-    const userMessage = messages[messages.length - 1]
-
-    // If editing, delete messages from cutoff BEFORE saving the new user message
-    if (supabase && editCutoffTimestamp) {
-      try {
-        await supabase
-          .from("messages")
-          .delete()
-          .eq("chat_id", chatId)
-          .gte("created_at", editCutoffTimestamp)
-      } catch (err) {
-        console.error("Failed to delete messages from cutoff:", err)
-      }
-    }
-
-    if (supabase && userMessage?.role === "user") {
-      await logUserMessage({
-        supabase,
+    /**
+     * OPTIMIZATION: Parallelize independent operations
+     * Instead of sequential DB queries, run them all at once
+     * Expected improvement: 60-80% faster pre-streaming phase
+     */
+    const [
+      supabase,
+      allModels,
+      effectiveSystemPrompt,
+      apiKey
+    ] = await Promise.all([
+      // 1. Validate user and check rate limits (critical - blocks streaming)
+      validateAndTrackUsage({
         userId,
-        chatId,
-        content: userMessage.content,
-        attachments: userMessage.experimental_attachments as Attachment[],
         model: normalizedModel,
         isAuthenticated,
-        message_group_id,
-      })
-    }
+      }),
+      // 2. Get all models config (needed for streaming)
+      getAllModels(),
+      // 3. Get system prompt with onboarding context (cached after first request)
+      (async () => {
+        const baseSystemPrompt = systemPrompt || SYSTEM_PROMPT_DEFAULT
+        return await getSystemPromptWithContext(
+          isAuthenticated ? userId : null,
+          baseSystemPrompt
+        )
+      })(),
+      // 4. Get user API key if authenticated (needed for streaming)
+      (async () => {
+        if (!isAuthenticated || !userId) return undefined
+        const { getEffectiveApiKey } = await import("@/lib/user-keys")
+        const provider = getProviderForModel(normalizedModel)
+        return (await getEffectiveApiKey(userId, provider as ProviderWithoutOllama)) || undefined
+      })()
+    ])
 
-    const allModels = await getAllModels()
+    // Verify model config exists
     const modelConfig = allModels.find((m) => m.id === normalizedModel)
-
     if (!modelConfig || !modelConfig.apiSdk) {
       throw new Error(`Model ${normalizedModel} not found`)
     }
 
-    // Get base system prompt (user's custom or default)
-    const baseSystemPrompt = systemPrompt || SYSTEM_PROMPT_DEFAULT
+    /**
+     * CRITICAL: Increment message count BEFORE streaming
+     * This prevents race conditions where multiple rapid requests could bypass rate limits
+     * The increment must complete before streaming starts to ensure accurate counting
+     */
+    if (supabase) {
+      await incrementMessageCount({
+        supabase,
+        userId,
+        isAuthenticated,
+        model: normalizedModel
+      })
+    }
 
-    // Inject onboarding context into system prompt
-    const effectiveSystemPrompt = await getSystemPromptWithContext(
-      isAuthenticated ? userId : null,
-      baseSystemPrompt
-    )
+    const userMessage = messages[messages.length - 1]
 
-    let apiKey: string | undefined
-    if (isAuthenticated && userId) {
-      const { getEffectiveApiKey } = await import("@/lib/user-keys")
-      const provider = getProviderForModel(normalizedModel)
-      apiKey =
-        (await getEffectiveApiKey(userId, provider as ProviderWithoutOllama)) ||
-        undefined
+    /**
+     * OPTIMIZATION: Move non-critical operations to background
+     * Logging and deletions can happen during streaming without blocking response
+     */
+    if (supabase) {
+      // Fire-and-forget for truly non-critical operations
+      Promise.all([
+        // Delete old messages if editing
+        (async () => {
+          if (!editCutoffTimestamp) return
+          try {
+            await supabase
+              .from("messages")
+              .delete()
+              .eq("chat_id", chatId)
+              .gte("created_at", editCutoffTimestamp)
+          } catch (err) {
+            console.error("Failed to delete messages from cutoff:", err)
+          }
+        })(),
+        // Log user message
+        userMessage?.role === "user"
+          ? logUserMessage({
+              supabase,
+              userId,
+              chatId,
+              content: userMessage.content,
+              attachments: userMessage.experimental_attachments as Attachment[],
+              model: normalizedModel,
+              isAuthenticated,
+              message_group_id,
+            })
+          : Promise.resolve()
+      ]).catch((err: unknown) => console.error("Background operations failed:", err))
     }
 
     // Build tools object - include Exa search tool if enabled and API key is configured

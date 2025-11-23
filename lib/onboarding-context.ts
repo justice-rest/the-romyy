@@ -15,6 +15,14 @@ export interface OnboardingData {
 }
 
 /**
+ * OPTIMIZATION: In-memory cache for onboarding context
+ * TTL: 5 minutes (300000ms)
+ * This reduces DB queries since onboarding data rarely changes
+ */
+const onboardingCache = new Map<string, { data: string; timestamp: number }>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+/**
  * Fetches onboarding data for a user from the database
  */
 export async function fetchOnboardingData(
@@ -40,6 +48,14 @@ export async function fetchOnboardingData(
     console.error("Error in fetchOnboardingData:", error)
     return null
   }
+}
+
+/**
+ * Invalidate cached onboarding context for a user
+ * Call this when user updates their settings
+ */
+export function invalidateOnboardingCache(userId: string): void {
+  onboardingCache.delete(userId)
 }
 
 /**
@@ -121,7 +137,8 @@ export function formatOnboardingContext(data: OnboardingData): string {
 }
 
 /**
- * Gets the complete system prompt with onboarding context injected
+ * OPTIMIZED: Gets the complete system prompt with onboarding context injected
+ * Uses in-memory cache to avoid hitting DB on every request
  */
 export async function getSystemPromptWithContext(
   userId: string | null,
@@ -129,9 +146,26 @@ export async function getSystemPromptWithContext(
 ): Promise<string> {
   if (!userId) return baseSystemPrompt
 
+  // Check cache first
+  const cached = onboardingCache.get(userId)
+  const now = Date.now()
+
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    // Cache hit - return immediately
+    return baseSystemPrompt + cached.data
+  }
+
+  // Cache miss or expired - fetch from DB
   const onboardingData = await fetchOnboardingData(userId)
   if (!onboardingData) return baseSystemPrompt
 
   const contextString = formatOnboardingContext(onboardingData)
+
+  // Update cache
+  onboardingCache.set(userId, {
+    data: contextString,
+    timestamp: now
+  })
+
   return baseSystemPrompt + contextString
 }
