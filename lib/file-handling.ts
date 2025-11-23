@@ -85,20 +85,29 @@ export async function validateFile(
 
 export async function uploadFile(
   supabase: SupabaseClient,
-  file: File
+  file: File,
+  userId: string
 ): Promise<string> {
   const fileExt = file.name.split(".").pop()
-  const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-  const filePath = `uploads/${fileName}`
+  const timestamp = Date.now()
+  const random = Math.random().toString(36).substring(2, 9)
+  const fileName = `${userId}/${timestamp}-${random}.${fileExt}`
+  const filePath = fileName
 
-  const { error } = await supabase.storage
+  // Upload with upsert to avoid conflicts
+  const { error, data } = await supabase.storage
     .from("chat-attachments")
-    .upload(filePath, file)
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    })
 
   if (error) {
+    console.error("Storage upload error:", error)
     throw new Error(`Error uploading file: ${error.message}`)
   }
 
+  // Get public URL - this works even with RLS enabled on the bucket
   const {
     data: { publicUrl },
   } = supabase.storage.from("chat-attachments").getPublicUrl(filePath)
@@ -152,7 +161,7 @@ export async function processFiles(
 
     try {
       // Upload file to Supabase storage
-      const url = await uploadFile(supabase, file)
+      const url = await uploadFile(supabase, file, userId)
 
       if (!url) {
         throw new Error("Upload failed - no URL returned")
@@ -170,13 +179,15 @@ export async function processFiles(
 
       if (dbError) {
         console.error("Database insertion failed:", dbError)
+
         // Try to clean up uploaded file
         try {
-          const filePath = url.split("/").slice(-2).join("/")
+          const filePath = `${userId}/${url.split("/").pop()}`
           await supabase.storage.from("chat-attachments").remove([filePath])
         } catch (cleanupError) {
           console.error("Cleanup failed:", cleanupError)
         }
+
         throw new Error(`Database insertion failed: ${dbError.message}`)
       }
 
@@ -184,7 +195,8 @@ export async function processFiles(
       attachments.push(createAttachment(file, url))
     } catch (error) {
       console.error(`Error processing file ${file.name}:`, error)
-      errors.push(`${file.name}: Upload failed`)
+      const errorMessage = error instanceof Error ? error.message : "Upload failed"
+      errors.push(`${file.name}: ${errorMessage}`)
     }
   }
 
