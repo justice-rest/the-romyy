@@ -15,6 +15,8 @@ export function UserProfile() {
       if (!user?.id) return
 
       const supabase = createClient()
+      if (!supabase) return
+
       const { data } = await supabase
         .from("onboarding_data")
         .select("first_name")
