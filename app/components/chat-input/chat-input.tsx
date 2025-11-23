@@ -31,7 +31,7 @@ type ChatInputProps = {
   status?: "submitted" | "streaming" | "ready" | "error"
   setEnableSearch: (enabled: boolean) => void
   enableSearch: boolean
-  quotedText?: { text: string; messageId: string} | null
+  quotedText?: { text: string; messageId: string } | null
   showWelcome?: boolean
   firstName?: string | null
   onWelcomeDismiss?: () => void
@@ -186,7 +186,7 @@ export function ChatInput({
               <FileList files={files} onFileRemove={onFileRemove} />
               <PromptInputTextarea
                 ref={textareaRef}
-                placeholder="Who should we look for today? Share their name & location."
+                placeholder="Donor’s full name and street address (& employer if known)"
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
                 className="min-h-[44px] pt-3 pl-4 text-base leading-[1.3] sm:text-base md:text-base"

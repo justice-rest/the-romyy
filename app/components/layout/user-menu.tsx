@@ -16,9 +16,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useUser } from "@/lib/user-store/provider"
-import { InstagramLogoIcon } from "@phosphor-icons/react"
+import { InstagramLogoIcon, SignOut } from "@phosphor-icons/react"
 import { useState } from "react"
 import { useCustomer } from "autumn-js/react"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 import { AppInfoTrigger } from "./app-info/app-info-trigger"
 import { FeedbackTrigger } from "./feedback/feedback-trigger"
 import { SettingsTrigger } from "./settings/settings-trigger"
@@ -26,6 +28,7 @@ import { SettingsTrigger } from "./settings/settings-trigger"
 export function UserMenu() {
   const { user } = useUser()
   const { customer } = useCustomer()
+  const router = useRouter()
   const [isMenuOpen, setMenuOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
 
@@ -36,6 +39,15 @@ export function UserMenu() {
     if (!isOpen) {
       setMenuOpen(false)
     }
+  }
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    if (!supabase) return
+
+    await supabase.auth.signOut()
+    router.push("/auth")
+    router.refresh()
   }
 
   // Check if user has an active subscription (any paid plan)
@@ -108,6 +120,10 @@ export function UserMenu() {
         <SettingsTrigger onOpenChange={handleSettingsOpenChange} />
         <FeedbackTrigger />
         <AppInfoTrigger />
+        <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
+          <SignOut className="size-4" />
+          <span>Sign out</span>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <a

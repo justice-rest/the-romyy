@@ -254,7 +254,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 <img
                   src={isHoveringLogo ? "/Romy-2.png" : "/romy.png"}
                   alt="Rōmy"
-                  className="max-h-[150px] max-w-full object-contain transition-transform hover:scale-105"
+                  className="max-h-[112.5px] max-w-full object-contain transition-transform hover:scale-105"
                 />
               </motion.div>
             )}
