@@ -22,15 +22,15 @@ import { OnboardingFormData } from "@/app/api/onboarding/route"
 const TOTAL_QUESTIONS = 10
 
 const NONPROFIT_SECTORS = [
+  "Arts, Culture, and Humanities",
   "Education",
-  "Animal Welfare",
-  "Poverty Alleviation",
-  "Healthcare",
-  "Environment",
-  "Arts & Culture",
-  "Human Rights",
-  "Disaster Relief",
-  "Religious",
+  "Environment and Animals",
+  "Health",
+  "Human Services",
+  "International / Foreign Affairs",
+  "Public and Societal Benefit",
+  "Religion",
+  "Mutual/Membership Benefit",
   "Other",
 ]
 
