@@ -7,7 +7,7 @@ import {
 import { Loader } from "@/components/prompt-kit/loader"
 import { ScrollButton } from "@/components/prompt-kit/scroll-button"
 import { ExtendedMessageAISDK } from "@/lib/chat-store/messages/api"
-import { getModelInfo } from "@/lib/models"
+import { getModelInfo, normalizeModelId } from "@/lib/models"
 import { PROVIDERS } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 import { Message as MessageType } from "@ai-sdk/react"
@@ -37,7 +37,8 @@ type ResponseCardProps = {
 }
 
 function ResponseCard({ response, group }: ResponseCardProps) {
-  const model = getModelInfo(response.model)
+  const normalizedModelId = normalizeModelId(response.model)
+  const model = getModelInfo(normalizedModelId)
   const providerIcon = PROVIDERS.find((p) => p.id === model?.baseProviderId)
 
   return (

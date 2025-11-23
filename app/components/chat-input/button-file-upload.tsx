@@ -14,7 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { getModelInfo } from "@/lib/models"
+import { getModelInfo, normalizeModelId } from "@/lib/models"
 import { isSupabaseEnabled } from "@/lib/supabase/config"
 import { cn } from "@/lib/utils"
 import { FileArrowUp, Paperclip } from "@phosphor-icons/react"
@@ -36,7 +36,9 @@ export function ButtonFileUpload({
     return null
   }
 
-  const isFileUploadAvailable = getModelInfo(model)?.vision
+  // Normalize model ID to handle deprecated/migrated model IDs (e.g., grok-4-fast → grok-4.1-fast)
+  const normalizedModel = normalizeModelId(model)
+  const isFileUploadAvailable = getModelInfo(normalizedModel)?.vision
 
   if (!isFileUploadAvailable) {
     return (
