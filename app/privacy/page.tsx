@@ -20,9 +20,6 @@ function Header() {
     <header className="h-app-header fixed top-0 right-0 left-0 z-50">
       <div className="h-app-header top-app-header bg-background pointer-events-none absolute left-0 z-50 mx-auto w-full to-transparent backdrop-blur-xl [-webkit-mask-image:linear-gradient(to_bottom,black,transparent)] lg:hidden"></div>
       <div className="bg-background relative mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:bg-transparent lg:px-8">
-        <Link href="/" className="text-xl font-medium tracking-tight">
-          Rōmy
-        </Link>
       </div>
     </header>
   )
@@ -47,9 +44,14 @@ export default function PrivacyPolicy() {
 
         <div className="fixed bottom-6 left-0 z-50 flex w-full justify-center">
           <Link href="/">
-            <Button variant="secondary" className="group" size="lg">
-              <span>Back to Rōmy</span>
-              <ArrowUpRight className="ml-2 h-4 w-4 rotate-45 transition-transform duration-300 group-hover:rotate-90" />
+            <Button
+              variant="outline"
+              className="group flex h-12 items-center justify-between rounded-full border-foreground bg-foreground py-2 pr-2 pl-6 text-background shadow-sm transition-all hover:scale-[1.02] hover:bg-background hover:text-foreground active:scale-[0.98]"
+            >
+              Back to Rōmy{" "}
+              <div className="ml-2 rounded-full bg-background/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-foreground">
+                <ArrowUpRight className="h-4 w-4 text-background transition-transform duration-300 group-hover:rotate-45 group-hover:text-background" weight="bold" />
+              </div>
             </Button>
           </Link>
         </div>
