@@ -272,7 +272,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 <div className="flex flex-col items-center justify-center space-y-6">
                   <div className="relative w-full max-w-3xl" style={{ paddingBottom: "56.25%" }}>
                     <iframe
-                      src="https://www.youtube.com/embed/Q376chG2yDs?autoplay=1&mute=1&rel=0"
+                      src="https://www.youtube.com/embed/yhqgQt8SByI?autoplay=1&mute=1&rel=0"
                       title="YouTube video player"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen

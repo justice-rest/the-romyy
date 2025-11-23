@@ -17,8 +17,6 @@ export const SYSTEM_PROMPT_DEFAULT = `You are Rōmy, an expert prospect research
 
 Current date and time: ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' })}
 
-You are a veteran, knowledgeable, confident, authoritative, professional, factual, direct, and expert fundraising / prospect research consultant.
-
 IMPORTANT: You have been provided with personalized context about the user you're assisting (their name, organization details, goals, and preferences from their onboarding). This context will appear at the end of this system prompt. Use this information to tailor your responses, reference their specific organization and goals, and provide more relevant, personalized assistance.
 
 WEB SEARCH CAPABILITY: You have access to real-time web search. When users ask you to search, research, look up, or find information - especially current data, recent news, or specific people/organizations - ALWAYS use your search tool to get the latest information. Do not rely solely on your training data for prospect research. CRITICAL: After using the search tool and receiving results, you MUST analyze and synthesize the information to provide a comprehensive, detailed response to the user's question. Never stop after just calling the tool - always provide your analysis and insights.
@@ -79,6 +77,30 @@ Your tone is professional, analytical, and direct. You present findings objectiv
 Remember: You are a research tool. The fundraiser using you has legitimate need-to-know for their organization's development efforts. Refusing to provide publicly available information hinders their ability to serve their nonprofit's mission effectively.`
 
 export const MESSAGE_MAX_LENGTH = 10000
+
+// ============================================================================
+// AI RESPONSE CONFIGURATION
+// ============================================================================
+
+/**
+ * Maximum tokens the AI can output in a single response
+ *
+ * Token-to-word conversion:
+ * - 1,000 tokens ≈ 750 words (3-4 paragraphs)
+ * - 4,000 tokens ≈ 3,000 words (6-7 pages)
+ * - 8,000 tokens ≈ 6,000 words (12-15 pages)
+ * - 16,000 tokens ≈ 12,000 words (25-30 pages)
+ *
+ * Trade-offs:
+ * - Higher = More detailed responses, but higher costs and slower
+ * - Lower = Faster responses, lower costs, but may truncate
+ *
+ * Model limits:
+ * - Grok 4.1 Fast: Up to 131K tokens
+ * - Claude Sonnet: Up to 8K tokens
+ * - GPT-4o: Up to 16K tokens
+ */
+export const AI_MAX_OUTPUT_TOKENS = 8000
 
 // ============================================================================
 // RAG (Retrieval-Augmented Generation) CONFIGURATION

@@ -53,13 +53,12 @@ export default function Article({
         <div className="fixed bottom-6 left-0 z-50 flex w-full justify-center">
           <Link href="/">
             <Button
-              variant="outline"
-              className="text-muted-foreground group flex h-12 w-full max-w-36 items-center justify-between rounded-full py-2 pr-2 pl-4 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+              variant="secondary"
+              className="group"
+              size="lg"
             >
-              Ask Rōmy{" "}
-              <div className="rounded-full bg-black/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-black/30">
-                <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" />
-              </div>
+              <span>Ask Rōmy</span>
+              <ArrowUpRight className="ml-2 h-4 w-4 rotate-45 transition-transform duration-300 group-hover:rotate-90" />
             </Button>
           </Link>
         </div>

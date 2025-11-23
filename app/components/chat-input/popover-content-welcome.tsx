@@ -38,13 +38,12 @@ export function PopoverContentWelcome({
         </p>
         <Button
           onClick={onGetStarted}
-          variant="outline"
-          className="group flex h-12 w-full items-center justify-between rounded-full border-gray-900 bg-gray-900 py-2 pr-2 pl-6 text-white shadow-sm transition-all hover:scale-[1.02] hover:bg-white hover:text-gray-900 active:scale-[0.98]"
+          variant="secondary"
+          className="group w-full text-base"
+          size="lg"
         >
-          Get Started{" "}
-          <div className="ml-2 rounded-full bg-white/20 p-2 backdrop-blur-sm transition-colors group-hover:bg-gray-900">
-            <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" weight="bold" />
-          </div>
+          <span>Get Started</span>
+          <ArrowUpRight className="ml-2 h-4 w-4 rotate-45 transition-transform duration-300 group-hover:rotate-90" weight="bold" />
         </Button>
       </div>
     </PopoverContent>
