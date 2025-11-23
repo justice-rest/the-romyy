@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/tooltip"
 import { useUser } from "@/lib/user-store/provider"
 import { InstagramLogoIcon, SignOut } from "@phosphor-icons/react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useCustomer } from "autumn-js/react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -31,8 +31,32 @@ export function UserMenu() {
   const router = useRouter()
   const [isMenuOpen, setMenuOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
+  const [onboardingFirstName, setOnboardingFirstName] = useState<string | null>(null)
+
+  // Fetch full name from onboarding data
+  useEffect(() => {
+    const fetchOnboardingName = async () => {
+      if (!user?.id) return
+
+      const supabase = createClient()
+      if (!supabase) return
+
+      const { data } = await supabase
+        .from("onboarding_data")
+        .select("first_name")
+        .eq("user_id", user.id)
+        .single()
+
+      setOnboardingFirstName(data?.first_name || null)
+    }
+
+    fetchOnboardingName()
+  }, [user?.id])
 
   if (!user) return null
+
+  // Use onboarding full first_name if available, otherwise fall back to display_name
+  const displayName = onboardingFirstName || user?.display_name
 
   const handleSettingsOpenChange = (isOpen: boolean) => {
     setSettingsOpen(isOpen)
@@ -67,7 +91,7 @@ export function UserMenu() {
           <DropdownMenuTrigger>
             <Avatar className="bg-background hover:bg-muted">
               <AvatarImage src={user?.profile_image ?? undefined} />
-              <AvatarFallback>{user?.display_name?.charAt(0)}</AvatarFallback>
+              <AvatarFallback>{displayName?.charAt(0)}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
         </TooltipTrigger>
@@ -88,7 +112,7 @@ export function UserMenu() {
       >
         <DropdownMenuItem className="flex flex-col items-start gap-0 no-underline hover:bg-transparent focus:bg-transparent">
           <div className="flex items-center gap-1.5">
-            <span>{user?.display_name}</span>
+            <span>{displayName}</span>
             {hasActiveSubscription && (
               <Tooltip>
                 <TooltipTrigger asChild>
