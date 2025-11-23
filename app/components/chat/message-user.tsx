@@ -151,6 +151,20 @@ export function MessageUser({
             <div className="text-primary mb-3 h-24 w-40 overflow-hidden rounded-md border p-2 text-xs">
               {getTextFromDataUrl(attachment.url)}
             </div>
+          ) : attachment.contentType === "application/pdf" ? (
+            <a
+              href={attachment.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary mb-3 flex h-24 w-40 items-center justify-center rounded-md border p-2 text-xs hover:bg-accent"
+            >
+              <div className="flex flex-col items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span className="truncate w-full text-center">{attachment.name}</span>
+              </div>
+            </a>
           ) : null}
         </div>
       ))}
