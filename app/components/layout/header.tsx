@@ -29,9 +29,9 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
             <div className="flex flex-1 items-center gap-2">
               <Link
                 href="/"
-                className="pointer-events-auto inline-flex items-center text-xl font-medium tracking-tight"
+                className="pointer-events-auto inline-flex items-center text-2xl font-medium tracking-tight"
               >
-                <RomyLogo className="mr-1 size-4" />
+                <RomyLogo className="mr-0.5 size-10" />
                 {APP_NAME}
               </Link>
               {hasSidebar && isMobile && <HeaderSidebarTrigger />}
