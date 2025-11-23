@@ -166,7 +166,6 @@ export function MMPricingCards() {
             period="/month"
             features={[
               "Unlimited messages",
-              "Upload & search your own documents (RAG)",
               "Dedicated support",
               "Everything in Pro",
             ]}
@@ -183,8 +182,8 @@ export function MMPricingCards() {
             period="/month"
             features={[
               "Everything in Max",
+              "Upload & search your own documents (RAG)",
               "Fundraising consultation",
-              "Access to all our AI models",
             ]}
             ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "ultra" ? "Current Plan" : "Get Started")}
             ctaVariant="outline"

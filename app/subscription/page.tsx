@@ -1,15 +1,45 @@
 "use client"
 
-import { MMPricingCards } from "@/components/subscription/mm-pricing-cards"
 import { RomyIcon } from "@/components/icons/romy"
 import { APP_NAME } from "@/lib/config"
 import { useUser } from "@/lib/user-store/provider"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { useEffect } from "react"
+import { useEffect, Suspense, lazy } from "react"
 import { PixelatedBackground } from "@/components/ui/pixelated-bg"
 import { Button } from "@/components/ui/button"
 import { ArrowUpRight } from "@phosphor-icons/react"
+
+// OPTIMIZATION: Lazy load pricing cards to reduce initial bundle size and improve TTI
+const MMPricingCards = lazy(() =>
+  import("@/components/subscription/mm-pricing-cards").then((mod) => ({
+    default: mod.MMPricingCards,
+  }))
+)
+
+// Loading skeleton for pricing cards
+function PricingCardsSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="w-full overflow-hidden rounded-xl">
+        <div className="flex flex-col divide-y divide-border lg:flex-row lg:divide-x lg:divide-y-0">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex w-full flex-col px-8 py-12 animate-pulse">
+              <div className="mb-6 h-10 w-32 bg-muted rounded"></div>
+              <div className="mb-10 h-8 w-24 bg-muted rounded"></div>
+              <div className="mb-12 space-y-4">
+                {[1, 2, 3].map((j) => (
+                  <div key={j} className="h-4 bg-muted rounded w-full"></div>
+                ))}
+              </div>
+              <div className="mt-auto h-12 bg-muted rounded"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 /**
  * Subscription Page
@@ -81,7 +111,7 @@ export default function SubscriptionPage() {
             {/* Title Section */}
             <div className="mb-12 text-center">
               <h1 className="mb-4 text-4xl font-bold text-foreground md:text-5xl">
-                Choose Your Plan
+                Simple, Transparent Pricing
               </h1>
               <p className="mx-auto max-w-2xl text-lg text-foreground/70">
                 Unlock the full potential of AI with Rōmy. Select the plan that
@@ -89,9 +119,11 @@ export default function SubscriptionPage() {
               </p>
             </div>
 
-            {/* Pricing Cards - Centered */}
+            {/* Pricing Cards - Centered with Suspense for faster initial render */}
             <div className="flex justify-center">
-              <MMPricingCards />
+              <Suspense fallback={<PricingCardsSkeleton />}>
+                <MMPricingCards />
+              </Suspense>
             </div>
 
             {/* Contact Us Button - with padding */}

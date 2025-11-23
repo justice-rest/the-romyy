@@ -17,14 +17,15 @@ export function AccountManagement() {
 
   const handleSignOut = async () => {
     try {
-      // Immediately redirect to login page to avoid showing guest UI
-      router.push("/auth")
-
-      // Then clean up state and storage in the background
+      // OPTIMIZATION: Clean up state and storage first
       await resetMessages()
       await resetChats()
       await signOut()
       await clearAllIndexedDBStores()
+
+      // INSTANT REDIRECT: Use window.location.href for synchronous redirect
+      // This prevents the guest view flash that occurs with router.push()
+      window.location.href = "/auth"
     } catch (e) {
       console.error("Sign out failed:", e)
       toast({ title: "Failed to sign out", status: "error" })
