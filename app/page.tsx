@@ -39,17 +39,18 @@ export default function Home() {
           return
         }
 
+        // Fetch first name from onboarding data (always, for chat heading)
+        const { data: onboardingData } = await supabase
+          .from("onboarding_data")
+          .select("first_name")
+          .eq("user_id", user.id)
+          .single()
+
+        setFirstName(onboardingData?.first_name || null)
+
         // Check if user just completed onboarding (show welcome once)
         const hasSeenWelcome = localStorage.getItem("hasSeenWelcome")
         if (userData?.onboarding_completed && !hasSeenWelcome) {
-          // Fetch first name from onboarding data
-          const { data: onboardingData } = await supabase
-            .from("onboarding_data")
-            .select("first_name")
-            .eq("user_id", user.id)
-            .single()
-
-          setFirstName(onboardingData?.first_name || null)
           setShowWelcome(true)
         }
       }
