@@ -87,7 +87,7 @@ export function MultiChatInput({
           onValueChange={onValueChange}
         >
           <PromptInputTextarea
-            placeholder="Ask all selected models..."
+            placeholder="Who should we look for today? Share their name & location."
             onKeyDown={handleKeyDown}
             className="min-h-[44px] pt-3 pl-4 text-base leading-[1.3] sm:text-base md:text-base"
           />

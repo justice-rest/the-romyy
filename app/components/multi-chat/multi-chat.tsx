@@ -361,6 +361,10 @@ export function MultiChat() {
 
   const showOnboarding = messageGroups.length === 0 && !messagesLoading
 
+  const firstName = useMemo(() => {
+    return user?.display_name?.split(' ')[0] || ''
+  }, [user?.display_name])
+
   return (
     <div
       className={cn(
@@ -381,7 +385,7 @@ export function MultiChat() {
             transition={{ layout: { duration: 0 } }}
           >
             <h1 className="mb-6 text-3xl font-medium tracking-tight">
-              Who are you looking for?
+              Who should I look for? {firstName}
             </h1>
           </motion.div>
         ) : (

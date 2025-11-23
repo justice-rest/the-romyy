@@ -146,7 +146,7 @@ export function MMPricingCards() {
       <div className="w-full overflow-hidden rounded-xl" data-id="mm-pricing">
         <div className="flex flex-col divide-y divide-border lg:flex-row lg:divide-x lg:divide-y-0">
           <PricingCard
-            title="Pro"
+            title="Growth"
             price={PRICING_CONSTANTS.PRICING.pro}
             period="/month"
             features={[
@@ -161,13 +161,13 @@ export function MMPricingCards() {
             isLoading={isLoading === "pro"}
           />
           <PricingCard
-            title="Max"
+            title="Pro"
             price={PRICING_CONSTANTS.PRICING.max}
             period="/month"
             features={[
               "Unlimited messages",
               "Dedicated support",
-              "Everything in Pro",
+              "Everything in Growth",
             ]}
             ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "max" ? "Current Plan" : "Get Started")}
             ctaVariant="solid"
@@ -177,11 +177,11 @@ export function MMPricingCards() {
             isLoading={isLoading === "max"}
           />
           <PricingCard
-            title="Ultra"
+            title="Scale"
             price={PRICING_CONSTANTS.PRICING.ultra}
             period="/month"
             features={[
-              "Everything in Max",
+              "Everything in Pro",
               "Upload & search your own documents (RAG)",
               "Fundraising consultation",
             ]}

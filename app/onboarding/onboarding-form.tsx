@@ -109,7 +109,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
 
   const handleSplashClick = () => {
     // Play startup sound
-    const audio = new Audio("/startup.wav")
+    const audio = new Audio("/startup.mp3")
     audio.play().catch((error) => console.error("Error playing audio:", error))
     // Move to video page
     setCurrentStep(1)
@@ -254,7 +254,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 <img
                   src={isHoveringLogo ? "/Romy-2.png" : "/romy.png"}
                   alt="Rōmy"
-                  className="max-h-[300px] max-w-full object-contain transition-transform hover:scale-105"
+                  className="max-h-[150px] max-w-full object-contain transition-transform hover:scale-105"
                 />
               </motion.div>
             )}
@@ -446,7 +446,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                       className={cn(
                         "flex items-center justify-between rounded-lg border-2 border-gray-300 p-4 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
                         formData.nonprofit_sector === sector &&
-                          "border-blue-600 bg-blue-600/10",
+                        "border-blue-600 bg-blue-600/10",
                       )}
                     >
                       <span className="font-medium">{sector}</span>
@@ -483,7 +483,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                       className={cn(
                         "flex items-center justify-between rounded-lg border-2 border-gray-300 p-4 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
                         formData.annual_budget === range &&
-                          "border-blue-600 bg-blue-600/10",
+                        "border-blue-600 bg-blue-600/10",
                       )}
                     >
                       <span className="font-medium">{range}</span>
@@ -520,7 +520,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                       className={cn(
                         "flex items-center justify-between rounded-lg border-2 border-gray-300 p-4 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
                         formData.donor_count === range &&
-                          "border-blue-600 bg-blue-600/10",
+                        "border-blue-600 bg-blue-600/10",
                       )}
                     >
                       <span className="font-medium">{range}</span>
@@ -560,7 +560,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                     className={cn(
                       "flex flex-1 items-center justify-between rounded-lg border-2 border-gray-300 p-6 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
                       formData.fundraising_primary === true &&
-                        "border-blue-600 bg-blue-600/10",
+                      "border-blue-600 bg-blue-600/10",
                     )}
                   >
                     <span className="text-lg font-medium">Yes</span>
@@ -576,7 +576,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                     className={cn(
                       "flex flex-1 items-center justify-between rounded-lg border-2 border-gray-300 p-6 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
                       formData.fundraising_primary === false &&
-                        "border-blue-600 bg-blue-600/10",
+                      "border-blue-600 bg-blue-600/10",
                     )}
                   >
                     <span className="text-lg font-medium">No</span>
@@ -609,7 +609,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                       className={cn(
                         "flex w-full items-center justify-between rounded-lg border-2 border-gray-300 p-4 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
                         formData.prior_tools?.includes(tool) &&
-                          "border-blue-600 bg-blue-600/10",
+                        "border-blue-600 bg-blue-600/10",
                       )}
                     >
                       <span className="font-medium">{tool}</span>

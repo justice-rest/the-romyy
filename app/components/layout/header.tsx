@@ -5,7 +5,7 @@ import { AppInfoTrigger } from "@/app/components/layout/app-info/app-info-trigge
 import { ButtonNewChat } from "@/app/components/layout/button-new-chat"
 import { UserMenu } from "@/app/components/layout/user-menu"
 import { useBreakpoint } from "@/app/hooks/use-breakpoint"
-import { RomyIcon } from "@/components/icons/romy"
+import { RomyLogo } from "@/components/icons/romy-logo"
 import { Button } from "@/components/ui/button"
 import { APP_NAME } from "@/lib/config"
 import { useUserPreferences } from "@/lib/user-preference-store/provider"
@@ -31,7 +31,7 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
                 href="/"
                 className="pointer-events-auto inline-flex items-center text-xl font-medium tracking-tight"
               >
-                <RomyIcon className="mr-1 size-4" />
+                <RomyLogo className="mr-1 size-4" />
                 {APP_NAME}
               </Link>
               {hasSidebar && isMobile && <HeaderSidebarTrigger />}

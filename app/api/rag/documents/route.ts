@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
     console.log(`[RAG Documents] User ID: ${user.id}`)
 
-    // Check if user has Ultra plan
+    // Check if user has Scale plan
     const customerData = await getCustomerData(user.id)
     const currentProductId = customerData?.products?.[0]?.id
     const planType = normalizePlanId(currentProductId)
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
 
     if (planType !== "ultra") {
       return NextResponse.json(
-        { error: "Ultra plan required for RAG features" },
+        { error: "Scale plan required for RAG features" },
         { status: 403 }
       )
     }
@@ -124,14 +124,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user has Ultra plan
+    // Check if user has Scale plan
     const customerData = await getCustomerData(user.id)
     const currentProductId = customerData?.products?.[0]?.id
     const planType = normalizePlanId(currentProductId)
 
     if (planType !== "ultra") {
       return NextResponse.json(
-        { error: "Ultra plan required for RAG features" },
+        { error: "Scale plan required for RAG features" },
         { status: 403 }
       )
     }
@@ -195,14 +195,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user has Ultra plan
+    // Check if user has Scale plan
     const customerData = await getCustomerData(user.id)
     const currentProductId = customerData?.products?.[0]?.id
     const planType = normalizePlanId(currentProductId)
 
     if (planType !== "ultra") {
       return NextResponse.json(
-        { error: "Ultra plan required for RAG features" },
+        { error: "Scale plan required for RAG features" },
         { status: 403 }
       )
     }

@@ -1,6 +1,6 @@
 "use client"
 
-import { RomyIcon } from "@/components/icons/romy"
+import { RomyLogo } from "@/components/icons/romy-logo"
 import { APP_NAME } from "@/lib/config"
 import { useUser } from "@/lib/user-store/provider"
 import { useRouter } from "next/navigation"
@@ -91,7 +91,7 @@ export default function SubscriptionPage() {
             href="/"
             className="inline-flex items-center text-xl font-medium tracking-tight text-foreground"
           >
-            <RomyIcon className="mr-1 size-4" />
+            <RomyLogo className="mr-1 size-4" />
             {APP_NAME}
           </Link>
           <Link

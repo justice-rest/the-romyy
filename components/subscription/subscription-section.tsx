@@ -83,7 +83,7 @@ export function SubscriptionSection() {
 
   const { iconSrc, bgColor, isMailIcon } = getPlanIcon(currentProduct?.id)
 
-  // Determine if plan has unlimited messages (Max or Ultra)
+  // Determine if plan has unlimited messages (Pro or Scale)
   const planType = currentProduct?.id
   const hasUnlimitedMessages = planType === "max" || planType === "ultra"
 

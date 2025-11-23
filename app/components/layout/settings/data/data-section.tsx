@@ -23,7 +23,7 @@ export function DataSection() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
 
-  // Check if user has Ultra plan
+  // Check if user has Scale plan
   const currentProductId = customer?.products?.[0]?.id
   const planType = normalizePlanId(currentProductId)
   const hasUltraAccess = planType === "ultra"
@@ -210,7 +210,7 @@ export function DataSection() {
           <div className="border-border rounded-lg border-2 border-dashed p-8">
             <div className="flex flex-col items-center gap-3 text-center">
               <p className="text-muted-foreground text-sm">
-                RAG document management is an Ultra plan feature
+                RAG document management is a Scale plan feature
               </p>
               <Popover>
                 <PopoverTrigger asChild>

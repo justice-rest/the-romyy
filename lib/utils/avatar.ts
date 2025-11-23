@@ -7,5 +7,5 @@
  */
 export function generateDiceBearAvatar(userId: string): string {
   const seed = encodeURIComponent(userId)
-  return `https://api.dicebear.com/9.x/dylan/svg?seed=${seed}`
+  return `https://api.dicebear.com/9.x/dylan/svg?seed=${seed}&backgroundColor=00A5E4`
 }
