@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
 import { MODEL_DEFAULT } from "@/lib/config"
+import { CaretLeft } from "@phosphor-icons/react"
 import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -135,6 +136,15 @@ export default function EmailAuthPage() {
 
   return (
     <div className="bg-background flex h-dvh w-full flex-col">
+      {/* Back Button */}
+      <button
+        onClick={() => router.push("/auth")}
+        className="fixed left-4 top-4 z-50 flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900 sm:left-8 sm:top-8"
+      >
+        <CaretLeft className="size-5" weight="bold" />
+        <span className="text-sm font-medium">Back</span>
+      </button>
+
       <main className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
@@ -202,18 +212,6 @@ export default function EmailAuthPage() {
               )}
             </div>
 
-            {!showResetPassword && !isSignUp && (
-              <div className="flex items-center justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowResetPassword(true)}
-                  className="text-foreground hover:text-primary text-sm transition-colors cursor-pointer underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
-            )}
-
             <Button
               type="submit"
               className="w-full text-base sm:text-base"
@@ -260,20 +258,22 @@ export default function EmailAuthPage() {
                 </button>
               </div>
             )}
-
-            <div className="text-center">
-              <Link
-                href="/auth"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors cursor-pointer"
-              >
-                Back to all sign in options
-              </Link>
-            </div>
           </form>
         </div>
       </main>
 
-      <footer className="text-muted-foreground py-6 text-center text-sm">
+      <footer className="text-muted-foreground py-6 text-center text-sm space-y-3">
+        {!showResetPassword && !isSignUp && (
+          <p>
+            <button
+              type="button"
+              onClick={() => setShowResetPassword(true)}
+              className="text-foreground hover:text-primary transition-colors cursor-pointer underline"
+            >
+              Forgot password?
+            </button>
+          </p>
+        )}
         <p>
           By continuing, you agree to our{" "}
           <Link
