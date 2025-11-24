@@ -4,7 +4,7 @@ import { useCustomer } from "autumn-js/react"
 import { TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { FlightTicket } from "./flight-ticket"
+import { SubscriptionProductCard } from "./subscription-product-card"
 import { createClient } from "@/lib/supabase/client"
 import { useUser } from "@/lib/user-store/provider"
 
@@ -202,12 +202,39 @@ export function SubscriptionSection() {
         </div>
       )}
 
-      {/* Flight Ticket */}
-      <div className="mb-6 overflow-hidden px-2 sm:px-4">
-        <FlightTicket
-          plan={planType || "free"}
-          credits={hasUnlimitedMessages ? "unlimited" : (features?.messages?.balance ?? 100)}
-          userName={userName || undefined}
+      {/* Subscription Product Cards */}
+      <div className="mb-6 grid grid-cols-1 gap-6 px-2 sm:px-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Growth Plan */}
+        <SubscriptionProductCard
+          planId="growth"
+          planName="Growth"
+          price={29}
+          description="Free 2-day Fedex Shipping, No commitment, pause anytime."
+          features={["Deliver every 90 days"]}
+          credits={100}
+          creditsUsed={features?.messages?.balance !== undefined && features?.messages?.balance !== null ? 100 - features.messages.balance : 0}
+        />
+
+        {/* Pro Plan */}
+        <SubscriptionProductCard
+          planId="pro"
+          planName="Pro"
+          price={89}
+          description="Free 2-day Fedex Shipping, No commitment, pause anytime."
+          features={["Deliver every 90 days"]}
+          credits="unlimited"
+          creditsUsed={0}
+        />
+
+        {/* Scale Plan */}
+        <SubscriptionProductCard
+          planId="scale"
+          planName="Scale"
+          price={200}
+          description="Free 2-day Fedex Shipping, No commitment, pause anytime."
+          features={["Deliver every 90 days"]}
+          credits="unlimited"
+          creditsUsed={0}
         />
       </div>
 
