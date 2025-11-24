@@ -36,13 +36,13 @@
 }
 
 .ticket {
-  width: 122%;
+  width: 200%;
   height: 250px;
   background: #FFB300;
   border-radius: 3px;
   box-shadow: 0 0 5px #aaa;
-  border-top: 1px solid #E89F3D;
-  border-bottom: 1px solid #E89F3D;
+  border-top: 1px solid #e89f3d;
+  border-bottom: 1px solid #e89f3d;
   position: relative;
 }
 
