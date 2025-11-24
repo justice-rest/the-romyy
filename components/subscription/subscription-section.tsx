@@ -207,34 +207,17 @@ export function SubscriptionSection() {
         <SubscriptionProductCard features={features} />
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-2">
-        {!hasActiveSubscription ? (
-          <Link
-            href="/subscription"
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+      {/* Manage Billing Button */}
+      {hasActiveSubscription && (
+        <div className="flex justify-center px-2 sm:px-4">
+          <button
+            onClick={handleOpenBillingPortal}
+            className="flex items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
           >
-            <TrendingUp className="h-4 w-4" />
-            Upgrade Plan
-          </Link>
-        ) : (
-          <>
-            <button
-              onClick={handleOpenBillingPortal}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
-            >
-              Manage Billing
-            </button>
-            <Link
-              href="/subscription"
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Change Plan
-            </Link>
-          </>
-        )}
-      </div>
+            Manage Billing
+          </button>
+        </div>
+      )}
 
       {/* Past Due Warning */}
       {currentProduct?.status === "past_due" && (
@@ -264,19 +247,6 @@ export function SubscriptionSection() {
           )}
         </div>
       )}
-
-      {/* Quick Info */}
-      <div className="rounded-lg border bg-card p-4 text-card-foreground">
-        <p className="text-sm text-muted-foreground">
-          Need help with your subscription?{" "}
-          <a
-            href="mailto:howard@getromy.app"
-            className="text-primary hover:underline"
-          >
-            Contact support
-          </a>
-        </p>
-      </div>
     </div>
   )
 }

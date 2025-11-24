@@ -1,11 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { PopoverContent } from "@/components/ui/popover"
 import { APP_NAME } from "@/lib/config"
-import { ArrowUpRight } from "@phosphor-icons/react"
 import Image from "next/image"
-import Link from "next/link"
 
 export function PopoverContentLimitReached() {
   return (
@@ -26,18 +23,8 @@ export function PopoverContentLimitReached() {
           Monthly message limit reached
         </p>
         <p className="text-muted-foreground mb-5 text-base">
-          Wait until next month or upgrade to Max/Ultra to continue your workflow.
+          Wait until next month or upgrade to Pro/Scale to continue your workflow. Visit Settings → Subscription to upgrade.
         </p>
-        <Link href="/subscription" className="block w-full">
-          <Button
-            variant="secondary"
-            className="group w-full text-base"
-            size="lg"
-          >
-            <span>Upgrade Plan</span>
-            <ArrowUpRight className="ml-2 h-4 w-4 rotate-45 transition-transform duration-300 group-hover:rotate-90" weight="bold" />
-          </Button>
-        </Link>
       </div>
     </PopoverContent>
   )

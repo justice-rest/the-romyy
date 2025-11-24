@@ -43,19 +43,17 @@ export function DialogLimitReached({
               Monthly message limit reached
             </div>
             <p className="text-muted-foreground mb-5 text-base">
-              Wait until next month or upgrade to Max/Ultra to continue your
-              workflow.
+              Wait until next month or upgrade to Pro/Scale to continue your
+              workflow. Visit Settings → Subscription to upgrade.
             </p>
-            <Link href="/subscription" className="block w-full">
-              <Button
-                variant="secondary"
-                className="w-full text-base"
-                size="lg"
-                onClick={() => setOpen(false)}
-              >
-                <span>Upgrade Plan</span>
-              </Button>
-            </Link>
+            <Button
+              variant="secondary"
+              className="w-full text-base"
+              size="lg"
+              onClick={() => setOpen(false)}
+            >
+              <span>Close</span>
+            </Button>
           </div>
         </div>
       </DialogContent>

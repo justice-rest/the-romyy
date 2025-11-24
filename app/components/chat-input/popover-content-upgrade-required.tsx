@@ -3,9 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { PopoverContent } from "@/components/ui/popover"
 import { APP_NAME } from "@/lib/config"
-import { ArrowUpRight } from "@phosphor-icons/react"
 import Image from "next/image"
-import Link from "next/link"
 
 export function PopoverContentUpgradeRequired() {
   return (
@@ -26,18 +24,8 @@ export function PopoverContentUpgradeRequired() {
           Upgrade to use Rōmy
         </p>
         <p className="text-muted-foreground mb-5 text-base">
-          Subscribe to start chatting with AI models and unlock all features.
+          Subscribe to start chatting with AI models and unlock all features. Visit Settings → Subscription to view plans.
         </p>
-        <Link href="/subscription" className="block w-full">
-          <Button
-            variant="secondary"
-            className="group w-full text-base"
-            size="lg"
-          >
-            <span>View Plans</span>
-            <ArrowUpRight className="ml-2 h-4 w-4 rotate-45 transition-transform duration-300 group-hover:rotate-90" weight="bold" />
-          </Button>
-        </Link>
       </div>
     </PopoverContent>
   )

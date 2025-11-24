@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useCustomer, CheckoutDialog } from "autumn-js/react"
 import { useUser } from "@/lib/user-store/provider"
+import { Certificate, Truck, CalendarBlank } from "@phosphor-icons/react"
 
 interface SubscriptionProductCardProps {
   features?: {
@@ -21,11 +22,32 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
   const isGuest = user?.anonymous === true || !user
   const currentProduct = customer?.products?.[0]?.id
 
-  // Plan configurations with message limits
+  // Plan configurations with message limits and features
   const plans = {
-    growth: { id: "growth", name: "Growth", price: 29.0, credits: 100, messages: "100 messages" },
-    pro: { id: "pro", name: "Pro", price: 89.0, credits: "unlimited", messages: "unlimited messages" },
-    scale: { id: "scale", name: "Scale", price: 200.0, credits: "unlimited", messages: "unlimited messages" },
+    growth: {
+      id: "growth",
+      name: "Growth",
+      price: 29.0,
+      credits: 100,
+      messages: "100 messages",
+      description: "File uploads, email support",
+    },
+    pro: {
+      id: "pro",
+      name: "Pro",
+      price: 89.0,
+      credits: "unlimited",
+      messages: "unlimited messages",
+      description: "Dedicated support, everything in Growth",
+    },
+    scale: {
+      id: "scale",
+      name: "Scale",
+      price: 200.0,
+      credits: "unlimited",
+      messages: "unlimited messages",
+      description: "Document search (RAG), fundraising consultation, everything in Pro",
+    },
   }
 
   // Set selected plan based on current product on mount
@@ -58,10 +80,22 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
     }
   }
 
-  // Show current credits balance
+  // Show current credits balance only for paying users
+  const hasPaidPlan = currentProduct && currentProduct !== "free"
   const displayCredits = currentPlan.credits === "unlimited"
     ? "∞"
     : (features?.messages?.balance ?? currentPlan.credits)
+
+  // Calculate new credits when switching plans
+  const getNewCredits = () => {
+    if (!hasPaidPlan && selectedPlan !== currentProduct) {
+      // User is switching from free/no plan to a paid plan
+      return currentPlan.credits === "unlimited" ? "∞" : currentPlan.credits
+    }
+    return null
+  }
+
+  const newCredits = getNewCredits()
 
   // Determine button text based on plan comparison
   const getButtonText = () => {
@@ -90,10 +124,19 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
         <br />
       </h4>
 
-      <div className="credits-line">
-        <span className="credits_name">Credits</span>
-        <span className="credits_value">{displayCredits}</span>
-      </div>
+      {hasPaidPlan && (
+        <div className="credits-line">
+          <span className="credits_name">Credits</span>
+          <span className="credits_value">{displayCredits}</span>
+        </div>
+      )}
+
+      {newCredits !== null && (
+        <div className="credits-line">
+          <span className="credits_name">New Credits</span>
+          <span className="credits_value">{newCredits}</span>
+        </div>
+      )}
 
       <hr />
 
@@ -136,10 +179,10 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
             </div>
             <div className="radio_price">${plans.pro.price.toFixed(2)}</div>
           </div>
-          <div className="info-txt">Free 2-day Fedex Shipping, No commitment, pause anytime.</div>
+          <div className="info-txt">{plans.pro.description}</div>
           <div className="freq_drop">
             <div className="freq_selected" style={{ cursor: "default" }}>
-              <i className="las la-calendar"></i>
+              <CalendarBlank size={20} weight="regular" className="inline-block mr-1" />
               <b>{plans.pro.messages}</b>
             </div>
           </div>
@@ -161,10 +204,10 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
             </div>
             <div className="radio_price">${plans.scale.price.toFixed(2)}</div>
           </div>
-          <div className="info-txt">Free 2-day Fedex Shipping, No commitment, pause anytime.</div>
+          <div className="info-txt">{plans.scale.description}</div>
           <div className="freq_drop">
             <div className="freq_selected" style={{ cursor: "default" }}>
-              <i className="las la-calendar"></i>
+              <CalendarBlank size={20} weight="regular" className="inline-block mr-1" />
               <b>{plans.scale.messages}</b>
             </div>
           </div>
@@ -186,13 +229,13 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
 
       <div className="guarantee">
         <div>
-          <i className="las la-certificate"></i>
+          <Certificate size={28} weight="regular" className="mx-auto mb-2" />
           2-Week Trial
         </div>
         <div className="line"></div>
         <div>
-          <i className="las la-truck"></i>
-          Free US Shipping
+          <Truck size={28} weight="regular" className="mx-auto mb-2" />
+          Cancel Anytime
         </div>
       </div>
 
@@ -207,7 +250,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           background: #fff;
           margin: 0 auto;
           border: 1px solid #ddd;
-          max-width: 500px;
+          max-width: 600px;
           width: 100%;
         }
 
@@ -281,7 +324,6 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           position: absolute;
           left: 0;
           font-weight: 400;
-          font-size: 14px;
           color: #666;
         }
 
@@ -291,6 +333,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
 
         .credits_value {
           color: black;
+          font-size: 16px;
         }
 
         :global(.dark) .credits_value {
@@ -435,23 +478,8 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           color: white;
         }
 
-        .freq_selected i {
-          font-size: 20px;
+        .freq_selected svg {
           vertical-align: middle;
-          color: black;
-          margin-right: 5px;
-        }
-
-        :global(.dark) .freq_selected i {
-          color: white;
-        }
-
-        .freq_selected i.la-angle-down {
-          font-size: 14px;
-          display: block;
-          position: absolute;
-          right: 5px;
-          top: 5px;
         }
 
         .checkout__btns {
@@ -523,23 +551,14 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           border-right-color: #333;
         }
 
-        .guarantee i {
-          display: block;
-          font-size: 25px;
+        .guarantee svg {
           color: black;
-          margin-bottom: 10px;
         }
 
-        :global(.dark) .guarantee i {
+        :global(.dark) .guarantee svg {
           color: white;
         }
       `}</style>
-
-      {/* Line Awesome Icons CDN */}
-      <link
-        rel="stylesheet"
-        href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css"
-      />
     </div>
   )
 }

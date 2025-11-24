@@ -44,18 +44,16 @@ export function DialogSubscriptionRequired({
             </div>
             <p className="text-muted-foreground mb-5 text-base">
               Subscribe to start chatting with AI models and unlock all
-              features.
+              features. Visit Settings → Subscription to view plans.
             </p>
-            <Link href="/subscription" className="block w-full">
-              <Button
-                variant="secondary"
-                className="w-full text-base"
-                size="lg"
-                onClick={() => setOpen(false)}
-              >
-                <span>View Plans</span>
-              </Button>
-            </Link>
+            <Button
+              variant="secondary"
+              className="w-full text-base"
+              size="lg"
+              onClick={() => setOpen(false)}
+            >
+              <span>Close</span>
+            </Button>
           </div>
         </div>
       </DialogContent>
