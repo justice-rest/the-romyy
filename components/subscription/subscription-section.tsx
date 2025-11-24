@@ -29,6 +29,21 @@ export function SubscriptionSection() {
       }
     }
     refreshData()
+
+    // Set up automatic refetch every 5 seconds to show credit updates in real-time
+    const intervalId = setInterval(refreshData, 5000)
+
+    // Listen for custom event when message is sent
+    const handleMessageSent = () => {
+      console.log("[Subscription] Message sent - refreshing balance")
+      refreshData()
+    }
+    window.addEventListener("message-sent", handleMessageSent)
+
+    return () => {
+      clearInterval(intervalId)
+      window.removeEventListener("message-sent", handleMessageSent)
+    }
   }, [refetch])
 
   const handleRefresh = async () => {

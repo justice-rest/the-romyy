@@ -142,6 +142,11 @@ export function useChatCore({
 
         if (!effectiveChatId) return
         await syncRecentMessages(effectiveChatId, setMessages, 2)
+
+        // Dispatch event to trigger subscription credit refresh
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("message-sent"))
+        }
       } catch (error) {
         console.error("Message ID reconciliation failed: ", error)
       }

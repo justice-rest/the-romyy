@@ -95,7 +95,7 @@ export function MemoryList() {
       </div>
 
       {/* Memory List */}
-      <div className="flex-1 space-y-3 overflow-y-auto scrollbar-thin">
+      <div className="flex-1 space-y-3 overflow-y-auto scrollbar-thin pb-6">
         {displayedMemories.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
             <div className="animate-in fade-in zoom-in-95 duration-500">
