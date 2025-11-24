@@ -13,11 +13,34 @@ import type { Message } from "@ai-sdk/react"
 import { MAX_MESSAGES_IN_PAYLOAD, MAX_TOOL_RESULT_SIZE } from "./config"
 
 /**
+ * Sanitize text content to prevent JSON serialization errors
+ * Removes or escapes problematic characters that break JSON parsing
+ */
+function sanitizeTextContent(text: string): string {
+  if (!text || typeof text !== "string") return text
+
+  try {
+    // Test if the text can be safely JSON stringified
+    JSON.stringify({ test: text })
+    return text
+  } catch {
+    // If JSON.stringify fails, sanitize the text
+    return text
+      .replace(/\\/g, "\\\\") // Escape backslashes first
+      .replace(/"/g, '\\"') // Escape double quotes
+      .replace(/\n/g, "\\n") // Escape newlines
+      .replace(/\r/g, "\\r") // Escape carriage returns
+      .replace(/\t/g, "\\t") // Escape tabs
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control characters
+  }
+}
+
+/**
  * Clean attachment URLs by removing blob URLs
  * Blob URLs are client-side only and shouldn't be sent to server
  */
 function cleanAttachments(
-  attachments?: Array<{ url?: string; name?: string; contentType?: string }>
+  attachments?: Array<{ url?: string; name?: string; contentType?: string; [key: string]: any }>
 ): Array<{ url: string; name: string; contentType: string }> | undefined {
   if (!attachments || attachments.length === 0) return undefined
 
@@ -33,7 +56,7 @@ function cleanAttachments(
     })
     .map((attachment) => ({
       url: attachment.url as string,
-      name: attachment.name as string,
+      name: sanitizeTextContent(attachment.name as string),
       contentType: attachment.contentType as string,
     }))
 
@@ -49,10 +72,11 @@ function truncateToolResult(result: any): any {
 
   // Handle different result types
   if (typeof result === "string") {
-    return result.length > MAX_TOOL_RESULT_SIZE
-      ? result.substring(0, MAX_TOOL_RESULT_SIZE) +
+    const sanitized = sanitizeTextContent(result)
+    return sanitized.length > MAX_TOOL_RESULT_SIZE
+      ? sanitized.substring(0, MAX_TOOL_RESULT_SIZE) +
           "\n\n[Content truncated to prevent payload size limit...]"
-      : result
+      : sanitized
   }
 
   if (typeof result === "object") {
@@ -62,11 +86,13 @@ function truncateToolResult(result: any): any {
     const contentFields = ["content", "text", "results", "data", "body"]
     for (const field of contentFields) {
       if (truncated[field] && typeof truncated[field] === "string") {
-        const content = truncated[field] as string
+        const content = sanitizeTextContent(truncated[field] as string)
         if (content.length > MAX_TOOL_RESULT_SIZE) {
           truncated[field] =
             content.substring(0, MAX_TOOL_RESULT_SIZE) +
             "\n\n[Content truncated to prevent payload size limit...]"
+        } else {
+          truncated[field] = content
         }
       }
     }
@@ -75,9 +101,14 @@ function truncateToolResult(result: any): any {
     if (Array.isArray(truncated.results)) {
       let totalSize = 0
       truncated.results = truncated.results.filter((item: any) => {
-        const itemStr = JSON.stringify(item)
-        totalSize += itemStr.length
-        return totalSize <= MAX_TOOL_RESULT_SIZE
+        try {
+          const itemStr = JSON.stringify(item)
+          totalSize += itemStr.length
+          return totalSize <= MAX_TOOL_RESULT_SIZE
+        } catch {
+          // Skip items that can't be serialized
+          return false
+        }
       })
     }
 
@@ -94,6 +125,10 @@ function truncateToolResult(result: any): any {
 function cleanMessage(message: Message): Message {
   const cleaned: Message = {
     ...message,
+    // Sanitize text content if it's a string
+    content: typeof message.content === "string"
+      ? sanitizeTextContent(message.content)
+      : message.content,
     // Clean attachments
     experimental_attachments: cleanAttachments(
       message.experimental_attachments as any
@@ -103,6 +138,13 @@ function cleanMessage(message: Message): Message {
   // Clean tool invocations if present in content
   if (Array.isArray(message.content)) {
     cleaned.content = message.content.map((part: any) => {
+      // Sanitize text parts
+      if (part.type === "text" && typeof part.text === "string") {
+        return {
+          ...part,
+          text: sanitizeTextContent(part.text),
+        }
+      }
       if (part.type === "tool-invocation" && part.toolInvocation?.result) {
         return {
           ...part,
