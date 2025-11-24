@@ -28,7 +28,7 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
       }}
       {...props}
     >
-      <span className="shimmer-text relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 dark:from-gray-100 dark:via-gray-300 dark:to-gray-100">
+      <span className="shimmer-text relative z-10">
         {children}
       </span>
       <span className="shimmer-effect pointer-events-none absolute inset-[-40px] rounded-[inherit] mix-blend-plus-lighter" />
@@ -124,7 +124,11 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           z-index: 2;
         }
 
-        .shimmer-button:hover .shimmer-text {
+        .shimmer-text {
+          color: transparent;
+          background-clip: text;
+          -webkit-background-clip: text;
+          background-color: rgb(30 30 30);
           background-image: linear-gradient(
             120deg,
             transparent,
@@ -134,6 +138,10 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           );
           background-repeat: no-repeat;
           background-size: 300% 300%;
+          background-position: center 200%;
+        }
+
+        .shimmer-button:hover .shimmer-text {
           animation: text 0.66s ease-in 1 both;
         }
       `}</style>
