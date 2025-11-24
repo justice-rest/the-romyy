@@ -182,15 +182,15 @@ export function PricingCards() {
             </div>
           </div>
           <button
-            onClick={() => handleCheckout("pro")}
-            disabled={currentProduct === "pro" || isLoading === "pro"}
+            onClick={() => handleCheckout("growth")}
+            disabled={currentProduct === "growth" || isLoading === "growth"}
             className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-[#D5D5D5]">
-                {currentProduct === "pro"
+                {currentProduct === "growth"
                   ? "Current Plan"
-                  : isLoading === "pro"
+                  : isLoading === "growth"
                     ? "Loading..."
                     : isGuest
                       ? "Sign In to Subscribe"
@@ -267,14 +267,14 @@ export function PricingCards() {
           </div>
           <button
             className="z-30 mt-auto inline-flex h-10 cursor-pointer items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-white p-3 outline outline-1 -outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => handleCheckout("max")}
-            disabled={currentProduct === "max" || isLoading === "max"}
+            onClick={() => handleCheckout("pro")}
+            disabled={currentProduct === "pro" || isLoading === "pro"}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-black">
-                {currentProduct === "max"
+                {currentProduct === "pro"
                   ? "Current Plan"
-                  : isLoading === "max"
+                  : isLoading === "pro"
                     ? "Loading..."
                     : isGuest
                       ? "Sign In to Subscribe"
@@ -332,14 +332,14 @@ export function PricingCards() {
           </div>
           <button
             className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 -outline-offset-1 outline-[#434343] disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => handleCheckout("ultra")}
-            disabled={currentProduct === "ultra" || isLoading === "ultra"}
+            onClick={() => handleCheckout("scale")}
+            disabled={currentProduct === "scale" || isLoading === "scale"}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-[#D5D5D5]">
-                {currentProduct === "ultra"
+                {currentProduct === "scale"
                   ? "Current Plan"
-                  : isLoading === "ultra"
+                  : isLoading === "scale"
                     ? "Loading..."
                     : isGuest
                       ? "Sign In to Subscribe"

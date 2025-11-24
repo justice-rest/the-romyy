@@ -6,7 +6,7 @@ A complete RAG (Retrieval-Augmented Generation) system has been successfully imp
 
 ### 🎯 Core Features
 
-1. **Document Upload & Management** (Ultra Plan Exclusive)
+1. **Document Upload & Management** (Scale Plan Exclusive)
    - Drag-and-drop PDF upload
    - Synchronous processing (upload → extract → chunk → embed → store)
    - Document organization with tags
@@ -31,8 +31,8 @@ A complete RAG (Retrieval-Augmented Generation) system has been successfully imp
    - Citations displayed in chat responses
 
 5. **Plan Gating**
-   - Ultra plan enforcement across all endpoints
-   - Pro/Max users see upgrade popover (matches existing pattern)
+   - Scale plan enforcement across all endpoints
+   - Growth/Pro users see upgrade popover (matches existing pattern)
    - Server-side and client-side validation
 
 ---
@@ -67,7 +67,7 @@ A complete RAG (Retrieval-Augmented Generation) system has been successfully imp
 - **`data-section.tsx`** - Main container with plan gating
 - **`document-upload.tsx`** - Drag-and-drop upload with animations
 - **`document-list.tsx`** - Document table with search, status badges
-- **`upgrade-prompt.tsx`** - Plan gate popover for Pro/Max users
+- **`upgrade-prompt.tsx`** - Plan gate popover for Growth/Pro users
 
 ### Chat Integration
 - **`/lib/tools/rag-search.ts`** - RAG search tool for AI
@@ -228,7 +228,7 @@ npm run build
 ## 🧪 Testing Guide
 
 ### 1. Document Upload Flow
-1. Sign in as Ultra plan user
+1. Sign in as Scale plan user
 2. Go to Settings → Data tab
 3. Drag-and-drop a PDF file
 4. Add tags (optional)
@@ -247,7 +247,7 @@ npm run build
 7. Check citations show: document name, page number, similarity score
 
 ### 3. Plan Gating
-1. Sign out or use Pro/Max plan account
+1. Sign out or use Growth/Pro plan account
 2. Go to Settings → Data tab
 3. Verify UI shows greyed-out upload area
 4. Click on the upload area
@@ -307,7 +307,7 @@ npm run build
 ## 🔐 Security Implementation
 
 ### Authentication & Authorization
-- Ultra plan check on all RAG endpoints (server-side)
+- Scale plan check on all RAG endpoints (server-side)
 - User ID validation from Supabase auth
 - RLS policies enforce user isolation
 
@@ -339,7 +339,7 @@ npm run build
 
 **Total**: <$1 one-time per user, minimal ongoing cost
 
-Ultra plan is $200/month, so RAG cost is **less than 0.5% of revenue**.
+Scale plan is $200/month, so RAG cost is **less than 0.5% of revenue**.
 
 ---
 
@@ -480,7 +480,7 @@ You now have a **production-ready RAG document management system** with:
 - ✅ Google Gemini embeddings via OpenRouter
 - ✅ AI auto-detection for document search
 - ✅ Citation display in chat
-- ✅ Ultra plan gating and rate limiting
+- ✅ Scale plan gating and rate limiting
 - ✅ Beautiful UI matching your existing design system
 - ✅ Comprehensive error handling
 

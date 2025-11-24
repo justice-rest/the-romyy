@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 
     console.log(`[RAG Documents] Plan type: ${planType}`)
 
-    if (planType !== "ultra") {
+    if (planType !== "scale") {
       return NextResponse.json(
         { error: "Scale plan required for RAG features" },
         { status: 403 }
@@ -129,7 +129,7 @@ export async function DELETE(request: Request) {
     const currentProductId = customerData?.products?.[0]?.id
     const planType = normalizePlanId(currentProductId)
 
-    if (planType !== "ultra") {
+    if (planType !== "scale") {
       return NextResponse.json(
         { error: "Scale plan required for RAG features" },
         { status: 403 }
@@ -200,7 +200,7 @@ export async function PATCH(request: Request) {
     const currentProductId = customerData?.products?.[0]?.id
     const planType = normalizePlanId(currentProductId)
 
-    if (planType !== "ultra") {
+    if (planType !== "scale") {
       return NextResponse.json(
         { error: "Scale plan required for RAG features" },
         { status: 403 }

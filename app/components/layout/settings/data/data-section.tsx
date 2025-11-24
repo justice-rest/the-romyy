@@ -26,7 +26,7 @@ export function DataSection() {
   // Check if user has Scale plan
   const currentProductId = customer?.products?.[0]?.id
   const planType = normalizePlanId(currentProductId)
-  const hasUltraAccess = planType === "ultra"
+  const hasUltraAccess = planType === "scale"
 
   // Fetch documents
   const fetchDocuments = useCallback(async () => {

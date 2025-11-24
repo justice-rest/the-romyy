@@ -44,7 +44,7 @@ export async function GET(
     const currentProductId = customerData?.products?.[0]?.id
     const planType = normalizePlanId(currentProductId)
 
-    if (planType !== "ultra") {
+    if (planType !== "scale") {
       return NextResponse.json(
         { error: "Scale plan required for RAG features" },
         { status: 403 }

@@ -62,7 +62,7 @@ OPENROUTER_API_KEY=your_key_here
 ## 🔑 Key Configuration
 
 ```typescript
-// Rate Limits (Ultra Plan)
+// Rate Limits (Scale Plan)
 RAG_DOCUMENT_LIMIT = 50              // Max documents
 RAG_STORAGE_LIMIT = 500MB            // Total storage
 RAG_DAILY_UPLOAD_LIMIT = 10          // Per day
@@ -265,7 +265,7 @@ SELECT * FROM search_rag_chunks(
 | Error | Cause | Solution |
 |-------|-------|----------|
 | "OpenRouter API key not configured" | Missing env var | Set `OPENROUTER_API_KEY` |
-| "Ultra plan required" | User not on Ultra | Upgrade user or test with Ultra account |
+| "Scale plan required" | User not on Scale | Upgrade user or test with Scale account |
 | "Document limit reached" | 50 docs uploaded | Delete some documents |
 | "Storage limit exceeded" | >500MB used | Delete large documents |
 | "Daily upload limit reached" | 10 uploads today | Wait until next day (UTC) |
@@ -297,7 +297,7 @@ SELECT * FROM search_rag_chunks(
 
 ---
 
-## 💰 Cost Per User (Ultra)
+## 💰 Cost Per User (Scale)
 
 - **Embedding**: ~$0.75 one-time (50 docs)
 - **Storage**: <$0.01/month
@@ -308,17 +308,17 @@ SELECT * FROM search_rag_chunks(
 
 ## 📱 User Experience
 
-### For Ultra Users
+### For Scale Users
 - Full access to Data tab
 - Upload documents
 - Search and manage documents
 - AI automatically uses documents
 - See citations in chat
 
-### For Pro/Max Users
+### For Growth/Pro Users
 - See "Data" tab (greyed out)
 - Click shows upgrade popover
-- "Upgrade to Ultra" button
+- "Upgrade to Scale" button
 - Redirects to subscription page
 
 ---
@@ -330,7 +330,7 @@ SELECT * FROM search_rag_chunks(
 - ✅ AI uses document content in responses
 - ✅ Citations appear with document name + page
 - ✅ Storage stats update correctly
-- ✅ Pro/Max users see upgrade prompt
+- ✅ Growth/Pro users see upgrade prompt
 - ✅ Documents can be downloaded/deleted
 
 ---

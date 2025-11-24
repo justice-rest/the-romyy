@@ -81,7 +81,7 @@ export function UserMenu() {
   // Get the subscription tier
   const currentProductId = customer?.products?.[0]?.id
   const planType = currentProductId?.replace("-yearly", "")
-  const isPremiumTier = planType === "max" || planType === "ultra"
+  const isPremiumTier = planType === "pro" || planType === "scale"
 
   return (
     // fix shadcn/ui / radix bug when dialog into dropdown menu

@@ -70,11 +70,11 @@ export function SubscriptionSection() {
   // Get plan icon and color based on product ID
   const getPlanIcon = (productId?: string) => {
     switch (productId) {
-      case "pro":
+      case "growth":
         return { iconSrc: "/lock.svg", bgColor: "bg-transparent", isMailIcon: false }
-      case "max":
+      case "pro":
         return { iconSrc: "/zap.svg", bgColor: "bg-transparent", isMailIcon: false }
-      case "ultra":
+      case "scale":
         return { iconSrc: "/mail-pixel.svg", bgColor: "bg-transparent", isMailIcon: true }
       default:
         return { iconSrc: "/lock.svg", bgColor: "bg-transparent", isMailIcon: false }
@@ -85,7 +85,7 @@ export function SubscriptionSection() {
 
   // Determine if plan has unlimited messages (Pro or Scale)
   const planType = currentProduct?.id
-  const hasUnlimitedMessages = planType === "max" || planType === "ultra"
+  const hasUnlimitedMessages = planType === "pro" || planType === "scale"
 
   // Get scheduled plan info for notification
   const scheduledPlanName = scheduledProduct?.name

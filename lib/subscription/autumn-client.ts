@@ -52,9 +52,9 @@ const circuitBreaker = new AutumnCircuitBreaker()
  * Handles variations like "-yearly", "-annual", "-monthly", etc.
  *
  * Examples:
- * - "pro-yearly" → "pro"
- * - "max-annual" → "max"
- * - "ultra" → "ultra"
+ * - "growth-yearly" → "growth"
+ * - "pro-annual" → "pro"
+ * - "scale" → "scale"
  */
 export function normalizePlanId(productId?: string): string | null {
   if (!productId) return null

@@ -91,21 +91,21 @@ npm start
 
 ### Test 1: Settings Data Tab Access
 
-**For Ultra Users:**
-1. [ ] Sign in as Ultra plan user
+**For Scale Users:**
+1. [ ] Sign in as Scale plan user
 2. [ ] Open Settings (click settings icon)
 3. [ ] Verify "Data" tab appears between "Appearance" and "Subscription"
 4. [ ] Click "Data" tab
 5. [ ] Verify upload area is visible and interactive
 6. [ ] Verify storage stats show: "0/50 • 0B/500MB"
 
-**For Pro/Max Users:**
-1. [ ] Sign in as Pro or Max plan user (or sign out)
+**For Growth/Pro Users:**
+1. [ ] Sign in as Growth or Pro plan user (or sign out)
 2. [ ] Open Settings → Data tab
 3. [ ] Verify upload area is greyed out
 4. [ ] Click on greyed upload area
-5. [ ] Verify popover appears with "Ultra Plan Required 🚀"
-6. [ ] Click "Upgrade to Ultra" button
+5. [ ] Verify popover appears with "Scale Plan Required 🚀"
+6. [ ] Click "Upgrade to Scale" button
 7. [ ] Verify redirect to /subscription page
 
 ### Test 2: Document Upload
@@ -115,7 +115,7 @@ npm start
 - Recommended: Use a short document (5-10 pages) for faster testing
 
 **Steps:**
-1. [ ] Go to Settings → Data tab (as Ultra user)
+1. [ ] Go to Settings → Data tab (as Scale user)
 2. [ ] Drag-and-drop the PDF file into upload area
 3. [ ] Verify file preview appears with name and size
 4. [ ] (Optional) Add tags: "test, annual-report, 2024"
@@ -308,8 +308,8 @@ Your RAG system is working correctly if:
 ✅ Search finds relevant documents
 ✅ AI uses document content in responses
 ✅ Citations appear with document name, page, snippet
-✅ Pro/Max users see upgrade popover
-✅ Ultra users have full access
+✅ Growth/Pro users see upgrade popover
+✅ Scale users have full access
 ✅ Rate limits enforce correctly
 ✅ Documents can be downloaded and deleted
 
@@ -332,13 +332,13 @@ Your RAG system is working correctly if:
 ### Post-Deployment Verification
 
 1. [ ] Visit production site
-2. [ ] Sign in as Ultra user
+2. [ ] Sign in as Scale user
 3. [ ] Upload a test document
 4. [ ] Wait for processing
 5. [ ] Test RAG search in chat
 6. [ ] Verify citations appear
 7. [ ] Test on mobile device
-8. [ ] Test Pro/Max plan gating
+8. [ ] Test Growth/Pro plan gating
 
 ---
 
@@ -374,7 +374,7 @@ Watch for these errors in logs:
 - `PDF processing failed`
 - `Failed to generate embeddings`
 - `Vector search failed`
-- `Ultra plan required`
+- `Scale plan required`
 
 ---
 

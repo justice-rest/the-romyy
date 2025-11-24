@@ -154,11 +154,11 @@ export function MMPricingCards() {
               "File uploads",
               "Email support",
             ]}
-            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "pro" ? "Current Plan" : "Get Started")}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "growth" ? "Current Plan" : "Get Started")}
             ctaVariant="outline"
-            onCtaClick={() => handleCheckout("pro")}
-            disabled={currentProduct === "pro"}
-            isLoading={isLoading === "pro"}
+            onCtaClick={() => handleCheckout("growth")}
+            disabled={currentProduct === "growth"}
+            isLoading={isLoading === "growth"}
           />
           <PricingCard
             title="Pro"
@@ -169,12 +169,12 @@ export function MMPricingCards() {
               "Dedicated support",
               "Everything in Growth",
             ]}
-            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "max" ? "Current Plan" : "Get Started")}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "pro" ? "Current Plan" : "Get Started")}
             ctaVariant="solid"
             badge="Popular"
-            onCtaClick={() => handleCheckout("max")}
-            disabled={currentProduct === "max"}
-            isLoading={isLoading === "max"}
+            onCtaClick={() => handleCheckout("pro")}
+            disabled={currentProduct === "pro"}
+            isLoading={isLoading === "pro"}
           />
           <PricingCard
             title="Scale"
@@ -185,11 +185,11 @@ export function MMPricingCards() {
               "Upload & search your own documents (RAG)",
               "Fundraising consultation",
             ]}
-            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "ultra" ? "Current Plan" : "Get Started")}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "scale" ? "Current Plan" : "Get Started")}
             ctaVariant="outline"
-            onCtaClick={() => handleCheckout("ultra")}
-            disabled={currentProduct === "ultra"}
-            isLoading={isLoading === "ultra"}
+            onCtaClick={() => handleCheckout("scale")}
+            disabled={currentProduct === "scale"}
+            isLoading={isLoading === "scale"}
           />
         </div>
       </div>
