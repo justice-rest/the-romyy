@@ -248,13 +248,13 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 transition={{ duration: 0.5 }}
                 className="flex h-[80vh] cursor-pointer items-center justify-center"
                 onClick={handleSplashClick}
-                onMouseEnter={() => setIsHoveringLogo(true)}
-                onMouseLeave={() => setIsHoveringLogo(false)}
               >
                 <img
                   src={isHoveringLogo ? "/Romy-2.png" : "/romy.png"}
                   alt="Rōmy"
                   className="max-h-[112.5px] max-w-full object-contain transition-transform hover:scale-105"
+                  onMouseEnter={() => setIsHoveringLogo(true)}
+                  onMouseLeave={() => setIsHoveringLogo(false)}
                 />
               </motion.div>
             )}
