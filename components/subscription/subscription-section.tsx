@@ -203,7 +203,7 @@ export function SubscriptionSection() {
       )}
 
       {/* Flight Ticket */}
-      <div className="mb-6 overflow-hidden px-2">
+      <div className="mb-6 overflow-hidden px-4">
         <FlightTicket
           plan={planType || "free"}
           credits={hasUnlimitedMessages ? "unlimited" : (features?.messages?.balance ?? 100)}

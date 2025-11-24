@@ -1,23 +1,33 @@
 .ticketBox {
   position: relative;
   width: 100%;
-  max-width: 580px;
-  margin: -20px auto;
-  transform: scale(0.85);
+  max-width: 520px;
+  margin: -25px auto;
+  transform: scale(0.72);
   transform-origin: center center;
 }
 
 @media (max-width: 640px) {
   .ticketBox {
-    transform: scale(0.75);
-    margin: -30px auto;
+    transform: scale(0.62);
+    margin: -35px auto;
+    max-width: 480px;
   }
 }
 
 @media (min-width: 768px) {
   .ticketBox {
-    transform: scale(0.9);
-    margin: -15px auto;
+    transform: scale(0.76);
+    margin: -20px auto;
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ticketBox {
+    transform: scale(0.80);
+    margin: -18px auto;
+    max-width: 560px;
   }
 }
 
@@ -38,7 +48,7 @@
   list-style: none;
   position: absolute;
   top: 0px;
-  left: -5px;
+  left: -3px;
 }
 
 .left li {
@@ -124,7 +134,7 @@
   list-style: none;
   position: absolute;
   top: 0px;
-  right: -5px;
+  right: -3px;
 }
 
 .right li:nth-child(-n+2) {
