@@ -202,40 +202,9 @@ export function SubscriptionSection() {
         </div>
       )}
 
-      {/* Subscription Product Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-6 px-2 sm:px-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Growth Plan */}
-        <SubscriptionProductCard
-          planId="growth"
-          planName="Growth"
-          price={29}
-          description="Free 2-day Fedex Shipping, No commitment, pause anytime."
-          features={["Deliver every 90 days"]}
-          credits={100}
-          creditsUsed={features?.messages?.balance !== undefined && features?.messages?.balance !== null ? 100 - features.messages.balance : 0}
-        />
-
-        {/* Pro Plan */}
-        <SubscriptionProductCard
-          planId="pro"
-          planName="Pro"
-          price={89}
-          description="Free 2-day Fedex Shipping, No commitment, pause anytime."
-          features={["Deliver every 90 days"]}
-          credits="unlimited"
-          creditsUsed={0}
-        />
-
-        {/* Scale Plan */}
-        <SubscriptionProductCard
-          planId="scale"
-          planName="Scale"
-          price={200}
-          description="Free 2-day Fedex Shipping, No commitment, pause anytime."
-          features={["Deliver every 90 days"]}
-          credits="unlimited"
-          creditsUsed={0}
-        />
+      {/* Subscription Product Card */}
+      <div className="mb-6 flex justify-center px-2 sm:px-4">
+        <SubscriptionProductCard features={features} />
       </div>
 
       {/* Action Buttons */}

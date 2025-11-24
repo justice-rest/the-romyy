@@ -1,44 +1,46 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
 import { useCustomer, CheckoutDialog } from "autumn-js/react"
 import { useUser } from "@/lib/user-store/provider"
 
 interface SubscriptionProductCardProps {
-  planId: "growth" | "pro" | "scale"
-  planName: string
-  price: number
-  description: string
-  features: string[]
-  credits: number | "unlimited"
-  creditsUsed?: number
+  features?: {
+    messages?: {
+      balance: number | null
+    }
+  }
 }
 
-export function SubscriptionProductCard({
-  planId,
-  planName,
-  price,
-  description,
-  features,
-  credits,
-  creditsUsed = 0,
-}: SubscriptionProductCardProps) {
+export function SubscriptionProductCard({ features }: SubscriptionProductCardProps) {
   const { customer, checkout } = useCustomer()
   const { user } = useUser()
+  const [selectedPlan, setSelectedPlan] = useState<"growth" | "pro" | "scale">("growth")
   const [isLoading, setIsLoading] = useState(false)
 
   const isGuest = user?.anonymous === true || !user
   const currentProduct = customer?.products?.[0]?.id
-  const isCurrentPlan = currentProduct === planId
+
+  // Plan configurations
+  const plans = {
+    growth: { id: "growth", name: "Growth", price: 29.0, credits: 100 },
+    pro: { id: "pro", name: "Pro", price: 89.0, credits: "unlimited" },
+    scale: { id: "scale", name: "Scale", price: 200.0, credits: "unlimited" },
+  }
+
+  const currentPlan = plans[selectedPlan]
+
+  const handlePlanClick = (planId: "growth" | "pro" | "scale") => {
+    setSelectedPlan(planId)
+  }
 
   const handleCheckout = async () => {
-    if (isGuest || isCurrentPlan) return
+    if (isGuest) return
 
     setIsLoading(true)
     try {
       await checkout({
-        productId: planId,
+        productId: selectedPlan,
         dialog: CheckoutDialog,
         successUrl: window.location.origin + "/",
       })
@@ -49,17 +51,29 @@ export function SubscriptionProductCard({
     }
   }
 
-  const displayCredits = credits === "unlimited" ? "∞" : credits
-  const creditPercent = credits === "unlimited" ? 0 : Math.min((creditsUsed / (credits as number)) * 100, 100)
+  // Calculate credits used for Growth plan
+  const creditsUsed =
+    selectedPlan === "growth" && features?.messages?.balance !== undefined && features?.messages?.balance !== null
+      ? 100 - features.messages.balance
+      : 0
+
+  const displayCredits = currentPlan.credits === "unlimited" ? "∞" : currentPlan.credits
 
   return (
     <div className="checkout__box">
-      <h2>{planName}</h2>
+      <h2>Credits</h2>
       <h4 className="price">
         <span className="price_name">Price</span>
-        <span className="sub_price">${price.toFixed(2)}</span>
+        <span className="sub_price">${currentPlan.price.toFixed(2)}</span>
         <br />
       </h4>
+
+      <div className="credits-line">
+        <span className="credits_name">Credits</span>
+        <span className="credits_value">
+          {selectedPlan === "growth" ? `${creditsUsed} / ${displayCredits}` : displayCredits}
+        </span>
+      </div>
 
       <hr />
 
@@ -68,57 +82,91 @@ export function SubscriptionProductCard({
       </h3>
 
       <div className="checkout__opts">
-        <div className="opt opt2 selected">
+        {/* Growth Plan */}
+        <div
+          className={`opt opt1 ${selectedPlan === "growth" ? "selected" : ""}`}
+          data-rel="growth"
+          data-price="29.00"
+          onClick={() => handlePlanClick("growth")}
+        >
           <div className="gridme">
             <div className="radio">
               <span className="radio_btn"></span>
             </div>
             <div className="lbl">
-              {planName} <b>Plan</b>
+              Growth <b>Plan</b>
             </div>
-            <div className="radio_price">${price.toFixed(2)}</div>
+            <div className="radio_price">${plans.growth.price.toFixed(2)}</div>
           </div>
-          <div className="info-txt">{description}</div>
+        </div>
+
+        {/* Pro Plan */}
+        <div
+          className={`opt opt2 ${selectedPlan === "pro" ? "selected" : ""}`}
+          data-rel="pro"
+          data-price="89.00"
+          onClick={() => handlePlanClick("pro")}
+        >
+          <div className="gridme">
+            <div className="radio">
+              <span className="radio_btn"></span>
+            </div>
+            <div className="lbl">
+              Pro <b>Plan</b>
+            </div>
+            <div className="radio_price">${plans.pro.price.toFixed(2)}</div>
+          </div>
+          <div className="info-txt">Free 2-day Fedex Shipping, No commitment, pause anytime.</div>
           <div className="freq_drop">
             <div className="freq_selected" style={{ cursor: "default" }}>
               <i className="las la-calendar"></i>
-              {features[0] || "Deliver every 90 days"}
+              Deliver every <b>90 days</b>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Credits Display */}
-      <div className="credits-display">
-        <div className="credits-info">
-          <span className="credits-label">Credits</span>
-          <span className="credits-value">
-            {creditsUsed} / {displayCredits}
-          </span>
-        </div>
-        {credits !== "unlimited" && (
-          <div className="credits-bar">
-            <div className="credits-progress" style={{ width: `${creditPercent}%` }}></div>
+        {/* Scale Plan */}
+        <div
+          className={`opt opt3 ${selectedPlan === "scale" ? "selected" : ""}`}
+          data-rel="scale"
+          data-price="200.00"
+          onClick={() => handlePlanClick("scale")}
+        >
+          <div className="gridme">
+            <div className="radio">
+              <span className="radio_btn"></span>
+            </div>
+            <div className="lbl">
+              Scale <b>Plan</b>
+            </div>
+            <div className="radio_price">${plans.scale.price.toFixed(2)}</div>
           </div>
-        )}
+          <div className="info-txt">Free 2-day Fedex Shipping, No commitment, pause anytime.</div>
+          <div className="freq_drop">
+            <div className="freq_selected" style={{ cursor: "default" }}>
+              <i className="las la-calendar"></i>
+              Deliver every <b>90 days</b>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="checkout__btns">
         <div className="cart_btn full-width">
-          <Button
+          <button
             type="button"
             className="btn addtocart"
             onClick={handleCheckout}
-            disabled={isCurrentPlan || isLoading || isGuest}
+            disabled={currentProduct === selectedPlan || isLoading || isGuest}
           >
-            {isCurrentPlan
+            {currentProduct === selectedPlan
               ? "Current Plan"
               : isLoading
                 ? "Loading..."
                 : isGuest
                   ? "Sign In to Subscribe"
-                  : "Subscribe Now"}
-          </Button>
+                  : "Add to Cart"}
+          </button>
         </div>
       </div>
 
@@ -135,29 +183,29 @@ export function SubscriptionProductCard({
       </div>
 
       <style jsx>{`
+        body {
+          font-family: "Open Sans", sans-serif;
+          background: #f4f4f4;
+        }
+
         .checkout__box {
           padding: 20px;
           background: #fff;
           margin: 0 auto;
           border: 1px solid #ddd;
-          border-radius: 8px;
           max-width: 400px;
         }
 
         :global(.dark) .checkout__box {
-          background: #1a1a1a;
-          border-color: #333;
+          background: #fff;
+          border: 1px solid #ddd;
         }
 
         .checkout__box h2 {
-          font-size: 24px;
-          font-weight: 700;
+          font-size: 18px;
+          font-weight: 600;
           margin-bottom: 10px;
           color: black;
-        }
-
-        :global(.dark) .checkout__box h2 {
-          color: white;
         }
 
         .price {
@@ -169,35 +217,39 @@ export function SubscriptionProductCard({
           position: relative;
         }
 
-        :global(.dark) .price {
-          color: white;
+        .price_name {
+          position: absolute;
+          left: 0;
         }
 
-        .price_name {
+        .reg_price.crossed {
+          color: #888;
+          text-decoration: line-through;
+          font-weight: 400;
+        }
+
+        .sub_price {
+          color: black;
+        }
+
+        .credits-line {
+          text-align: right;
+          font-size: 16px;
+          font-weight: 700;
+          color: black;
+          margin-bottom: 10px;
+          position: relative;
+        }
+
+        .credits_name {
           position: absolute;
           left: 0;
           font-weight: 400;
           font-size: 14px;
-          color: #666;
         }
 
-        :global(.dark) .price_name {
-          color: #999;
-        }
-
-        .sub_price {
-          font-size: 20px;
-        }
-
-        hr {
-          border: none;
-          margin: 10px 0;
-          padding: 0;
-          border-bottom: 1px solid #ddd;
-        }
-
-        :global(.dark) hr {
-          border-bottom-color: #333;
+        .credits_value {
+          color: black;
         }
 
         h3 {
@@ -206,40 +258,37 @@ export function SubscriptionProductCard({
           font-weight: 600;
           letter-spacing: 1.5px;
           color: black;
-          margin-bottom: 15px;
         }
 
-        :global(.dark) h3 {
-          color: white;
+        hr {
+          border: none;
+          margin: 10px;
+          padding: 0;
+          border-bottom: 1px solid #ddd;
         }
 
         .sub-txt {
-          color: #3ab54b;
+          color: inherit;
         }
 
         .checkout__opts .opt {
           padding: 15px 0;
-          border: 2px solid black;
+          border: 1px solid #ccc;
           border-radius: 5px;
           margin-bottom: 15px;
           font-size: 14px;
-          cursor: default;
+          cursor: pointer;
         }
 
-        :global(.dark) .checkout__opts .opt {
-          border-color: #3ab54b;
+        .checkout__opts .opt.selected {
+          border: 2px solid black;
         }
 
-        .radio_btn {
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
+        .checkout__opts .opt.selected .radio_btn {
           border: 2px solid #3ab54b;
-          display: block;
-          position: relative;
         }
 
-        .radio_btn:before {
+        .checkout__opts .opt.selected .radio_btn:before {
           content: "";
           width: 14px;
           height: 14px;
@@ -251,28 +300,17 @@ export function SubscriptionProductCard({
           right: 3px;
         }
 
-        .gridme {
-          display: grid;
-          grid-template-columns: 30px 1fr 80px;
-          align-items: center;
-          padding: 0 15px;
-          color: black;
+        .checkout__opts .opt.opt2,
+        .checkout__opts .opt.opt3 {
+          padding-bottom: 10px;
+          cursor: pointer;
         }
 
-        :global(.dark) .gridme {
-          color: white;
-        }
-
-        .radio_price {
-          text-align: right;
-          font-weight: 600;
-        }
-
-        .lbl b {
+        .checkout__opts .opt .lbl b {
           color: #3ab54b;
         }
 
-        .info-txt {
+        .checkout__opts .opt .info-txt {
           padding-left: 40px;
           font-size: 12px;
           padding-bottom: 15px;
@@ -282,8 +320,25 @@ export function SubscriptionProductCard({
           padding-right: 15px;
         }
 
-        :global(.dark) .info-txt {
-          color: #999;
+        .gridme {
+          display: grid;
+          grid-template-columns: 30px 1fr 60px;
+          align-items: center;
+          padding: 0 15px;
+          color: black;
+        }
+
+        .radio_btn {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 1px solid #bbb;
+          display: block;
+          position: relative;
+        }
+
+        .radio_price {
+          text-align: right;
         }
 
         .freq_drop {
@@ -292,85 +347,23 @@ export function SubscriptionProductCard({
           font-size: 14px;
         }
 
-        :global(.dark) .freq_drop {
-          border-top-color: #555;
-        }
-
         .freq_selected {
           position: relative;
           color: black;
-        }
-
-        :global(.dark) .freq_selected {
-          color: white;
         }
 
         .freq_selected i {
           font-size: 20px;
           vertical-align: middle;
           color: black;
-          margin-right: 5px;
         }
 
-        :global(.dark) .freq_selected i {
-          color: white;
-        }
-
-        .credits-display {
-          margin: 15px 0;
-          padding: 15px;
-          background: #f9f9f9;
-          border-radius: 5px;
-          border: 1px solid #e0e0e0;
-        }
-
-        :global(.dark) .credits-display {
-          background: #2a2a2a;
-          border-color: #444;
-        }
-
-        .credits-info {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-
-        .credits-label {
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          color: #666;
-        }
-
-        :global(.dark) .credits-label {
-          color: #999;
-        }
-
-        .credits-value {
-          font-size: 16px;
-          font-weight: 700;
-          color: #3ab54b;
-        }
-
-        .credits-bar {
-          width: 100%;
-          height: 8px;
-          background: #e0e0e0;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-
-        :global(.dark) .credits-bar {
-          background: #444;
-        }
-
-        .credits-progress {
-          height: 100%;
-          background: #3ab54b;
-          transition: width 0.3s ease;
-          border-radius: 4px;
+        .freq_selected i.la-angle-down {
+          font-size: 14px;
+          display: block;
+          position: absolute;
+          right: 5px;
+          top: 5px;
         }
 
         .checkout__btns {
@@ -404,7 +397,7 @@ export function SubscriptionProductCard({
         }
 
         .btn.addtocart:disabled {
-          opacity: 0.5;
+          opacity: 0.6;
           cursor: not-allowed;
         }
 
@@ -418,19 +411,10 @@ export function SubscriptionProductCard({
           border-bottom: 1px solid #ddd;
         }
 
-        :global(.dark) .guarantee {
-          border-top-color: #333;
-          border-bottom-color: #333;
-        }
-
         .guarantee div {
           padding: 10px;
           font-size: 12px;
           color: black;
-        }
-
-        :global(.dark) .guarantee div {
-          color: white;
         }
 
         .guarantee div.line {
@@ -438,19 +422,11 @@ export function SubscriptionProductCard({
           border-right: 1px solid #ddd;
         }
 
-        :global(.dark) .guarantee div.line {
-          border-right-color: #333;
-        }
-
         .guarantee i {
           display: block;
           font-size: 25px;
           color: black;
           margin-bottom: 10px;
-        }
-
-        :global(.dark) .guarantee i {
-          color: white;
         }
       `}</style>
 
