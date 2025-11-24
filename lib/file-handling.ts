@@ -6,7 +6,7 @@ import { createClient } from "./supabase/client"
 import { isSupabaseEnabled } from "./supabase/config"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-const LARGE_FILE_WARNING_SIZE = 5 * 1024 * 1024 // 5MB - warn about potential token limits
+const LARGE_FILE_WARNING_SIZE = 2 * 1024 * 1024 // 2MB - warn about potential token limits (more aggressive)
 
 const ALLOWED_FILE_TYPES = [
   "image/jpeg",
@@ -228,7 +228,7 @@ export async function processFiles(
   if (hasLargeFile) {
     toast({
       title: "Large PDF detected",
-      description: "PDFs over 5MB may contain more text than the AI can process in one message. Very large content will be automatically truncated. Consider breaking large documents into smaller sections.",
+      description: "PDFs over 2MB will be automatically truncated to ~12,500 tokens (about 50 pages). For best results with large documents: (1) Break into smaller sections, (2) Ask specific questions about parts of the document, or (3) Use the document upload feature for semantic search instead.",
       status: "info",
     })
   }

@@ -17,7 +17,9 @@ import {
 } from "./api"
 import { createErrorResponse, extractErrorMessage } from "./utils"
 
-export const maxDuration = 60
+// Increase timeout to 5 minutes for large PDFs + web search operations
+// Note: Vercel Pro allows up to 300 seconds (5 min) for serverless functions
+export const maxDuration = 300
 
 type ChatRequest = {
   messages: MessageAISDK[]

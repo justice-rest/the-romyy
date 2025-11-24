@@ -38,18 +38,30 @@ function sanitizeTextContent(text: string): string {
 /**
  * Truncate message content if it exceeds the maximum size
  * Prevents context window overflow from large PDF extractions
+ *
+ * @param content - The text content to potentially truncate
+ * @param hasAttachments - Whether this message has file attachments (PDFs need more aggressive truncation)
  */
-function truncateMessageContent(content: string): string {
-  if (!content || content.length <= MAX_MESSAGE_CONTENT_SIZE) {
+function truncateMessageContent(content: string, hasAttachments: boolean = false): string {
+  // For messages with attachments (especially PDFs), use even more aggressive truncation
+  // because the AI will also be processing the file content, leaving less room for text
+  const maxSize = hasAttachments
+    ? Math.floor(MAX_MESSAGE_CONTENT_SIZE * 0.5) // 50K chars = ~12.5K tokens for messages with files
+    : MAX_MESSAGE_CONTENT_SIZE // 100K chars = ~25K tokens for regular messages
+
+  if (!content || content.length <= maxSize) {
     return content
   }
 
-  const truncated = content.substring(0, MAX_MESSAGE_CONTENT_SIZE)
-  const tokensRemoved = Math.round((content.length - MAX_MESSAGE_CONTENT_SIZE) / 4)
+  const truncated = content.substring(0, maxSize)
+  const tokensRemoved = Math.round((content.length - maxSize) / 4)
+
+  // Log truncation for debugging
+  console.log(`[Payload Optimizer] Truncated message content: ${content.length} chars -> ${maxSize} chars (removed ~${tokensRemoved.toLocaleString()} tokens, hasAttachments: ${hasAttachments})`)
 
   return (
     truncated +
-    `\n\n[Content truncated to prevent context window overflow. Removed approximately ${tokensRemoved.toLocaleString()} tokens. Consider breaking this into smaller chunks or summarizing the content before sending.]`
+    `\n\n[Content truncated to prevent context window overflow. Removed approximately ${tokensRemoved.toLocaleString()} tokens.${hasAttachments ? ' File attachments require additional context space.' : ''} Consider breaking this into smaller chunks or summarizing the content before sending.]`
   )
 }
 
@@ -141,11 +153,18 @@ function truncateToolResult(result: any): any {
  * Removes blob URLs, truncates large tool results, keeps essential data
  */
 function cleanMessage(message: Message): Message {
+  // Check if this message has attachments (needs more aggressive truncation)
+  const hasAttachments = !!(
+    message.experimental_attachments &&
+    Array.isArray(message.experimental_attachments) &&
+    message.experimental_attachments.length > 0
+  )
+
   const cleaned: Message = {
     ...message,
     // Sanitize and truncate text content if it's a string
     content: typeof message.content === "string"
-      ? truncateMessageContent(sanitizeTextContent(message.content))
+      ? truncateMessageContent(sanitizeTextContent(message.content), hasAttachments)
       : message.content,
     // Clean attachments
     experimental_attachments: cleanAttachments(
@@ -160,7 +179,7 @@ function cleanMessage(message: Message): Message {
       if (part.type === "text" && typeof part.text === "string") {
         return {
           ...part,
-          text: truncateMessageContent(sanitizeTextContent(part.text)),
+          text: truncateMessageContent(sanitizeTextContent(part.text), hasAttachments),
         }
       }
       if (part.type === "tool-invocation" && part.toolInvocation?.result) {

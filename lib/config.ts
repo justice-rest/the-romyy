@@ -94,9 +94,15 @@ export const MAX_TOOL_RESULT_SIZE = 50000
 
 // Maximum size for individual message content (in characters)
 // Prevents context window overflow from large PDF extractions or long messages
-// ~1M characters ≈ ~250K tokens (4:1 ratio for English text)
-// Most models support 200K-2M tokens, so we cap at 500K chars (~125K tokens) per message
-export const MAX_MESSAGE_CONTENT_SIZE = 500000
+// ~4 characters ≈ ~1 token (4:1 ratio for English text)
+//
+// IMPORTANT: Even though models claim 200K-2M token windows, they perform poorly
+// with very large single messages. Practical limits are much lower:
+// - User messages: 20K-40K tokens optimal
+// - With web search: Even less (10K-20K) to leave room for search results
+//
+// 100K chars = ~25K tokens - good balance for PDFs with search enabled
+export const MAX_MESSAGE_CONTENT_SIZE = 100000
 
 // ============================================================================
 // AI RESPONSE CONFIGURATION
