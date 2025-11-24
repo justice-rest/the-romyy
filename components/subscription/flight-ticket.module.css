@@ -8,6 +8,26 @@
   background: transparent;
 }
 
+/* Mobile phones (portrait) */
+@media (max-width: 480px) {
+  .ticketBox {
+    width: 280px;
+    max-width: 280px;
+    margin: -20px -20px;
+    transform: scale(0.75);
+  }
+}
+
+/* Mobile phones (landscape) and small tablets */
+@media (min-width: 481px) and (max-width: 768px) {
+  .ticketBox {
+    width: 290px;
+    max-width: 290px;
+    margin: -18px -22px;
+    transform: scale(0.78);
+  }
+}
+
 .ticket {
   width: 200%;
   height: 250px;
