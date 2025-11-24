@@ -195,7 +195,7 @@ export function MessageUser({
                 target="_blank"
                 rel="noopener noreferrer"
                 download={attachment.name}
-                className="text-primary mb-3 flex h-24 w-40 items-center justify-center rounded-md border p-2 text-xs hover:bg-accent transition-colors"
+                className="text-primary mb-3 flex h-24 w-40 min-w-0 items-center justify-center rounded-md border p-2 text-xs hover:bg-accent transition-colors"
                 onClick={(e) => {
                   // For blob URLs, force download instead of navigation
                   if (attachment.url.startsWith("blob:")) {
@@ -207,9 +207,11 @@ export function MessageUser({
                   }
                 }}
               >
-                <div className="flex flex-col items-center gap-1">
-                  {getFileIcon(attachment.contentType || "")}
-                  <span className="truncate w-full text-center font-medium">
+                <div className="flex flex-col items-center gap-1 w-full min-w-0">
+                  <div className="flex-shrink-0">
+                    {getFileIcon(attachment.contentType || "")}
+                  </div>
+                  <span className="truncate w-full text-center font-medium px-1" title={attachment.name}>
                     {attachment.name}
                   </span>
                 </div>
