@@ -1,8 +1,24 @@
 .ticketBox {
   position: relative;
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 580px;
+  margin: -20px auto;
+  transform: scale(0.85);
+  transform-origin: center center;
+}
+
+@media (max-width: 640px) {
+  .ticketBox {
+    transform: scale(0.75);
+    margin: -30px auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .ticketBox {
+    transform: scale(0.9);
+    margin: -15px auto;
+  }
 }
 
 .ticket {
