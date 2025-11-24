@@ -24,14 +24,15 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
         "--glow-hue": "222deg",
         "--shadow-hue": "180deg",
         "--inset": "40px",
+        "--bg": "#1b1724",
         transitionTimingFunction: "linear(0, 0.002, 0.01 0.9%, 0.038 1.8%, 0.156, 0.312 5.8%, 0.789 11.1%, 1.015 14.2%, 1.096, 1.157, 1.199, 1.224 20.3%, 1.231, 1.231, 1.226, 1.214 24.6%, 1.176 26.9%, 1.057 32.6%, 1.007 35.5%, 0.984, 0.968, 0.956, 0.949 42%, 0.946 44.1%, 0.95 46.5%, 0.998 57.2%, 1.007, 1.011 63.3%, 1.012 68.3%, 0.998 84%, 1)",
       }}
       {...props}
     >
-      <span className="shimmer-text relative z-10">
+      <span className="text relative z-10">
         {children}
       </span>
-      <span className="shimmer-effect pointer-events-none absolute inset-[-40px] rounded-[inherit] mix-blend-plus-lighter" />
+      <span className="shimmer pointer-events-none absolute inset-[-40px] rounded-[inherit] mix-blend-plus-lighter" />
       <style jsx>{`
         @property --shimmer {
           syntax: "<angle>";
@@ -72,7 +73,7 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           }
         }
 
-        .shimmer-effect {
+        .shimmer {
           mask-image: conic-gradient(
             from var(--shimmer, 0deg),
             transparent 0%,
@@ -89,14 +90,14 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           animation: shimmer 1s linear infinite both;
         }
 
-        .shimmer-button:hover .shimmer-effect::before,
-        .shimmer-button:hover .shimmer-effect::after {
+        .shimmer-button:hover .shimmer::before,
+        .shimmer-button:hover .shimmer::after {
           opacity: 1;
           animation: shine 1.2s ease-in 1 forwards;
         }
 
-        .shimmer-effect::before,
-        .shimmer-effect::after {
+        .shimmer::before,
+        .shimmer::after {
           transition: all 0.5s ease;
           opacity: 0;
           content: "";
@@ -107,7 +108,7 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           pointer-events: none;
         }
 
-        .shimmer-effect::before {
+        .shimmer::before {
           box-shadow:
             0 0 calc(var(--inset) * 0.1) 2px hsl(var(--glow-hue) 20% 95%),
             0 0 calc(var(--inset) * 0.18) 4px hsl(var(--glow-hue) 20% 80%),
@@ -116,7 +117,7 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           z-index: -1;
         }
 
-        .shimmer-effect::after {
+        .shimmer::after {
           box-shadow:
             inset 0 0 0 1px hsl(var(--glow-hue) 70% 95%),
             inset 0 0 2px 1px hsl(var(--glow-hue) 100% 80%),
@@ -124,11 +125,11 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           z-index: 2;
         }
 
-        .shimmer-text {
+        .text {
           color: transparent;
           background-clip: text;
           -webkit-background-clip: text;
-          background-color: rgb(30 30 30);
+          background-color: var(--bg);
           background-image: linear-gradient(
             120deg,
             transparent,
@@ -141,7 +142,7 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           background-position: center 200%;
         }
 
-        .shimmer-button:hover .shimmer-text {
+        .shimmer-button:hover .text {
           animation: text 0.66s ease-in 1 both;
         }
       `}</style>
