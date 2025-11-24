@@ -89,7 +89,7 @@ export function MemoryList() {
           )}
         </div>
         <ShimmerButton onClick={() => setShowForm(true)} className="h-10">
-          <Plus className="mr-2 h-5 w-5" weight="bold" />
+          <Plus className="h-5 w-5" weight="bold" />
           Add Memory
         </ShimmerButton>
       </div>

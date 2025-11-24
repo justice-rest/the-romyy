@@ -12,6 +12,7 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
     <button
       className={cn(
         "shimmer-button group relative isolate overflow-hidden rounded-[0.66em] px-[1.4em] py-[0.8em] font-semibold transition-all duration-[1.33s]",
+        "flex items-center justify-center", // Add flex layout
         "bg-gradient-to-br from-[#ffc4ec] via-[#efdbfd] to-[#ffedd6]",
         "shadow-[0_2px_3px_1px_hsl(222deg_50%_20%/50%),inset_0_-10px_20px_-10px_hsla(180deg_10%_90%/95%)]",
         "hover:scale-110 hover:shadow-[0_4px_8px_-2px_hsl(222deg_50%_20%/50%),inset_0_0_0_transparent]",
@@ -29,7 +30,7 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
       }}
       {...props}
     >
-      <span className="text relative z-10">
+      <span className="button-content relative z-10 flex items-center gap-2">
         {children}
       </span>
       <span className="shimmer pointer-events-none absolute inset-[-40px] rounded-[inherit] mix-blend-plus-lighter" />
@@ -125,25 +126,40 @@ export function ShimmerButton({ children, className, ...props }: ShimmerButtonPr
           z-index: 2;
         }
 
-        .text {
+        /* Button content - default state with dark text/icons */
+        .button-content {
+          color: var(--bg);
+        }
+
+        /* SVG icons get solid color */
+        .button-content :global(svg) {
+          color: var(--bg) !important;
+          fill: currentColor;
+        }
+
+        /* On hover, apply gradient effect to the whole content */
+        .shimmer-button:hover .button-content {
           color: transparent;
           background-clip: text;
           -webkit-background-clip: text;
           background-color: var(--bg);
           background-image: linear-gradient(
             120deg,
-            transparent,
+            var(--bg) 0%,
             hsla(var(--glow-hue), 100%, 80%, 0.66) 40%,
             hsla(var(--glow-hue), 100%, 90%, 0.9) 50%,
-            transparent 52%
+            var(--bg) 100%
           );
           background-repeat: no-repeat;
-          background-size: 300% 300%;
-          background-position: center 200%;
+          background-size: 200% 100%;
+          animation: text 0.66s ease-in-out 1 forwards;
         }
 
-        .shimmer-button:hover .text {
-          animation: text 0.66s ease-in 1 both;
+        /* Keep SVG visible on hover with solid color */
+        .shimmer-button:hover .button-content :global(svg) {
+          color: var(--bg) !important;
+          opacity: 1;
+          -webkit-text-fill-color: var(--bg);
         }
       `}</style>
     </button>
