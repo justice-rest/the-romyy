@@ -21,12 +21,19 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
   const isGuest = user?.anonymous === true || !user
   const currentProduct = customer?.products?.[0]?.id
 
-  // Plan configurations
+  // Plan configurations with message limits
   const plans = {
-    growth: { id: "growth", name: "Growth", price: 29.0, credits: 100 },
-    pro: { id: "pro", name: "Pro", price: 89.0, credits: "unlimited" },
-    scale: { id: "scale", name: "Scale", price: 200.0, credits: "unlimited" },
+    growth: { id: "growth", name: "Growth", price: 29.0, credits: 100, messages: "100 messages" },
+    pro: { id: "pro", name: "Pro", price: 89.0, credits: "unlimited", messages: "unlimited messages" },
+    scale: { id: "scale", name: "Scale", price: 200.0, credits: "unlimited", messages: "unlimited messages" },
   }
+
+  // Set selected plan based on current product on mount
+  useEffect(() => {
+    if (currentProduct && (currentProduct === "growth" || currentProduct === "pro" || currentProduct === "scale")) {
+      setSelectedPlan(currentProduct)
+    }
+  }, [currentProduct])
 
   const currentPlan = plans[selectedPlan]
 
@@ -51,13 +58,28 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
     }
   }
 
-  // Calculate credits used for Growth plan
-  const creditsUsed =
-    selectedPlan === "growth" && features?.messages?.balance !== undefined && features?.messages?.balance !== null
-      ? 100 - features.messages.balance
-      : 0
+  // Show current credits balance
+  const displayCredits = currentPlan.credits === "unlimited"
+    ? "∞"
+    : (features?.messages?.balance ?? currentPlan.credits)
 
-  const displayCredits = currentPlan.credits === "unlimited" ? "∞" : currentPlan.credits
+  // Determine button text based on plan comparison
+  const getButtonText = () => {
+    if (isGuest) return "Sign In to Subscribe"
+    if (isLoading) return "Loading..."
+    if (currentProduct === selectedPlan) return "Current Plan"
+
+    // Determine upgrade or downgrade
+    const planOrder = { growth: 1, pro: 2, scale: 3 }
+    const currentOrder = currentProduct ? planOrder[currentProduct as keyof typeof planOrder] ?? 0 : 0
+    const selectedOrder = planOrder[selectedPlan]
+
+    if (currentOrder === 0) return "Subscribe"
+    if (selectedOrder > currentOrder) return "Upgrade"
+    if (selectedOrder < currentOrder) return "Downgrade"
+
+    return "Add to Cart"
+  }
 
   return (
     <div className="checkout__box">
@@ -70,9 +92,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
 
       <div className="credits-line">
         <span className="credits_name">Credits</span>
-        <span className="credits_value">
-          {selectedPlan === "growth" ? `${creditsUsed} / ${displayCredits}` : displayCredits}
-        </span>
+        <span className="credits_value">{displayCredits}</span>
       </div>
 
       <hr />
@@ -120,7 +140,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           <div className="freq_drop">
             <div className="freq_selected" style={{ cursor: "default" }}>
               <i className="las la-calendar"></i>
-              Deliver every <b>90 days</b>
+              <b>{plans.pro.messages}</b>
             </div>
           </div>
         </div>
@@ -145,7 +165,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           <div className="freq_drop">
             <div className="freq_selected" style={{ cursor: "default" }}>
               <i className="las la-calendar"></i>
-              Deliver every <b>90 days</b>
+              <b>{plans.scale.messages}</b>
             </div>
           </div>
         </div>
@@ -157,15 +177,9 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
             type="button"
             className="btn addtocart"
             onClick={handleCheckout}
-            disabled={currentProduct === selectedPlan || isLoading || isGuest}
+            disabled={currentProduct === selectedPlan || isLoading}
           >
-            {currentProduct === selectedPlan
-              ? "Current Plan"
-              : isLoading
-                ? "Loading..."
-                : isGuest
-                  ? "Sign In to Subscribe"
-                  : "Add to Cart"}
+            {getButtonText()}
           </button>
         </div>
       </div>
@@ -193,12 +207,13 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           background: #fff;
           margin: 0 auto;
           border: 1px solid #ddd;
-          max-width: 400px;
+          max-width: 500px;
+          width: 100%;
         }
 
         :global(.dark) .checkout__box {
-          background: #fff;
-          border: 1px solid #ddd;
+          background: #1a1a1a;
+          border: 1px solid #333;
         }
 
         .checkout__box h2 {
@@ -206,6 +221,10 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           font-weight: 600;
           margin-bottom: 10px;
           color: black;
+        }
+
+        :global(.dark) .checkout__box h2 {
+          color: white;
         }
 
         .price {
@@ -217,9 +236,18 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           position: relative;
         }
 
+        :global(.dark) .price {
+          color: white;
+        }
+
         .price_name {
           position: absolute;
           left: 0;
+          font-weight: 400;
+        }
+
+        :global(.dark) .price_name {
+          color: #999;
         }
 
         .reg_price.crossed {
@@ -232,6 +260,10 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           color: black;
         }
 
+        :global(.dark) .sub_price {
+          color: white;
+        }
+
         .credits-line {
           text-align: right;
           font-size: 16px;
@@ -241,15 +273,28 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           position: relative;
         }
 
+        :global(.dark) .credits-line {
+          color: white;
+        }
+
         .credits_name {
           position: absolute;
           left: 0;
           font-weight: 400;
           font-size: 14px;
+          color: #666;
+        }
+
+        :global(.dark) .credits_name {
+          color: #999;
         }
 
         .credits_value {
           color: black;
+        }
+
+        :global(.dark) .credits_value {
+          color: white;
         }
 
         h3 {
@@ -260,11 +305,19 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           color: black;
         }
 
+        :global(.dark) h3 {
+          color: white;
+        }
+
         hr {
           border: none;
           margin: 10px;
           padding: 0;
           border-bottom: 1px solid #ddd;
+        }
+
+        :global(.dark) hr {
+          border-bottom-color: #333;
         }
 
         .sub-txt {
@@ -280,24 +333,33 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           cursor: pointer;
         }
 
+        :global(.dark) .checkout__opts .opt {
+          border-color: #444;
+        }
+
         .checkout__opts .opt.selected {
           border: 2px solid black;
+        }
+
+        :global(.dark) .checkout__opts .opt.selected {
+          border: 2px solid #3ab54b;
         }
 
         .checkout__opts .opt.selected .radio_btn {
           border: 2px solid #3ab54b;
         }
 
-        .checkout__opts .opt.selected .radio_btn:before {
+        .checkout__opts .opt.selected .radio_btn::before {
           content: "";
-          width: 14px;
-          height: 14px;
+          width: 10px;
+          height: 10px;
           display: block;
           position: absolute;
           background: #3ab54b;
           border-radius: 50%;
-          top: 3px;
-          right: 3px;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
         }
 
         .checkout__opts .opt.opt2,
@@ -320,12 +382,20 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           padding-right: 15px;
         }
 
+        :global(.dark) .checkout__opts .opt .info-txt {
+          color: #999;
+        }
+
         .gridme {
           display: grid;
-          grid-template-columns: 30px 1fr 60px;
+          grid-template-columns: 30px 1fr 80px;
           align-items: center;
           padding: 0 15px;
           color: black;
+        }
+
+        :global(.dark) .gridme {
+          color: white;
         }
 
         .radio_btn {
@@ -337,8 +407,13 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           position: relative;
         }
 
+        :global(.dark) .radio_btn {
+          border-color: #666;
+        }
+
         .radio_price {
           text-align: right;
+          font-weight: 600;
         }
 
         .freq_drop {
@@ -347,15 +422,28 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           font-size: 14px;
         }
 
+        :global(.dark) .freq_drop {
+          border-top-color: #444;
+        }
+
         .freq_selected {
           position: relative;
           color: black;
+        }
+
+        :global(.dark) .freq_selected {
+          color: white;
         }
 
         .freq_selected i {
           font-size: 20px;
           vertical-align: middle;
           color: black;
+          margin-right: 5px;
+        }
+
+        :global(.dark) .freq_selected i {
+          color: white;
         }
 
         .freq_selected i.la-angle-down {
@@ -411,10 +499,19 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           border-bottom: 1px solid #ddd;
         }
 
+        :global(.dark) .guarantee {
+          border-top-color: #333;
+          border-bottom-color: #333;
+        }
+
         .guarantee div {
           padding: 10px;
           font-size: 12px;
           color: black;
+        }
+
+        :global(.dark) .guarantee div {
+          color: white;
         }
 
         .guarantee div.line {
@@ -422,11 +519,19 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           border-right: 1px solid #ddd;
         }
 
+        :global(.dark) .guarantee div.line {
+          border-right-color: #333;
+        }
+
         .guarantee i {
           display: block;
           font-size: 25px;
           color: black;
           margin-bottom: 10px;
+        }
+
+        :global(.dark) .guarantee i {
+          color: white;
         }
       `}</style>
 
