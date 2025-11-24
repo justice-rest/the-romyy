@@ -15,23 +15,12 @@ export const metadata: Metadata = {
   },
 }
 
-function Header() {
-  return (
-    <header className="h-app-header fixed top-0 right-0 left-0 z-50">
-      <div className="h-app-header top-app-header bg-background pointer-events-none absolute left-0 z-50 mx-auto w-full to-transparent backdrop-blur-xl [-webkit-mask-image:linear-gradient(to_bottom,black,transparent)] lg:hidden"></div>
-      <div className="bg-background relative mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:bg-transparent lg:px-8">
-      </div>
-    </header>
-  )
-}
-
 export default function TermsOfService() {
   return (
     <>
-      <Header />
       <div className="mx-auto max-w-3xl px-4 py-12 md:py-24">
         <div className="mb-8 flex items-center justify-center gap-2 text-sm font-medium">
-          <time className="text-foreground">Effective January 23, 2025</time>
+          <time className="text-foreground">Effective November 25, 2025</time>
         </div>
 
         <h1 className="mb-4 text-center text-4xl font-medium tracking-tight md:text-5xl">
@@ -268,12 +257,12 @@ export default function TermsOfService() {
           <h2>15. Governing Law and Dispute Resolution</h2>
           <h3>15.1 Governing Law</h3>
           <p>
-            These Terms shall be governed by and construed in accordance with the laws of the United States, without regard to conflict of law principles.
+            These Terms shall be governed by and construed in accordance with the laws of the State of Texas, without regard to conflict of law principles.
           </p>
 
           <h3>15.2 Dispute Resolution</h3>
           <p>
-            Any disputes arising out of or relating to these Terms or the Service shall be resolved through good faith negotiation. If negotiation fails, disputes shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association.
+            Any disputes arising out of or relating to these Terms or the Service shall be resolved through good faith negotiation. If negotiation fails, disputes shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association, with the arbitration venue located in Texas.
           </p>
 
           <h3>15.3 Class Action Waiver</h3>
@@ -322,7 +311,7 @@ export default function TermsOfService() {
           </p>
 
           <div className="mt-12 border-t border-border pt-6 text-sm text-muted-foreground">
-            <p>Last updated: January 23, 2025</p>
+            <p>Last updated: November 25, 2025</p>
           </div>
         </div>
       </div>

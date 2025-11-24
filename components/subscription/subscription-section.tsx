@@ -6,6 +6,9 @@ import { DiamondsFour } from "@phosphor-icons/react"
 import NumberFlow from "@number-flow/react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { FlightTicket } from "./flight-ticket"
+import { createClient } from "@/lib/supabase/client"
+import { useUser } from "@/lib/user-store/provider"
 
 /**
  * Subscription Section Component
@@ -15,8 +18,30 @@ import { useState, useEffect } from "react"
  */
 export function SubscriptionSection() {
   const { customer, openBillingPortal, refetch } = useCustomer()
+  const { user } = useUser()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [dataLoadedAt, setDataLoadedAt] = useState<number>(Date.now())
+  const [userName, setUserName] = useState<string | null>(null)
+
+  // Fetch user's name from onboarding data
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (!user?.id) return
+
+      const supabase = createClient()
+      if (!supabase) return
+
+      const { data } = await supabase
+        .from("onboarding_data")
+        .select("first_name")
+        .eq("user_id", user.id)
+        .single()
+
+      setUserName(data?.first_name || null)
+    }
+
+    fetchUserName()
+  }, [user?.id])
 
   // Auto-refresh subscription data on mount to ensure fresh data
   useEffect(() => {
@@ -236,40 +261,14 @@ export function SubscriptionSection() {
           </button>
         </div>
 
-        {/* Usage Stats */}
+        {/* Flight Ticket */}
         {hasActiveSubscription && (
-          <div className="mb-4 rounded-lg bg-muted/50 p-4">
-            <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="font-medium">Messages</span>
-              <div className="flex items-center gap-1">
-                <DiamondsFour size={14} weight="fill" className="text-primary" />
-                <span className="text-muted-foreground font-semibold">
-                  {hasUnlimitedMessages ? (
-                    "∞ Unlimited"
-                  ) : features?.messages?.balance !== undefined ? (
-                    <>
-                      <NumberFlow
-                        value={features.messages.balance ?? 0}
-                        className="inline"
-                      />
-                      /100
-                    </>
-                  ) : (
-                    "0/100"
-                  )}
-                </span>
-              </div>
-            </div>
-            {!hasUnlimitedMessages && (
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full bg-primary transition-all"
-                  style={{
-                    width: `${Math.min(((features?.messages?.balance ?? 0) / 100) * 100, 100)}%`,
-                  }}
-                />
-              </div>
-            )}
+          <div className="mb-4">
+            <FlightTicket
+              plan={planType || "free"}
+              credits={hasUnlimitedMessages ? "unlimited" : (features?.messages?.balance ?? 100)}
+              userName={userName || undefined}
+            />
           </div>
         )}
 

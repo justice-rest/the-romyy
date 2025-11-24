@@ -15,23 +15,12 @@ export const metadata: Metadata = {
   },
 }
 
-function Header() {
-  return (
-    <header className="h-app-header fixed top-0 right-0 left-0 z-50">
-      <div className="h-app-header top-app-header bg-background pointer-events-none absolute left-0 z-50 mx-auto w-full to-transparent backdrop-blur-xl [-webkit-mask-image:linear-gradient(to_bottom,black,transparent)] lg:hidden"></div>
-      <div className="bg-background relative mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:bg-transparent lg:px-8">
-      </div>
-    </header>
-  )
-}
-
 export default function PrivacyPolicy() {
   return (
     <>
-      <Header />
       <div className="mx-auto max-w-3xl px-4 py-12 md:py-24">
         <div className="mb-8 flex items-center justify-center gap-2 text-sm font-medium">
-          <time className="text-foreground">Effective January 23, 2025</time>
+          <time className="text-foreground">Effective November 25, 2025</time>
         </div>
 
         <h1 className="mb-4 text-center text-4xl font-medium tracking-tight md:text-5xl">
@@ -425,7 +414,7 @@ export default function PrivacyPolicy() {
           </ul>
 
           <div className="mt-12 border-t border-border pt-6 text-sm text-muted-foreground">
-            <p>Last updated: January 23, 2025</p>
+            <p>Last updated: November 25, 2025</p>
           </div>
         </div>
       </div>

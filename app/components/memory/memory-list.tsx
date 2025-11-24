@@ -6,8 +6,8 @@ import { MemoryCard } from "./memory-card"
 import { MemoryForm } from "./memory-form"
 import { MemoryStats } from "./memory-stats"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { MagnifyingGlass, Plus } from "@phosphor-icons/react"
-import { ShimmerButton } from "@/app/components/ui/shimmer-button"
 
 export function MemoryList() {
   const { memories, stats, isLoading, searchMemories } = useMemory()
@@ -88,10 +88,10 @@ export function MemoryList() {
             </div>
           )}
         </div>
-        <ShimmerButton onClick={() => setShowForm(true)} className="h-10">
+        <Button onClick={() => setShowForm(true)} size="lg">
           <Plus className="h-5 w-5" weight="bold" />
           Add Memory
-        </ShimmerButton>
+        </Button>
       </div>
 
       {/* Memory List */}
