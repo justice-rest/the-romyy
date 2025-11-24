@@ -5,13 +5,12 @@ import { useMemory } from "@/lib/memory-store"
 import { MemoryCard } from "./memory-card"
 import { MemoryForm } from "./memory-form"
 import { MemoryStats } from "./memory-stats"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, MagnifyingGlass, ArrowClockwise } from "@phosphor-icons/react"
+import { MagnifyingGlass, Plus } from "@phosphor-icons/react"
+import { ShimmerButton } from "@/app/components/ui/shimmer-button"
 
 export function MemoryList() {
-  const { memories, stats, isLoading, searchMemories, refresh } = useMemory()
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const { memories, stats, isLoading, searchMemories } = useMemory()
   const [showForm, setShowForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [semanticResults, setSemanticResults] = useState<any[]>([])
@@ -55,20 +54,6 @@ export function MemoryList() {
   // Show semantic results if available, otherwise local filtered results
   const displayedMemories = semanticResults.length > 0 ? semanticResults : localFilteredMemories
 
-  const handleClearSearch = () => {
-    setSearchQuery("")
-    setSemanticResults([])
-  }
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await refresh()
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
-
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -103,31 +88,10 @@ export function MemoryList() {
             </div>
           )}
         </div>
-        {searchQuery && (
-          <Button
-            onClick={handleClearSearch}
-            variant="ghost"
-            className="h-10 transition-all hover:scale-105"
-          >
-            Clear
-          </Button>
-        )}
-        <Button
-          onClick={handleRefresh}
-          variant="ghost"
-          disabled={isRefreshing}
-          title="Refresh memories"
-          className="h-10 w-10 p-0 transition-all hover:scale-105"
-        >
-          <ArrowClockwise className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`} />
-        </Button>
-        <Button
-          onClick={() => setShowForm(true)}
-          className="h-10 transition-all hover:scale-105 active:scale-95"
-        >
-          <Plus className="mr-2 h-5 w-5" />
+        <ShimmerButton onClick={() => setShowForm(true)} className="h-10">
+          <Plus className="mr-2 h-5 w-5" weight="bold" />
           Add Memory
-        </Button>
+        </ShimmerButton>
       </div>
 
       {/* Memory List */}

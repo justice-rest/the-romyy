@@ -12,7 +12,7 @@ import {
   PlugsConnectedIcon,
   CreditCardIcon,
   XIcon,
-  BrainIcon,
+  HardDrives,
 } from "@phosphor-icons/react"
 import { useState } from "react"
 import { SubscriptionSection } from "@/components/subscription/subscription-section"
@@ -98,7 +98,7 @@ export function SettingsContent({
                     value="memory"
                     className="flex shrink-0 items-center gap-2"
                   >
-                    <BrainIcon className="size-4" />
+                    <HardDrives className="size-4" />
                     <span>Memory</span>
                   </TabsTrigger>
                 )}
@@ -209,7 +209,7 @@ export function SettingsContent({
                     className="w-full justify-start rounded-md px-3 py-2 text-left"
                   >
                     <div className="flex items-center gap-2">
-                      <BrainIcon className="size-4" />
+                      <HardDrives className="size-4" />
                       <span>Memory</span>
                     </div>
                   </TabsTrigger>

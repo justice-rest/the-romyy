@@ -21,6 +21,12 @@ interface MemoryChartProps {
   stats: MemoryStats
 }
 
+interface TimelineDataPoint {
+  date: string
+  auto: number
+  explicit: number
+}
+
 const chartConfig = {
   auto: {
     label: "Auto Memories",
@@ -33,76 +39,116 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function MemoryChart({ stats }: MemoryChartProps) {
-  // Create mock time-series data for visualization
-  const chartData = React.useMemo(() => {
-    const data = []
-    const now = new Date()
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(now)
-      date.setDate(date.getDate() - i)
-      data.push({
-        date: date.toISOString().split("T")[0],
-        auto: Math.floor(Math.random() * stats.auto_memories),
-        explicit: Math.floor(Math.random() * stats.explicit_memories),
-      })
+  const [chartData, setChartData] = React.useState<TimelineDataPoint[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+
+  // Fetch real timeline data from API
+  React.useEffect(() => {
+    const fetchTimeline = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        const response = await fetch("/api/memories/timeline?days=30")
+        if (!response.ok) {
+          throw new Error("Failed to fetch timeline data")
+        }
+
+        const data = await response.json()
+        if (data.success && data.timeline) {
+          setChartData(data.timeline)
+        } else {
+          throw new Error(data.error || "Invalid response format")
+        }
+      } catch (err) {
+        console.error("Failed to fetch timeline:", err)
+        setError(err instanceof Error ? err.message : "Unknown error")
+        // Fallback to empty data
+        setChartData([])
+      } finally {
+        setIsLoading(false)
+      }
     }
-    return data
-  }, [stats.auto_memories, stats.explicit_memories])
+
+    fetchTimeline()
+  }, [stats]) // Refetch when stats change
 
   return (
     <Card className="py-0">
       <CardHeader className="flex flex-col justify-center gap-1 px-6 py-5">
         <CardTitle>Memory Distribution</CardTitle>
         <CardDescription>
-          Auto-extracted vs manually added memories
+          Auto-extracted vs manually added memories over the last 30 days
         </CardDescription>
       </CardHeader>
       <CardContent className="px-2 sm:p-6">
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
-        >
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-            }}
+        {isLoading ? (
+          <div className="flex h-[250px] items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <p className="text-sm text-muted-foreground">Loading timeline...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="flex h-[250px] items-center justify-center">
+            <p className="text-sm text-muted-foreground">
+              Unable to load timeline data
+            </p>
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="flex h-[250px] items-center justify-center">
+            <p className="text-sm text-muted-foreground">
+              No memory data available yet
+            </p>
+          </div>
+        ) : (
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-[250px] w-full"
           >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value: any) => {
-                const date = new Date(value)
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })
+            <BarChart
+              accessibilityLayer
+              data={chartData}
+              margin={{
+                left: 12,
+                right: 12,
               }}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  className="w-[150px]"
-                  labelFormatter={(value: any) => {
-                    return new Date(value).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  }}
-                />
-              }
-            />
-            <Bar dataKey="auto" fill="var(--color-auto)" />
-            <Bar dataKey="explicit" fill="var(--color-explicit)" />
-          </BarChart>
-        </ChartContainer>
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                tickFormatter={(value: any) => {
+                  const date = new Date(value)
+                  return date.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })
+                }}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    className="w-[150px]"
+                    labelFormatter={(value: any) => {
+                      return new Date(value).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                    }}
+                  />
+                }
+              />
+              <Bar dataKey="auto" fill="var(--color-auto)" />
+              <Bar dataKey="explicit" fill="var(--color-explicit)" />
+            </BarChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )
