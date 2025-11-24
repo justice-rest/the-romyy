@@ -8,6 +8,18 @@
   background: transparent;
 }
 
+/* Mobile and tablet devices */
+@media (max-width: 768px) {
+  .ticketBox {
+    width: 302px;
+    max-width: 302px;
+    margin: -18px -65px;
+    transform: scale(0.60);
+    transform-origin: center center;
+    background: transparent;
+  }
+}
+
 .ticket {
   width: 200%;
   height: 250px;
