@@ -235,10 +235,23 @@ export async function POST(req: Request) {
 
                 if (!isMemoryEnabled()) return
 
+                // Extract text from response messages
+                const textParts: string[] = []
+                for (const msg of response.messages) {
+                  if (msg.role === "assistant" && Array.isArray(msg.content)) {
+                    for (const part of msg.content) {
+                      if (part.type === "text" && part.text) {
+                        textParts.push(part.text)
+                      }
+                    }
+                  }
+                }
+                const responseText = textParts.join("\n\n")
+
                 // Build conversation history for extraction (last user message + assistant response)
                 const conversationForExtraction = [
                   { role: userMessage.role, content: String(userMessage.content) },
-                  { role: "assistant", content: response.text },
+                  { role: "assistant", content: responseText },
                 ]
 
                 // Extract memories

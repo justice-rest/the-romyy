@@ -7,7 +7,7 @@ import { MemoryForm } from "./memory-form"
 import { MemoryStats } from "./memory-stats"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Search } from "@phosphor-icons/react"
+import { Plus, MagnifyingGlass } from "@phosphor-icons/react"
 
 export function MemoryList() {
   const { memories, stats, isLoading, searchMemories } = useMemory()
@@ -56,7 +56,7 @@ export function MemoryList() {
       {/* Search and Add */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <MagnifyingGlass className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search memories..."
             value={searchQuery}

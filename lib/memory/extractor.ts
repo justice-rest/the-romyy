@@ -5,7 +5,7 @@
  * Also handles explicit "remember this" commands
  */
 
-import { streamText } from "ai"
+import { generateText } from "ai"
 import { createOpenRouter } from "@openrouter/ai-sdk-provider"
 import type { ExtractedMemory, ExtractionRequest } from "./types"
 import {
@@ -142,7 +142,7 @@ export async function extractMemoriesAuto(
     // Use a fast, cheap model for extraction
     const extractionModel = openrouter.chat("openai/gpt-4o-mini")
 
-    const { text } = await streamText({
+    const { text } = await generateText({
       model: extractionModel,
       system: EXTRACTION_SYSTEM_PROMPT,
       prompt: `Analyze this conversation and extract important facts to remember:
@@ -151,7 +151,7 @@ ${conversationText}
 
 Return a JSON array of extracted memories (or empty array if none found).`,
       maxTokens: 2000,
-    }).then((result) => result.text)
+    })
 
     // Parse JSON response
     try {

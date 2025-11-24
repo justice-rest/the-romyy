@@ -32,6 +32,10 @@ export async function searchMemories(
 ): Promise<MemorySearchResult[]> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured - cannot search memories")
+      return []
+    }
 
     // Generate embedding for search query
     const { embedding } = await generateEmbedding(params.query, apiKey)

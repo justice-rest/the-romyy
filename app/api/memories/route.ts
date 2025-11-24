@@ -29,6 +29,12 @@ export async function GET(req: Request) {
     }
 
     const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: "Supabase not configured" },
+        { status: 503 }
+      )
+    }
 
     const {
       data: { user },
@@ -84,6 +90,12 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: "Supabase not configured" },
+        { status: 503 }
+      )
+    }
 
     const {
       data: { user },

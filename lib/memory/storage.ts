@@ -28,6 +28,10 @@ export async function createMemory(
 ): Promise<UserMemory | null> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return null
+    }
 
     // Check if user has reached memory limit
     const { count } = await supabase
@@ -80,6 +84,10 @@ export async function createMemories(
 ): Promise<UserMemory[]> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return []
+    }
 
     // Convert embeddings to JSON strings
     const memoriesToInsert = memories.map((m) => ({
@@ -125,6 +133,10 @@ export async function getMemoryById(
 ): Promise<UserMemory | null> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return null
+    }
 
     const { data, error } = await supabase
       .from("user_memories")
@@ -160,6 +172,10 @@ export async function getUserMemories(
 ): Promise<UserMemory[]> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return []
+    }
 
     let query = supabase
       .from("user_memories")
@@ -204,6 +220,10 @@ export async function getMemoriesByType(
 ): Promise<UserMemory[]> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return []
+    }
 
     let query = supabase
       .from("user_memories")
@@ -239,6 +259,16 @@ export async function getMemoriesByType(
 export async function getMemoryStats(userId: string): Promise<MemoryStats> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return {
+        total_memories: 0,
+        auto_memories: 0,
+        explicit_memories: 0,
+        avg_importance: 0,
+        most_recent_memory: null,
+      }
+    }
 
     const { data, error } = await supabase.rpc("get_user_memory_stats", {
       user_id_param: userId,
@@ -291,6 +321,10 @@ export async function updateMemory(
 ): Promise<UserMemory | null> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return null
+    }
 
     const updateData: any = {}
 
@@ -339,6 +373,9 @@ export async function updateMemory(
 export async function incrementMemoryAccess(memoryId: string): Promise<void> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      return
+    }
 
     await supabase.rpc("increment_memory_access", {
       memory_id: memoryId,
@@ -366,6 +403,10 @@ export async function deleteMemory(
 ): Promise<boolean> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return false
+    }
 
     const { error } = await supabase
       .from("user_memories")
@@ -394,6 +435,10 @@ export async function deleteMemory(
 export async function deleteAllMemories(userId: string): Promise<number> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return 0
+    }
 
     const { data, error } = await supabase
       .from("user_memories")
@@ -426,6 +471,10 @@ export async function deleteMemoriesByType(
 ): Promise<number> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return 0
+    }
 
     const { data, error } = await supabase
       .from("user_memories")
@@ -460,6 +509,10 @@ export async function pruneMemories(
 ): Promise<number> {
   try {
     const supabase = await createClient()
+    if (!supabase) {
+      console.error("Supabase not configured")
+      return 0
+    }
 
     // Get IDs of memories to keep (sorted by weighted score)
     const { data: memoriesToKeep } = await supabase

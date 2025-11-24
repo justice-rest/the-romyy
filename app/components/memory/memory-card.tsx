@@ -5,7 +5,7 @@ import { useMemory } from "@/lib/memory-store"
 import type { UserMemory } from "@/lib/memory/types"
 import { Button } from "@/components/ui/button"
 import { Trash, Sparkle, Brain } from "@phosphor-icons/react"
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow } from "@/lib/utils/date"
 
 interface MemoryCardProps {
   memory: UserMemory

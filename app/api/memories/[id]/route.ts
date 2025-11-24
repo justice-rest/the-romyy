@@ -34,6 +34,12 @@ export async function GET(req: Request, context: RouteContext) {
     }
 
     const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: "Supabase not configured" },
+        { status: 503 }
+      )
+    }
 
     const {
       data: { user },
@@ -87,6 +93,12 @@ export async function PUT(req: Request, context: RouteContext) {
     }
 
     const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: "Supabase not configured" },
+        { status: 503 }
+      )
+    }
 
     const {
       data: { user },
@@ -156,6 +168,12 @@ export async function DELETE(req: Request, context: RouteContext) {
     }
 
     const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: "Supabase not configured" },
+        { status: 503 }
+      )
+    }
 
     const {
       data: { user },
