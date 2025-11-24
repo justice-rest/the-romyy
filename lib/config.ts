@@ -92,6 +92,12 @@ export const MAX_MESSAGES_IN_PAYLOAD = 50
 // Large search results or RAG outputs will be truncated to prevent payload bloat
 export const MAX_TOOL_RESULT_SIZE = 50000
 
+// Maximum size for individual message content (in characters)
+// Prevents context window overflow from large PDF extractions or long messages
+// ~1M characters ≈ ~250K tokens (4:1 ratio for English text)
+// Most models support 200K-2M tokens, so we cap at 500K chars (~125K tokens) per message
+export const MAX_MESSAGE_CONTENT_SIZE = 500000
+
 // ============================================================================
 // AI RESPONSE CONFIGURATION
 // ============================================================================

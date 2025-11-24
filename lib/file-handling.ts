@@ -6,6 +6,7 @@ import { createClient } from "./supabase/client"
 import { isSupabaseEnabled } from "./supabase/config"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const LARGE_FILE_WARNING_SIZE = 5 * 1024 * 1024 // 5MB - warn about potential token limits
 
 const ALLOWED_FILE_TYPES = [
   "image/jpeg",
@@ -149,6 +150,7 @@ export async function processFiles(
 
   const attachments: Attachment[] = []
   const errors: string[] = []
+  let hasLargeFile = false
 
   for (const file of files) {
     // Validate file
@@ -157,6 +159,11 @@ export async function processFiles(
       console.warn(`File ${file.name} validation failed:`, validation.error)
       errors.push(`${file.name}: ${validation.error}`)
       continue
+    }
+
+    // Check if file is large (especially PDFs which extract to text)
+    if (file.size > LARGE_FILE_WARNING_SIZE && file.type === "application/pdf") {
+      hasLargeFile = true
     }
 
     try {
@@ -214,6 +221,15 @@ export async function processFiles(
     toast({
       title: `${attachments.length} file(s) uploaded successfully`,
       status: "success",
+    })
+  }
+
+  // Warn about large PDFs that might exceed token limits
+  if (hasLargeFile) {
+    toast({
+      title: "Large PDF detected",
+      description: "PDFs over 5MB may contain more text than the AI can process in one message. Very large content will be automatically truncated. Consider breaking large documents into smaller sections.",
+      status: "info",
     })
   }
 

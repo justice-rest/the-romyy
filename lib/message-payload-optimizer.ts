@@ -10,7 +10,7 @@
  */
 
 import type { Message } from "@ai-sdk/react"
-import { MAX_MESSAGES_IN_PAYLOAD, MAX_TOOL_RESULT_SIZE } from "./config"
+import { MAX_MESSAGES_IN_PAYLOAD, MAX_TOOL_RESULT_SIZE, MAX_MESSAGE_CONTENT_SIZE } from "./config"
 
 /**
  * Sanitize text content to prevent JSON serialization errors
@@ -33,6 +33,24 @@ function sanitizeTextContent(text: string): string {
       .replace(/\t/g, "\\t") // Escape tabs
       .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control characters
   }
+}
+
+/**
+ * Truncate message content if it exceeds the maximum size
+ * Prevents context window overflow from large PDF extractions
+ */
+function truncateMessageContent(content: string): string {
+  if (!content || content.length <= MAX_MESSAGE_CONTENT_SIZE) {
+    return content
+  }
+
+  const truncated = content.substring(0, MAX_MESSAGE_CONTENT_SIZE)
+  const tokensRemoved = Math.round((content.length - MAX_MESSAGE_CONTENT_SIZE) / 4)
+
+  return (
+    truncated +
+    `\n\n[Content truncated to prevent context window overflow. Removed approximately ${tokensRemoved.toLocaleString()} tokens. Consider breaking this into smaller chunks or summarizing the content before sending.]`
+  )
 }
 
 /**
@@ -125,9 +143,9 @@ function truncateToolResult(result: any): any {
 function cleanMessage(message: Message): Message {
   const cleaned: Message = {
     ...message,
-    // Sanitize text content if it's a string
+    // Sanitize and truncate text content if it's a string
     content: typeof message.content === "string"
-      ? sanitizeTextContent(message.content)
+      ? truncateMessageContent(sanitizeTextContent(message.content))
       : message.content,
     // Clean attachments
     experimental_attachments: cleanAttachments(
@@ -138,11 +156,11 @@ function cleanMessage(message: Message): Message {
   // Clean tool invocations if present in content
   if (Array.isArray(message.content)) {
     cleaned.content = message.content.map((part: any) => {
-      // Sanitize text parts
+      // Sanitize and truncate text parts
       if (part.type === "text" && typeof part.text === "string") {
         return {
           ...part,
-          text: sanitizeTextContent(part.text),
+          text: truncateMessageContent(sanitizeTextContent(part.text)),
         }
       }
       if (part.type === "tool-invocation" && part.toolInvocation?.result) {
