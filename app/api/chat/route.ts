@@ -6,6 +6,7 @@ import { createListDocumentsTool } from "@/lib/tools/list-documents"
 import { createRagSearchTool } from "@/lib/tools/rag-search"
 import type { ProviderWithoutOllama } from "@/lib/user-keys"
 import { getSystemPromptWithContext } from "@/lib/onboarding-context"
+import { optimizeMessagePayload } from "@/lib/message-payload-optimizer"
 import { Attachment } from "@ai-sdk/ui-utils"
 import { Message as MessageAISDK, streamText, ToolSet } from "ai"
 import {
@@ -160,10 +161,14 @@ export async function POST(req: Request) {
         : {}),
     } as ToolSet
 
+    // Optimize message payload to prevent FUNCTION_PAYLOAD_TOO_LARGE errors
+    // This limits message history, removes blob URLs, and truncates large tool results
+    const optimizedMessages = optimizeMessagePayload(messages)
+
     const result = streamText({
       model: modelConfig.apiSdk(apiKey, { enableSearch }),
       system: effectiveSystemPrompt,
-      messages: messages,
+      messages: optimizedMessages,
       tools,
       maxSteps: 10,
       maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 8000 tokens ≈ 6000 words)

@@ -44,6 +44,8 @@ export async function searchDocumentChunks(
 
   try {
     // Format embedding as pgvector string: [0.1,0.2,0.3]
+    // Note: While this creates a ~15KB string for 1536 dimensions,
+    // it's the standard way to pass vectors to PostgREST RPC functions
     const embeddingString = `[${queryEmbedding.join(',')}]`
 
     // Call the search_rag_chunks function from Supabase

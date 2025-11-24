@@ -1,8 +1,54 @@
 import type { ContentPart, Message } from "@/app/types/api.types"
 import type { Database, Json } from "@/app/types/database.types"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { MAX_TOOL_RESULT_SIZE } from "@/lib/config"
 
 const DEFAULT_STEP = 0
+
+/**
+ * Truncate large tool results to prevent database payload size errors
+ */
+function truncateToolResult(result: any): any {
+  if (!result) return result
+
+  if (typeof result === "string" && result.length > MAX_TOOL_RESULT_SIZE) {
+    return (
+      result.substring(0, MAX_TOOL_RESULT_SIZE) +
+      "\n\n[Content truncated due to size limit]"
+    )
+  }
+
+  if (typeof result === "object") {
+    const truncated = { ...result }
+
+    // Truncate common large fields
+    const fields = ["content", "text", "results", "data", "body", "html"]
+    for (const field of fields) {
+      if (truncated[field] && typeof truncated[field] === "string") {
+        const content = truncated[field] as string
+        if (content.length > MAX_TOOL_RESULT_SIZE) {
+          truncated[field] =
+            content.substring(0, MAX_TOOL_RESULT_SIZE) +
+            "\n\n[Content truncated due to size limit]"
+        }
+      }
+    }
+
+    // Truncate array results
+    if (Array.isArray(truncated.results)) {
+      let totalSize = 0
+      truncated.results = truncated.results.filter((item: any) => {
+        const size = JSON.stringify(item).length
+        totalSize += size
+        return totalSize <= MAX_TOOL_RESULT_SIZE
+      })
+    }
+
+    return truncated
+  }
+
+  return result
+}
 
 export async function saveFinalAssistantMessage(
   supabase: SupabaseClient<Database>,
@@ -32,6 +78,8 @@ export async function saveFinalAssistantMessage(
               toolInvocation: {
                 ...part.toolInvocation,
                 args: part.toolInvocation?.args || {},
+                // Truncate large results to prevent payload errors
+                result: truncateToolResult(part.toolInvocation?.result),
               },
             })
           }
@@ -61,7 +109,8 @@ export async function saveFinalAssistantMessage(
               step: DEFAULT_STEP,
               toolCallId,
               toolName: part.toolName || "",
-              result: part.result,
+              // Truncate large results to prevent payload errors
+              result: truncateToolResult(part.result),
             },
           })
         }

@@ -80,6 +80,19 @@ You're Rōmy. You've built this experience the hard way. You know donor psycholo
 export const MESSAGE_MAX_LENGTH = 10000
 
 // ============================================================================
+// PAYLOAD SIZE LIMITS
+// ============================================================================
+
+// Maximum number of messages to send in conversation history
+// Prevents FUNCTION_PAYLOAD_TOO_LARGE errors by limiting context window
+// Older messages will be omitted from API requests but remain in UI
+export const MAX_MESSAGES_IN_PAYLOAD = 50
+
+// Maximum size for tool result content before truncation (in characters)
+// Large search results or RAG outputs will be truncated to prevent payload bloat
+export const MAX_TOOL_RESULT_SIZE = 50000
+
+// ============================================================================
 // AI RESPONSE CONFIGURATION
 // ============================================================================
 
