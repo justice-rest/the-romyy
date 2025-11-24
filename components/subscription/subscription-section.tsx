@@ -261,16 +261,14 @@ export function SubscriptionSection() {
           </button>
         </div>
 
-        {/* Flight Ticket */}
-        {hasActiveSubscription && (
-          <div className="mb-4">
-            <FlightTicket
-              plan={planType || "free"}
-              credits={hasUnlimitedMessages ? "unlimited" : (features?.messages?.balance ?? 100)}
-              userName={userName || undefined}
-            />
-          </div>
-        )}
+        {/* Flight Ticket - TEMPORARY: Showing without condition for testing */}
+        <div className="mb-4">
+          <FlightTicket
+            plan={planType || "free"}
+            credits={hasUnlimitedMessages ? "unlimited" : (features?.messages?.balance ?? 100)}
+            userName={userName || undefined}
+          />
+        </div>
 
         {/* Action Buttons */}
         <div className="flex gap-2">
