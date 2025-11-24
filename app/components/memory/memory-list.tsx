@@ -1,43 +1,72 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useMemory } from "@/lib/memory-store"
 import { MemoryCard } from "./memory-card"
 import { MemoryForm } from "./memory-form"
 import { MemoryStats } from "./memory-stats"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, MagnifyingGlass } from "@phosphor-icons/react"
+import { Plus, MagnifyingGlass, ArrowClockwise } from "@phosphor-icons/react"
 
 export function MemoryList() {
-  const { memories, stats, isLoading, searchMemories } = useMemory()
+  const { memories, stats, isLoading, searchMemories, refresh } = useMemory()
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [semanticResults, setSemanticResults] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
 
-  const displayedMemories = searchResults.length > 0 ? searchResults : memories
+  // Immediate local filtering for instant feedback
+  const localFilteredMemories = useMemo(() => {
+    if (!searchQuery.trim()) return memories
 
-  const handleSearch = async () => {
+    const query = searchQuery.toLowerCase()
+    return memories.filter((memory) =>
+      memory.content.toLowerCase().includes(query)
+    )
+  }, [memories, searchQuery])
+
+  // Debounced semantic search using API
+  useEffect(() => {
     if (!searchQuery.trim()) {
-      setSearchResults([])
+      setSemanticResults([])
+      setIsSearching(false)
       return
     }
 
     setIsSearching(true)
-    try {
-      const results = await searchMemories(searchQuery, { limit: 20 })
-      setSearchResults(results)
-    } catch (error) {
-      console.error("Search failed:", error)
-    } finally {
-      setIsSearching(false)
-    }
-  }
+    const timeoutId = setTimeout(async () => {
+      try {
+        const results = await searchMemories(searchQuery, { limit: 20 })
+        setSemanticResults(results)
+      } catch (error) {
+        console.error("Semantic search failed:", error)
+        // Fall back to local results on error
+        setSemanticResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 300) // 300ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, searchMemories])
+
+  // Show semantic results if available, otherwise local filtered results
+  const displayedMemories = semanticResults.length > 0 ? semanticResults : localFilteredMemories
 
   const handleClearSearch = () => {
     setSearchQuery("")
-    setSearchResults([])
+    setSemanticResults([])
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await refresh()
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   if (isLoading) {
@@ -61,22 +90,28 @@ export function MemoryList() {
             placeholder="Search memories..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch()
-              }
-            }}
             className="pl-10"
           />
+          {isSearching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          )}
         </div>
-        <Button onClick={handleSearch} disabled={isSearching} variant="outline">
-          {isSearching ? "Searching..." : "Search"}
-        </Button>
-        {searchResults.length > 0 && (
-          <Button onClick={handleClearSearch} variant="ghost">
+        {searchQuery && (
+          <Button onClick={handleClearSearch} variant="ghost" size="sm">
             Clear
           </Button>
         )}
+        <Button
+          onClick={handleRefresh}
+          variant="ghost"
+          size="sm"
+          disabled={isRefreshing}
+          title="Refresh memories"
+        >
+          <ArrowClockwise className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+        </Button>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Memory
@@ -88,16 +123,10 @@ export function MemoryList() {
         {displayedMemories.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
             <div className="text-muted-foreground">
-              {searchResults.length === 0 && searchQuery
+              {searchQuery
                 ? "No memories found matching your search."
                 : "No memories yet. The AI will automatically save important facts as you chat."}
             </div>
-            {!searchQuery && (
-              <Button onClick={() => setShowForm(true)} variant="outline">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Your First Memory
-              </Button>
-            )}
           </div>
         )}
 

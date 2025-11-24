@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useMemory } from "@/lib/memory-store"
 import type { UserMemory } from "@/lib/memory/types"
 import { Button } from "@/components/ui/button"
-import { Trash, Sparkle, Brain } from "@phosphor-icons/react"
+import { Trash, Sparkle } from "@phosphor-icons/react"
 import { formatDistanceToNow } from "@/lib/utils/date"
 
 interface MemoryCardProps {
@@ -47,11 +47,10 @@ export function MemoryCard({ memory }: MemoryCardProps) {
       {/* Header */}
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          {isExplicit ? (
-            <Sparkle className="h-4 w-4 text-purple-500" weight="fill" />
-          ) : (
-            <Brain className="h-4 w-4 text-blue-500" />
-          )}
+          <Sparkle
+            className={isExplicit ? "h-4 w-4 text-purple-500" : "h-4 w-4 text-yellow-500"}
+            weight="fill"
+          />
           <span className="text-xs font-medium text-muted-foreground capitalize">
             {category.replace("_", " ")}
           </span>

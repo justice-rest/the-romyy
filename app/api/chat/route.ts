@@ -230,10 +230,14 @@ export async function POST(req: Request) {
           if (isAuthenticated) {
             Promise.resolve().then(async () => {
               try {
+                console.log("[Memory] Starting extraction for authenticated user:", userId)
                 const { extractMemories, createMemory, memoryExists, calculateImportanceScore, isMemoryEnabled } = await import("@/lib/memory")
                 const { generateEmbedding } = await import("@/lib/rag/embeddings")
 
-                if (!isMemoryEnabled()) return
+                if (!isMemoryEnabled()) {
+                  console.log("[Memory] Memory system is disabled")
+                  return
+                }
 
                 // Extract text from response messages
                 const textParts: string[] = []
@@ -254,6 +258,7 @@ export async function POST(req: Request) {
                   { role: "assistant", content: responseText },
                 ]
 
+                console.log("[Memory] Extracting memories from conversation...")
                 // Extract memories
                 const extractedMemories = await extractMemories(
                   {
@@ -264,10 +269,13 @@ export async function POST(req: Request) {
                   apiKey || process.env.OPENROUTER_API_KEY || ""
                 )
 
+                console.log(`[Memory] Found ${extractedMemories.length} potential memories to save`)
+
                 // Save each extracted memory
                 for (const memory of extractedMemories) {
                   try {
                     // Check if similar memory already exists (avoid duplicates)
+                    console.log(`[Memory] Checking if memory already exists: "${memory.content.substring(0, 50)}..."`)
                     const exists = await memoryExists(
                       memory.content,
                       userId,
@@ -275,11 +283,12 @@ export async function POST(req: Request) {
                     )
 
                     if (exists) {
-                      console.log("Skipping duplicate memory:", memory.content)
+                      console.log(`[Memory] ⏭️  Skipping duplicate memory`)
                       continue
                     }
 
                     // Generate embedding for memory
+                    console.log(`[Memory] Generating embedding...`)
                     const { embedding } = await generateEmbedding(
                       memory.content,
                       apiKey || process.env.OPENROUTER_API_KEY || ""
@@ -295,8 +304,9 @@ export async function POST(req: Request) {
                       }
                     )
 
+                    console.log(`[Memory] Saving with importance score: ${importanceScore}`)
                     // Save memory to database
-                    await createMemory({
+                    const savedMemory = await createMemory({
                       user_id: userId,
                       content: memory.content,
                       memory_type: memory.tags?.includes("explicit") ? "explicit" : "auto",
@@ -310,16 +320,22 @@ export async function POST(req: Request) {
                       embedding,
                     })
 
-                    console.log(`Saved memory: ${memory.content} (importance: ${importanceScore})`)
+                    if (savedMemory) {
+                      console.log(`[Memory] ✅ Successfully saved: "${memory.content.substring(0, 50)}..." (importance: ${importanceScore})`)
+                    } else {
+                      console.error(`[Memory] ❌ Failed to save memory (returned null)`)
+                    }
                   } catch (memErr) {
-                    console.error("Failed to save individual memory:", memErr)
+                    console.error("[Memory] ❌ Error saving individual memory:", memErr)
                   }
                 }
+
+                console.log(`[Memory] Extraction complete. Processed ${extractedMemories.length} memories.`)
               } catch (error) {
-                console.error("Failed to extract/save memories:", error)
+                console.error("[Memory] ❌ Memory extraction failed:", error)
                 // Don't fail the response if memory extraction fails
               }
-            }).catch((err) => console.error("Background memory extraction failed:", err))
+            }).catch((err) => console.error("[Memory] ❌ Background memory extraction failed:", err))
           }
         }
       },

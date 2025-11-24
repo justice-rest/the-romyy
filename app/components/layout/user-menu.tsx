@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useUser } from "@/lib/user-store/provider"
-import { InstagramLogoIcon, SignOut } from "@phosphor-icons/react"
+import { InstagramLogoIcon, LinkedinLogoIcon, SignOut } from "@phosphor-icons/react"
 import { useState, useEffect } from "react"
 import { useCustomer } from "autumn-js/react"
 import { createClient } from "@/lib/supabase/client"
@@ -169,6 +169,17 @@ export function UserMenu() {
           >
             <InstagramLogoIcon className="size-4" />
             <span>@getromy.app</span>
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a
+            href="https://www.linkedin.com/company/107042684/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2"
+          >
+            <LinkedinLogoIcon className="size-4" />
+            <span>Rōmy</span>
           </a>
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -115,7 +115,7 @@ export default function SubscriptionPage() {
               </h1>
               <p className="text-foreground mx-auto max-w-2xl text-lg">
                 Unlock the full potential of AI with Rōmy. Select the plan that
-                fits your needs.
+                fits your needs. Start with a 2-week free trial.
               </p>
             </div>
 

@@ -121,7 +121,7 @@ async function searchMemoriesApi(params: SearchMemoriesRequest): Promise<MemoryS
 export function MemoryProvider({ children, userId }: { children: ReactNode; userId: string | null }) {
   const queryClient = useQueryClient()
 
-  // Fetch memories
+  // Fetch memories with automatic refetching to catch background-created memories
   const {
     data,
     isLoading,
@@ -131,7 +131,9 @@ export function MemoryProvider({ children, userId }: { children: ReactNode; user
     queryKey: ["memories", userId],
     queryFn: fetchMemories,
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds (reduced from 5 minutes)
+    refetchInterval: 30 * 1000, // Auto-refetch every 30 seconds to catch background memories
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
   })
 
   const memories = data?.memories || []

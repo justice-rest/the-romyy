@@ -18,6 +18,7 @@ export default function EmailAuthPage() {
   const [showResetPassword, setShowResetPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const router = useRouter()
 
   const supabase = createClient()
@@ -59,6 +60,13 @@ export default function EmailAuthPage() {
         setEmail("")
       } else if (isSignUp) {
         // Handle sign up
+        // Validate password confirmation
+        if (password !== confirmPassword) {
+          setError("Passwords do not match")
+          setIsLoading(false)
+          return
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -78,6 +86,7 @@ export default function EmailAuthPage() {
         )
         setEmail("")
         setPassword("")
+        setConfirmPassword("")
       } else {
         // Handle sign in
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -205,6 +214,24 @@ export default function EmailAuthPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                </div>
+              )}
+
+              {isSignUp && !showResetPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Input
+                    id="confirm-password"
+                    name="confirm-password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm your password"
                     disabled={isLoading}
                     minLength={6}
                   />
