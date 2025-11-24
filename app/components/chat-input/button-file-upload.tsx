@@ -32,6 +32,9 @@ export function ButtonFileUpload({
   isUserAuthenticated,
   model,
 }: ButtonFileUploadProps) {
+  // File upload is temporarily disabled - coming soon
+  const isFileUploadTemporarilyDisabled = true
+
   if (!isSupabaseEnabled) {
     return null
   }
@@ -39,6 +42,27 @@ export function ButtonFileUpload({
   // Normalize model ID to handle deprecated/migrated model IDs (e.g., grok-4-fast → grok-4.1-fast)
   const normalizedModel = normalizeModelId(model)
   const isFileUploadAvailable = getModelInfo(normalizedModel)?.vision
+
+  // Show "Coming Soon" state when feature is temporarily disabled
+  if (isFileUploadTemporarilyDisabled) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="border-border dark:bg-secondary size-9 cursor-not-allowed rounded-full border bg-transparent opacity-50"
+            type="button"
+            disabled
+            aria-label="Add files (Coming Soon)"
+          >
+            <Paperclip className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Add files (Coming Soon)</TooltipContent>
+      </Tooltip>
+    )
+  }
 
   if (!isFileUploadAvailable) {
     return (

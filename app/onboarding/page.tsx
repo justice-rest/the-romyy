@@ -6,8 +6,6 @@ import { OnboardingFormData } from "@/app/api/onboarding/route"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 
-export const dynamic = "force-dynamic"
-
 export default function OnboardingPage() {
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)
