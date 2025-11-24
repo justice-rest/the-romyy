@@ -529,6 +529,56 @@ export type Database = {
           },
         ]
       }
+      user_memories: {
+        Row: {
+          id: string
+          user_id: string
+          content: string
+          memory_type: "auto" | "explicit"
+          importance_score: number
+          metadata: Json
+          embedding: string // JSON-encoded vector
+          access_count: number
+          last_accessed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          content: string
+          memory_type?: "auto" | "explicit"
+          importance_score?: number
+          metadata?: Json
+          embedding: string
+          access_count?: number
+          last_accessed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          content?: string
+          memory_type?: "auto" | "explicit"
+          importance_score?: number
+          metadata?: Json
+          embedding?: string
+          access_count?: number
+          last_accessed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_memories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -561,6 +611,45 @@ export type Database = {
           total_bytes: number
           chunk_count: number
         }>
+      }
+      search_user_memories: {
+        Args: {
+          query_embedding: string // JSON-encoded vector
+          match_user_id: string
+          match_count?: number
+          similarity_threshold?: number
+          memory_type_filter?: string | null
+          min_importance?: number
+        }
+        Returns: Array<{
+          id: string
+          content: string
+          memory_type: string
+          importance_score: number
+          metadata: Json
+          similarity: number
+          weighted_score: number
+          created_at: string
+          last_accessed_at: string | null
+        }>
+      }
+      get_user_memory_stats: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: Array<{
+          total_memories: number
+          auto_memories: number
+          explicit_memories: number
+          avg_importance: number
+          most_recent_memory: string | null
+        }>
+      }
+      increment_memory_access: {
+        Args: {
+          memory_id: string
+        }
+        Returns: void
       }
     }
     Enums: Record<string, never>

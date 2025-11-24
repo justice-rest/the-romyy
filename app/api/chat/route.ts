@@ -4,6 +4,7 @@ import { getProviderForModel } from "@/lib/openproviders/provider-map"
 import { exaSearchTool, shouldEnableExaTool } from "@/lib/tools/exa-search"
 import { createListDocumentsTool } from "@/lib/tools/list-documents"
 import { createRagSearchTool } from "@/lib/tools/rag-search"
+import { createMemorySearchTool } from "@/lib/tools/memory-tool"
 import type { ProviderWithoutOllama } from "@/lib/user-keys"
 import { getSystemPromptWithContext } from "@/lib/onboarding-context"
 import { optimizeMessagePayload } from "@/lib/message-payload-optimizer"
@@ -115,6 +116,40 @@ export async function POST(req: Request) {
 
     const userMessage = messages[messages.length - 1]
 
+    // AUTO-INJECT: Add relevant memories to system prompt (HYBRID mode)
+    let finalSystemPrompt = effectiveSystemPrompt
+    if (isAuthenticated) {
+      try {
+        const { getMemoriesForAutoInject, formatMemoriesForPrompt, buildConversationContext, isMemoryEnabled } = await import("@/lib/memory")
+
+        if (isMemoryEnabled()) {
+          const conversationContext = buildConversationContext(
+            messages.slice(-5).map((m) => ({ role: m.role, content: String(m.content) }))
+          )
+
+          if (conversationContext) {
+            const relevantMemories = await getMemoriesForAutoInject(
+              {
+                conversationContext,
+                userId,
+                count: 5,
+                minImportance: 0.3,
+              },
+              apiKey || process.env.OPENROUTER_API_KEY || ""
+            )
+
+            if (relevantMemories.length > 0) {
+              const memoryContext = formatMemoriesForPrompt(relevantMemories)
+              finalSystemPrompt = `${effectiveSystemPrompt}\n\n${memoryContext}`
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to inject memories:", error)
+        // Don't fail the request if memory injection fails
+      }
+    }
+
     /**
      * OPTIMIZATION: Move non-critical operations to background
      * Logging and deletions can happen during streaming without blocking response
@@ -151,14 +186,14 @@ export async function POST(req: Request) {
       ]).catch((err: unknown) => console.error("Background operations failed:", err))
     }
 
-    // Build tools object - include Exa search tool if enabled and API key is configured
-    // Also include RAG tools for authenticated users (always available, AI decides when to use them)
+    // Build tools object - include Exa search, RAG tools, and Memory search for authenticated users
     const tools: ToolSet = {
       ...(enableSearch && shouldEnableExaTool() ? { searchWeb: exaSearchTool } : {}),
       ...(isAuthenticated
         ? {
             list_documents: createListDocumentsTool(userId),
             rag_search: createRagSearchTool(userId),
+            search_memory: createMemorySearchTool(userId),
           }
         : {}),
     } as ToolSet
@@ -169,7 +204,7 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: modelConfig.apiSdk(apiKey, { enableSearch }),
-      system: effectiveSystemPrompt,
+      system: finalSystemPrompt,
       messages: optimizedMessages,
       tools,
       maxSteps: 10,
@@ -181,6 +216,7 @@ export async function POST(req: Request) {
 
       onFinish: async ({ response }) => {
         if (supabase) {
+          // Store assistant message
           await storeAssistantMessage({
             supabase,
             chatId,
@@ -189,6 +225,89 @@ export async function POST(req: Request) {
             message_group_id,
             model: normalizedModel,
           })
+
+          // MEMORY EXTRACTION: Extract and save important facts (background operation)
+          if (isAuthenticated) {
+            Promise.resolve().then(async () => {
+              try {
+                const { extractMemories, createMemory, memoryExists, calculateImportanceScore, isMemoryEnabled } = await import("@/lib/memory")
+                const { generateEmbedding } = await import("@/lib/rag/embeddings")
+
+                if (!isMemoryEnabled()) return
+
+                // Build conversation history for extraction (last user message + assistant response)
+                const conversationForExtraction = [
+                  { role: userMessage.role, content: String(userMessage.content) },
+                  { role: "assistant", content: response.text },
+                ]
+
+                // Extract memories
+                const extractedMemories = await extractMemories(
+                  {
+                    messages: conversationForExtraction,
+                    userId,
+                    chatId,
+                  },
+                  apiKey || process.env.OPENROUTER_API_KEY || ""
+                )
+
+                // Save each extracted memory
+                for (const memory of extractedMemories) {
+                  try {
+                    // Check if similar memory already exists (avoid duplicates)
+                    const exists = await memoryExists(
+                      memory.content,
+                      userId,
+                      apiKey || process.env.OPENROUTER_API_KEY || ""
+                    )
+
+                    if (exists) {
+                      console.log("Skipping duplicate memory:", memory.content)
+                      continue
+                    }
+
+                    // Generate embedding for memory
+                    const { embedding } = await generateEmbedding(
+                      memory.content,
+                      apiKey || process.env.OPENROUTER_API_KEY || ""
+                    )
+
+                    // Calculate final importance score
+                    const importanceScore = calculateImportanceScore(
+                      memory.content,
+                      memory.category,
+                      {
+                        tags: memory.tags,
+                        context: memory.context,
+                      }
+                    )
+
+                    // Save memory to database
+                    await createMemory({
+                      user_id: userId,
+                      content: memory.content,
+                      memory_type: memory.tags?.includes("explicit") ? "explicit" : "auto",
+                      importance_score: importanceScore,
+                      metadata: {
+                        source_chat_id: chatId,
+                        category: memory.category,
+                        tags: memory.tags,
+                        context: memory.context,
+                      },
+                      embedding,
+                    })
+
+                    console.log(`Saved memory: ${memory.content} (importance: ${importanceScore})`)
+                  } catch (memErr) {
+                    console.error("Failed to save individual memory:", memErr)
+                  }
+                }
+              } catch (error) {
+                console.error("Failed to extract/save memories:", error)
+                // Don't fail the response if memory extraction fails
+              }
+            }).catch((err) => console.error("Background memory extraction failed:", err))
+          }
         }
       },
     })

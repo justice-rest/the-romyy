@@ -233,6 +233,68 @@ const { track, identify, isAvailable } = useAnalytics()
 
 **Configuration**: See `/lib/posthog/README.md` for complete documentation
 
+### AI Memory System Integration
+**Dual Implementation Strategy** for personalized, context-aware conversations:
+
+**1. Automatic Memory Extraction** (`/lib/memory/extractor.ts`)
+- AI analyzes conversations and extracts important facts
+- Stores user preferences, personal details, and context
+- Two types: explicit ("remember that...") and automatic
+- Features:
+  - **Pattern detection**: Recognizes memory commands
+  - **AI-powered extraction**: Uses GPT-4o-mini to identify facts
+  - **Category classification**: Organizes into user_info, preferences, context, etc.
+  - **Importance scoring**: Ranks memories by relevance (0-1 scale)
+
+**2. Hybrid Memory Retrieval** (`/lib/memory/retrieval.ts`)
+- Auto-injection: Retrieves relevant memories and injects into system prompt
+- Tool-based search: AI can explicitly search memories with `search_memory` tool
+- Semantic search using vector embeddings (1536 dimensions)
+- Features:
+  - **Context building**: Analyzes recent conversation for relevant memories
+  - **Vector similarity**: Uses pgvector for semantic search
+  - **Deduplication**: Prevents storing redundant information
+  - **Access tracking**: Monitors which memories are frequently used
+
+**3. Memory Storage** (`/lib/memory/storage.ts`)
+- Database table: `user_memories` with pgvector extension
+- CRUD operations with RLS policies
+- Features:
+  - **Vector embeddings**: Uses OpenRouter for embedding generation
+  - **Importance decay**: Older, unused memories become less relevant
+  - **Pruning**: Auto-removes low-value memories when limit reached
+  - **Statistics**: Tracks total memories, avg importance, etc.
+
+**Memory Flow**:
+```
+User sends message
+  → Retrieve relevant memories (semantic search)
+  → Inject top 5 memories into system prompt
+  → AI generates response with memory context
+  → Extract new facts from conversation
+  → Save to database with embeddings
+  → Track access patterns
+```
+
+**Memory Management UI** (`/app/components/memory/`):
+- Settings → Memory tab shows all user memories
+- Features: search, add, edit, delete memories
+- Components: MemoryList, MemoryCard, MemoryForm, MemoryStats
+- State: MemoryProvider with React Query caching
+
+**Configuration** (`/lib/memory/config.ts`):
+- `MAX_MEMORIES_PER_USER`: 1000 memories per user
+- `AUTO_INJECT_MEMORY_COUNT`: 5 memories injected per request
+- `DEFAULT_SIMILARITY_THRESHOLD`: 0.5 (0-1 scale)
+- `EXPLICIT_MEMORY_IMPORTANCE`: 0.9 for user-requested memories
+
+**Key Files**:
+- `/lib/memory/` - Core memory system (extraction, storage, retrieval, scoring)
+- `/lib/tools/memory-tool.ts` - AI tool for searching memories
+- `/app/api/chat/route.ts` - Integration point (lines 119-151, 229-310)
+- `/app/api/memories/` - REST API endpoints for memory CRUD
+- `/migrations/006_add_memory_system.sql` - Database schema
+
 ### Exa Search Integration
 **Dual Implementation Strategy** for maximum reliability and control:
 

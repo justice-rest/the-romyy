@@ -12,6 +12,7 @@ import {
   PlugsConnectedIcon,
   CreditCardIcon,
   XIcon,
+  BrainIcon,
 } from "@phosphor-icons/react"
 import { useState } from "react"
 import { SubscriptionSection } from "@/components/subscription/subscription-section"
@@ -25,12 +26,13 @@ import { AccountManagement } from "./general/account-management"
 import { OnboardingDataSection } from "./general/onboarding-data"
 import { UserProfile } from "./general/user-profile"
 import { DataSection } from "./data/data-section"
+import { MemoryList } from "@/app/components/memory"
 
 type SettingsContentProps = {
   isDrawer?: boolean
 }
 
-type TabType = "general" | "appearance" | "data" | "subscription" | "connections"
+type TabType = "general" | "appearance" | "data" | "memory" | "subscription" | "connections"
 
 export function SettingsContent({
   isDrawer = false,
@@ -93,6 +95,15 @@ export function SettingsContent({
                 )}
                 {isSupabaseEnabled && (
                   <TabsTrigger
+                    value="memory"
+                    className="flex shrink-0 items-center gap-2"
+                  >
+                    <BrainIcon className="size-4" />
+                    <span>Memory</span>
+                  </TabsTrigger>
+                )}
+                {isSupabaseEnabled && (
+                  <TabsTrigger
                     value="subscription"
                     className="flex shrink-0 items-center gap-2"
                   >
@@ -129,6 +140,20 @@ export function SettingsContent({
 
             <TabsContent value="data" className="space-y-6 px-6">
               {isSupabaseEnabled && <DataSection />}
+            </TabsContent>
+
+            <TabsContent value="memory" className="space-y-6 px-6">
+              {isSupabaseEnabled && (
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">AI Memory</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Manage what the AI remembers about you across conversations.
+                    </p>
+                  </div>
+                  <MemoryList />
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="subscription" className="space-y-6 px-6">
@@ -180,6 +205,18 @@ export function SettingsContent({
 
                 {isSupabaseEnabled && (
                   <TabsTrigger
+                    value="memory"
+                    className="w-full justify-start rounded-md px-3 py-2 text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BrainIcon className="size-4" />
+                      <span>Memory</span>
+                    </div>
+                  </TabsTrigger>
+                )}
+
+                {isSupabaseEnabled && (
+                  <TabsTrigger
                     value="subscription"
                     className="w-full justify-start rounded-md px-3 py-2 text-left"
                   >
@@ -222,6 +259,20 @@ export function SettingsContent({
 
               <TabsContent value="data" className="mt-0 space-y-6">
                 {isSupabaseEnabled && <DataSection />}
+              </TabsContent>
+
+              <TabsContent value="memory" className="mt-0 space-y-6">
+                {isSupabaseEnabled && (
+                  <div className="space-y-4">
+                    <div>
+                      <h2 className="text-lg font-semibold">AI Memory</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Manage what the AI remembers about you across conversations.
+                      </p>
+                    </div>
+                    <MemoryList />
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="subscription" className="mt-0 space-y-6">

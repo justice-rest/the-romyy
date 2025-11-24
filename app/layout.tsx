@@ -13,6 +13,7 @@ import { UserPreferencesProvider } from "@/lib/user-preference-store/provider"
 import { UserProvider } from "@/lib/user-store/provider"
 import { getUserProfile } from "@/lib/user/api"
 import { PostHogProvider } from "@/lib/posthog/provider"
+import { MemoryProvider } from "@/lib/memory-store"
 import { ThemeProvider } from "next-themes"
 import Script from "next/script"
 import { LayoutClient } from "./layout-client"
@@ -66,22 +67,24 @@ export default async function RootLayout({
                         userId={userProfile?.id}
                         initialPreferences={userProfile?.preferences}
                       >
-                        <TooltipProvider
-                          delayDuration={200}
-                          skipDelayDuration={500}
-                        >
-                          <ThemeProvider
-                            attribute="class"
-                            defaultTheme="light"
-                            enableSystem
-                            disableTransitionOnChange
+                        <MemoryProvider userId={userProfile?.id || null}>
+                          <TooltipProvider
+                            delayDuration={200}
+                            skipDelayDuration={500}
                           >
-                            <SidebarProvider defaultOpen>
-                              <Toaster position="top-center" />
-                              {children}
-                            </SidebarProvider>
-                          </ThemeProvider>
-                        </TooltipProvider>
+                            <ThemeProvider
+                              attribute="class"
+                              defaultTheme="light"
+                              enableSystem
+                              disableTransitionOnChange
+                            >
+                              <SidebarProvider defaultOpen>
+                                <Toaster position="top-center" />
+                                {children}
+                              </SidebarProvider>
+                            </ThemeProvider>
+                          </TooltipProvider>
+                        </MemoryProvider>
                       </UserPreferencesProvider>
                     </ChatSessionProvider>
                   </ChatsProvider>
