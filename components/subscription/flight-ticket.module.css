@@ -1,3 +1,8 @@
+.ticketContainer {
+  position: relative;
+  width: 100%;
+}
+
 .ticketBox {
   position: relative;
   width: 302px;
@@ -17,6 +22,62 @@
     transform: scale(0.60);
     transform-origin: center center;
     background: transparent;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide scrollbar on mobile */
+  .ticketBox::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ticketBox {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Scroll arrow button - mobile only */
+.scrollArrow {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .scrollArrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 179, 0, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    z-index: 10;
+  }
+
+  .scrollArrow:hover {
+    background: rgba(255, 179, 0, 1);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .scrollArrow:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+
+  .arrowIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
   }
 }
 

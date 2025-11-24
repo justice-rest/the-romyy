@@ -1,5 +1,6 @@
-import React from "react"
+import React, { useRef, useState } from "react"
 import styles from "./flight-ticket.module.css"
+import { ArrowRight } from "@phosphor-icons/react"
 
 interface FlightTicketProps {
   plan: string // "growth" | "pro" | "scale"
@@ -10,9 +11,33 @@ interface FlightTicketProps {
 export function FlightTicket({ plan, credits, userName = "Anonasaurus, Rex" }: FlightTicketProps) {
   const displayCredits = credits === "unlimited" ? "∞" : credits
   const displayName = userName || "Anonasaurus, Rex"
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [showArrow, setShowArrow] = useState(true)
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+      // Hide arrow when fully scrolled to the right
+      setShowArrow(scrollLeft < scrollWidth - clientWidth - 10)
+    }
+  }
+
+  const scrollToRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        left: scrollRef.current.scrollWidth,
+        behavior: 'smooth'
+      })
+    }
+  }
 
   return (
-    <div className={styles.ticketBox}>
+    <div className={styles.ticketContainer}>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className={styles.ticketBox}
+      >
       <ul className={styles.left}>
         <li></li>
         <li></li>
@@ -167,6 +192,20 @@ export function FlightTicket({ plan, credits, userName = "Anonasaurus, Rex" }: F
         <div className={styles.barcode}></div>
         <div className={`${styles.barcode} ${styles.slip}`}></div>
       </div>
+      </div>
+
+      {/* Mobile-only arrow button */}
+      {showArrow && (
+        <button
+          onClick={scrollToRight}
+          className={styles.scrollArrow}
+          aria-label="Show full ticket"
+        >
+          <div className={styles.arrowIcon}>
+            <ArrowRight className="h-4 w-4" weight="bold" />
+          </div>
+        </button>
+      )}
     </div>
   )
 }
