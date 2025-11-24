@@ -72,7 +72,10 @@ export function MemoryList() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading memories...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="text-sm text-muted-foreground">Loading memories...</div>
+        </div>
       </div>
     )
   }
@@ -80,17 +83,19 @@ export function MemoryList() {
   return (
     <div className="flex h-full flex-col gap-4">
       {/* Stats */}
-      {stats && <MemoryStats stats={stats} />}
+      <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+        {stats && <MemoryStats stats={stats} />}
+      </div>
 
       {/* Search and Add */}
-      <div className="flex gap-2">
+      <div className="animate-in fade-in slide-in-from-top-4 duration-500 delay-100 flex gap-2">
         <div className="relative flex-1">
-          <MagnifyingGlass className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <MagnifyingGlass className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search memories..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="h-10 pl-10 transition-all focus-visible:ring-2"
           />
           {isSearching && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -99,39 +104,57 @@ export function MemoryList() {
           )}
         </div>
         {searchQuery && (
-          <Button onClick={handleClearSearch} variant="ghost" size="sm">
+          <Button
+            onClick={handleClearSearch}
+            variant="ghost"
+            className="h-10 transition-all hover:scale-105"
+          >
             Clear
           </Button>
         )}
         <Button
           onClick={handleRefresh}
           variant="ghost"
-          size="sm"
           disabled={isRefreshing}
           title="Refresh memories"
+          className="h-10 w-10 p-0 transition-all hover:scale-105"
         >
-          <ArrowClockwise className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          <ArrowClockwise className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`} />
         </Button>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button
+          onClick={() => setShowForm(true)}
+          className="h-10 transition-all hover:scale-105 active:scale-95"
+        >
+          <Plus className="mr-2 h-5 w-5" />
           Add Memory
         </Button>
       </div>
 
       {/* Memory List */}
-      <div className="flex-1 space-y-3 overflow-y-auto">
+      <div className="flex-1 space-y-3 overflow-y-auto scrollbar-thin">
         {displayedMemories.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-            <div className="text-muted-foreground">
-              {searchQuery
-                ? "No memories found matching your search."
-                : "No memories yet. The AI will automatically save important facts as you chat."}
+            <div className="animate-in fade-in zoom-in-95 duration-500">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <MagnifyingGlass className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <div className="text-muted-foreground">
+                {searchQuery
+                  ? "No memories found matching your search."
+                  : "No memories yet. The AI will automatically save important facts as you chat."}
+              </div>
             </div>
           </div>
         )}
 
-        {displayedMemories.map((memory) => (
-          <MemoryCard key={memory.id} memory={memory} />
+        {displayedMemories.map((memory, index) => (
+          <div
+            key={memory.id}
+            className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <MemoryCard memory={memory} />
+          </div>
         ))}
       </div>
 
