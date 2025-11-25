@@ -218,29 +218,47 @@ export async function POST(req: Request) {
     // This limits message history, removes blob URLs, and truncates large tool results
     const optimizedMessages = optimizeMessagePayload(messages)
 
-    const result = streamText({
-      model: modelConfig.apiSdk(apiKey, { enableSearch }),
-      system: finalSystemPrompt,
-      messages: optimizedMessages,
-      tools,
-      // Allow up to 10 steps for comprehensive search queries
-      // Model can call searchWeb multiple times to gather thorough results
+    // Log the last message to help debug
+    const lastMessage = optimizedMessages[optimizedMessages.length - 1]
+    console.log("[Chat API] Starting streamText with:", {
+      model: normalizedModel,
+      enableSearch,
+      toolsEnabled: Object.keys(tools),
+      messageCount: optimizedMessages.length,
       maxSteps: 10,
-      maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 16000 tokens ≈ 12000 words)
-      // OPTIMIZATION: Disable telemetry to reduce overhead
-      experimental_telemetry: { isEnabled: false },
-      onError: (err: unknown) => {
-        console.error("[Chat API] Streaming error occurred:", err)
-        // Log additional context for debugging
-        if (err instanceof Error) {
-          console.error("[Chat API] Error name:", err.name)
-          console.error("[Chat API] Error message:", err.message)
-          console.error("[Chat API] Error stack:", err.stack)
-        }
-      },
+      timestamp: new Date().toISOString(),
+      lastMessageRole: lastMessage?.role,
+      lastMessageContentLength: typeof lastMessage?.content === 'string'
+        ? lastMessage.content.length
+        : JSON.stringify(lastMessage?.content).length,
+    })
 
-      // Log each step to debug stuck issues
-      onStepFinish: ({ stepType, toolCalls, toolResults, finishReason, text }) => {
+    let result
+    try {
+      result = streamText({
+        model: modelConfig.apiSdk(apiKey, { enableSearch }),
+        system: finalSystemPrompt,
+        messages: optimizedMessages,
+        tools,
+        // Allow up to 10 steps for comprehensive search queries
+        // Model can call searchWeb multiple times to gather thorough results
+        maxSteps: 10,
+        maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 16000 tokens ≈ 12000 words)
+        // OPTIMIZATION: Disable telemetry to reduce overhead
+        experimental_telemetry: { isEnabled: false },
+        onError: (err: unknown) => {
+          console.error("[Chat API] Streaming error occurred:", err)
+          // Log additional context for debugging
+          if (err instanceof Error) {
+            console.error("[Chat API] Error name:", err.name)
+            console.error("[Chat API] Error message:", err.message)
+            console.error("[Chat API] Error stack:", err.stack)
+          }
+        },
+
+        // Log each step to debug stuck issues
+        onStepFinish: ({ stepType, toolCalls, toolResults, finishReason, text }) => {
+          console.log("[Chat API] onStepFinish called at:", new Date().toISOString())
         // Calculate tool result sizes for debugging (with safe type handling)
         const resultSizes = toolResults && Array.isArray(toolResults)
           ? toolResults.map((tr: unknown) => {
@@ -397,16 +415,24 @@ export async function POST(req: Request) {
         }
       },
     })
+    } catch (streamError) {
+      console.error("[Chat API] Failed to create streamText:", streamError)
+      throw streamError
+    }
+
+    console.log("[Chat API] streamText created, converting to response...")
 
     // OPTIMIZATION: Return streaming response with optimized headers
     const response = result.toDataStreamResponse({
       sendReasoning: true,
       sendSources: true,
       getErrorMessage: (error: unknown) => {
-        console.error("Error forwarded to client:", error)
+        console.error("[Chat API] Error in toDataStreamResponse:", error)
         return extractErrorMessage(error)
       },
     })
+
+    console.log("[Chat API] Response created, returning to client")
 
     // Add headers to optimize streaming delivery
     response.headers.set("X-Accel-Buffering", "no") // Disable nginx buffering

@@ -46,8 +46,12 @@ export const exaSearchTool = tool({
     numResults = EXA_DEFAULTS.numResults,
     type = EXA_DEFAULTS.type,
   }: ExaSearchParameters): Promise<ExaSearchResponse> => {
+    console.log("[Exa Tool] Starting search with:", { query, numResults, type })
+    const startTime = Date.now()
+
     // Check if Exa is enabled
     if (!isExaEnabled()) {
+      console.error("[Exa Tool] EXA_API_KEY not configured")
       throw new Error(
         "Exa search is not configured. Please add EXA_API_KEY to your environment variables."
       )
@@ -56,6 +60,7 @@ export const exaSearchTool = tool({
     try {
       // Initialize Exa client
       const exa = new Exa(getExaApiKey())
+      console.log("[Exa Tool] Exa client initialized, executing search...")
 
       // Perform search with enhanced configuration and timeout
       const searchResults = await withTimeout(
@@ -82,15 +87,29 @@ export const exaSearchTool = tool({
         author: result.author,
       }))
 
+      const duration = Date.now() - startTime
+      console.log("[Exa Tool] Search completed successfully:", {
+        resultCount: results.length,
+        durationMs: duration,
+        query,
+      })
+
       return {
         results,
         query,
         searchType: type,
       }
     } catch (error) {
+      const duration = Date.now() - startTime
       // Handle Exa API errors gracefully
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred"
+
+      console.error("[Exa Tool] Search failed:", {
+        error: errorMessage,
+        durationMs: duration,
+        query,
+      })
 
       throw new Error(`Exa search failed: ${errorMessage}`)
     }
