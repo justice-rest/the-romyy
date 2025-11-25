@@ -209,17 +209,45 @@ export function SubscriptionSection() {
         <SubscriptionProductCard features={features} />
       </div>
 
-      {/* Manage Billing Button */}
+      {/* Manage Billing Button - Styled like Upgrade button */}
       {hasActiveSubscription && (
         <div className="flex justify-center px-2 sm:px-4">
           <button
             onClick={handleOpenBillingPortal}
-            className="flex items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
+            className="manage-billing-btn"
           >
             Manage Billing
           </button>
         </div>
       )}
+
+      <style jsx>{`
+        .manage-billing-btn {
+          display: block;
+          border-radius: 4px;
+          color: black;
+          font-size: 16px;
+          font-weight: 700;
+          width: 100%;
+          max-width: 600px;
+          border: 1px solid rgb(255, 187, 16);
+          background-color: rgb(255, 187, 16);
+          height: 60px;
+          letter-spacing: 1px;
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+
+        .manage-billing-btn:hover {
+          background-color: transparent;
+          border-color: rgb(255, 187, 16);
+          color: black;
+        }
+
+        :global(.dark) .manage-billing-btn:hover {
+          color: white;
+        }
+      `}</style>
 
       {/* Past Due Warning */}
       {currentProduct?.status === "past_due" && (
