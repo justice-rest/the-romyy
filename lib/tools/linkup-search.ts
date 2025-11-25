@@ -7,8 +7,9 @@ import {
   type LinkupSearchResponse,
 } from "./types"
 
-// Timeout for Linkup search requests (30 seconds)
-const LINKUP_SEARCH_TIMEOUT_MS = 30000
+// Timeout for Linkup search requests (60 seconds)
+// sourcedAnswer mode needs time to synthesize results
+const LINKUP_SEARCH_TIMEOUT_MS = 60000
 
 /**
  * Helper to add timeout to a promise
@@ -93,17 +94,26 @@ export const linkupSearchTool = tool({
       }
     } catch (error) {
       const duration = Date.now() - startTime
-      // Handle Linkup API errors gracefully
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred"
+      const isTimeout = errorMessage.includes("timed out")
 
       console.error("[Linkup Tool] Search failed:", {
         error: errorMessage,
         durationMs: duration,
         query,
+        isTimeout,
       })
 
-      throw new Error(`Linkup search failed: ${errorMessage}`)
+      // Return graceful fallback instead of throwing - allows AI to continue responding
+      return {
+        answer: isTimeout
+          ? "Web search timed out. I'll answer based on my existing knowledge instead."
+          : `Web search encountered an error: ${errorMessage}. I'll answer based on my existing knowledge instead.`,
+        sources: [],
+        query,
+        depth,
+      }
     }
   },
 })
