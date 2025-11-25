@@ -62,16 +62,20 @@ export async function POST(req: Request) {
     // Normalize model ID for backwards compatibility (e.g., grok-4-fast → grok-4.1-fast)
     const normalizedModel = normalizeModelId(model)
 
+    // Determine if we should inject memories (check early for parallel execution)
+    const shouldInjectMemory = isAuthenticated && messages.length >= 3
+
     /**
-     * OPTIMIZATION: Parallelize independent operations
-     * Instead of sequential DB queries, run them all at once
-     * Expected improvement: 60-80% faster pre-streaming phase
+     * OPTIMIZATION: Parallelize ALL independent operations including memory retrieval
+     * Memory now runs IN PARALLEL with validation, not after it
+     * This eliminates ~150-300ms of sequential latency
      */
     const [
       supabase,
       allModels,
       effectiveSystemPrompt,
-      apiKey
+      apiKey,
+      memoryResult
     ] = await Promise.all([
       // 1. Validate user and check rate limits (critical - blocks streaming)
       validateAndTrackUsage({
@@ -95,6 +99,41 @@ export async function POST(req: Request) {
         const { getEffectiveApiKey } = await import("@/lib/user-keys")
         const provider = getProviderForModel(normalizedModel)
         return (await getEffectiveApiKey(userId, provider as ProviderWithoutOllama)) || undefined
+      })(),
+      // 5. MEMORY RETRIEVAL - Now runs in parallel with everything else!
+      (async (): Promise<string | null> => {
+        if (!shouldInjectMemory) return null
+
+        try {
+          const { getMemoriesForAutoInject, formatMemoriesForPrompt, buildConversationContext, isMemoryEnabled } = await import("@/lib/memory")
+
+          if (!isMemoryEnabled()) return null
+
+          const conversationContext = buildConversationContext(
+            messages.slice(-3).map((m) => ({ role: m.role, content: String(m.content) }))
+          )
+
+          if (!conversationContext) return null
+
+          // Use env key since user key isn't available yet in parallel
+          const relevantMemories = await getMemoriesForAutoInject(
+            {
+              conversationContext,
+              userId,
+              count: 3,
+              minImportance: 0.4,
+            },
+            process.env.OPENROUTER_API_KEY || ""
+          )
+
+          if (relevantMemories.length > 0) {
+            return formatMemoriesForPrompt(relevantMemories)
+          }
+          return null
+        } catch (error) {
+          console.error("Failed to retrieve memories:", error)
+          return null
+        }
       })()
     ])
 
@@ -120,45 +159,10 @@ export async function POST(req: Request) {
 
     const userMessage = messages[messages.length - 1]
 
-    // AUTO-INJECT: Add relevant memories to system prompt (HYBRID mode)
-    // OPTIMIZATION: Skip memory injection for very short conversations (faster first responses)
-    // and use only last 3 messages for context (reduces embedding size)
-    let finalSystemPrompt = effectiveSystemPrompt
-    const shouldInjectMemory = isAuthenticated && messages.length >= 3
-
-    if (shouldInjectMemory) {
-      try {
-        const { getMemoriesForAutoInject, formatMemoriesForPrompt, buildConversationContext, isMemoryEnabled } = await import("@/lib/memory")
-
-        if (isMemoryEnabled()) {
-          // Use last 3 messages (down from 5) for faster context building
-          const conversationContext = buildConversationContext(
-            messages.slice(-3).map((m) => ({ role: m.role, content: String(m.content) }))
-          )
-
-          if (conversationContext) {
-            // Memory retrieval has 200ms timeout - won't block streaming
-            const relevantMemories = await getMemoriesForAutoInject(
-              {
-                conversationContext,
-                userId,
-                count: 3, // Reduced from 5 for faster injection
-                minImportance: 0.4, // Slightly higher threshold for faster filtering
-              },
-              apiKey || process.env.OPENROUTER_API_KEY || ""
-            )
-
-            if (relevantMemories.length > 0) {
-              const memoryContext = formatMemoriesForPrompt(relevantMemories)
-              finalSystemPrompt = `${effectiveSystemPrompt}\n\n${memoryContext}`
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Failed to inject memories:", error)
-        // Don't fail the request if memory injection fails
-      }
-    }
+    // Combine system prompt with memory context (if retrieved)
+    const finalSystemPrompt = memoryResult
+      ? `${effectiveSystemPrompt}\n\n${memoryResult}`
+      : effectiveSystemPrompt
 
     /**
      * OPTIMIZATION: Move non-critical operations to background

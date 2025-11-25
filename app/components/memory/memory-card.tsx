@@ -14,11 +14,11 @@ import {
 import { cn } from "@/lib/utils"
 import {
   Trash,
-  Brain,
   DotsThreeVertical,
   Spinner,
   Star,
   Lightning,
+  Circle,
 } from "@phosphor-icons/react"
 import { formatDistanceToNow } from "@/lib/utils/date"
 import { motion } from "motion/react"
@@ -42,7 +42,7 @@ function ImportanceBadge({ score }: { score: number }) {
             className: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
           }
         : {
-            icon: Brain,
+            icon: Circle,
             label: "Low",
             className: "bg-muted text-muted-foreground",
           }
@@ -103,13 +103,10 @@ export function MemoryCard({ memory }: MemoryCardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -100 }}
-      className="group flex items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50"
+      className="group relative rounded-lg border border-border p-4 transition-colors hover:bg-accent/50"
     >
-      {/* Icon */}
-      <Brain className="h-8 w-8 flex-shrink-0 text-[#B183FF]" weight="fill" />
-
-      {/* Content */}
-      <div className="min-w-0 flex-1">
+      {/* Header row with badges and actions */}
+      <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-medium text-muted-foreground capitalize">
             {category.replace("_", " ")}
@@ -118,63 +115,63 @@ export function MemoryCard({ memory }: MemoryCardProps) {
           <TypeBadge isExplicit={isExplicit} />
         </div>
 
-        {/* Memory Content */}
-        <p className="mt-1.5 text-sm leading-relaxed">{memory.content}</p>
-
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {tags.map((tag: string) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {/* Metadata */}
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span>{Math.round(memory.importance_score * 100)}%</span>
-          <span>•</span>
-          <span>
-            {memory.last_accessed_at
-              ? `Used ${formatDistanceToNow(new Date(memory.last_accessed_at), { addSuffix: true })}`
-              : `Added ${formatDistanceToNow(new Date(memory.created_at), { addSuffix: true })}`}
-          </span>
-          {memory.access_count > 0 && (
-            <>
-              <span>•</span>
-              <span>
-                {memory.access_count} {memory.access_count === 1 ? "use" : "uses"}
-              </span>
-            </>
-          )}
-        </div>
+        {/* Actions */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Spinner className="h-4 w-4 animate-spin" />
+              ) : (
+                <DotsThreeVertical className="h-4 w-4" />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Actions */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <Spinner className="h-4 w-4 animate-spin" />
-            ) : (
-              <DotsThreeVertical className="h-4 w-4" />
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-            <Trash className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Memory Content */}
+      <p className="mt-2 text-sm leading-relaxed">{memory.content}</p>
+
+      {/* Tags */}
+      {tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {tags.map((tag: string) => (
+            <Badge key={tag} variant="outline" className="text-xs">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {/* Metadata */}
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span>{Math.round(memory.importance_score * 100)}%</span>
+        <span>•</span>
+        <span>
+          {memory.last_accessed_at
+            ? `Used ${formatDistanceToNow(new Date(memory.last_accessed_at), { addSuffix: true })}`
+            : `Added ${formatDistanceToNow(new Date(memory.created_at), { addSuffix: true })}`}
+        </span>
+        {memory.access_count > 0 && (
+          <>
+            <span>•</span>
+            <span>
+              {memory.access_count} {memory.access_count === 1 ? "use" : "uses"}
+            </span>
+          </>
+        )}
+      </div>
     </motion.div>
   )
 }
