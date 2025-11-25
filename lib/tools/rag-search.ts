@@ -1,10 +1,15 @@
 /**
  * RAG Search Tool
  * Allows AI to search user's uploaded documents using vector similarity
+ *
+ * OPTIMIZED: Uses static imports for faster execution
  */
 
 import { tool } from "ai"
 import { z } from "zod"
+import { generateEmbedding } from "@/lib/rag/embeddings"
+import { searchDocumentChunks } from "@/lib/rag/search"
+import { getCachedEmbedding, setCachedEmbedding } from "@/lib/memory/embedding-cache"
 
 /**
  * Create a RAG search tool bound to a specific user
@@ -38,16 +43,20 @@ export const createRagSearchTool = (userId: string) => tool({
         }
       }
 
-      // Import dynamically to avoid circular dependencies
-      const { generateEmbedding } = await import("@/lib/rag/embeddings")
-      const { searchDocumentChunks } = await import("@/lib/rag/search")
+      // OPTIMIZATION: Check embedding cache first
+      let embedding = getCachedEmbedding(query)
 
-      // Generate embedding for the search query
-      const embeddingResponse = await generateEmbedding(query, openrouterKey)
+      if (!embedding) {
+        // Generate embedding for the search query
+        const embeddingResponse = await generateEmbedding(query, openrouterKey)
+        embedding = embeddingResponse.embedding
+        // Cache for future use
+        setCachedEmbedding(query, embedding)
+      }
 
       // Search for similar chunks using the bound userId
       const results = await searchDocumentChunks(
-        embeddingResponse.embedding,
+        embedding,
         userId, // Use the userId bound to this tool instance
         {
           maxResults: 5,

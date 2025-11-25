@@ -15,6 +15,7 @@ export * from "./storage"
 export * from "./retrieval"
 export * from "./extractor"
 export * from "./scorer"
+export * from "./embedding-cache"
 
 // Re-export commonly used functions for convenience
 export { isMemoryEnabled } from "./config"

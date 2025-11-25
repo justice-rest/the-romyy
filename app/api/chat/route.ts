@@ -117,23 +117,29 @@ export async function POST(req: Request) {
     const userMessage = messages[messages.length - 1]
 
     // AUTO-INJECT: Add relevant memories to system prompt (HYBRID mode)
+    // OPTIMIZATION: Skip memory injection for very short conversations (faster first responses)
+    // and use only last 3 messages for context (reduces embedding size)
     let finalSystemPrompt = effectiveSystemPrompt
-    if (isAuthenticated) {
+    const shouldInjectMemory = isAuthenticated && messages.length >= 3
+
+    if (shouldInjectMemory) {
       try {
         const { getMemoriesForAutoInject, formatMemoriesForPrompt, buildConversationContext, isMemoryEnabled } = await import("@/lib/memory")
 
         if (isMemoryEnabled()) {
+          // Use last 3 messages (down from 5) for faster context building
           const conversationContext = buildConversationContext(
-            messages.slice(-5).map((m) => ({ role: m.role, content: String(m.content) }))
+            messages.slice(-3).map((m) => ({ role: m.role, content: String(m.content) }))
           )
 
           if (conversationContext) {
+            // Memory retrieval has 200ms timeout - won't block streaming
             const relevantMemories = await getMemoriesForAutoInject(
               {
                 conversationContext,
                 userId,
-                count: 5,
-                minImportance: 0.3,
+                count: 3, // Reduced from 5 for faster injection
+                minImportance: 0.4, // Slightly higher threshold for faster filtering
               },
               apiKey || process.env.OPENROUTER_API_KEY || ""
             )
@@ -207,8 +213,12 @@ export async function POST(req: Request) {
       system: finalSystemPrompt,
       messages: optimizedMessages,
       tools,
-      maxSteps: 10,
+      // OPTIMIZATION: Reduced from 10 to 5 for faster tool loops
+      // Most queries need at most 2-3 tool calls
+      maxSteps: 5,
       maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 8000 tokens ≈ 6000 words)
+      // OPTIMIZATION: Experimental settings for faster streaming
+      experimental_continueSteps: true, // Continue after tool calls without waiting
       onError: (err: unknown) => {
         console.error("Streaming error occurred:", err)
         // Don't set streamError anymore - let the AI SDK handle it through the stream

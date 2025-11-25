@@ -2,6 +2,7 @@
  * Memory Retrieval Module
  *
  * Handles semantic search and retrieval of user memories
+ * Optimized for speed with embedding caching and timeouts
  */
 
 import { createClient } from "@/lib/supabase/server"
@@ -14,6 +15,10 @@ import {
   MAX_SEARCH_RESULTS,
 } from "./config"
 import { incrementMemoryAccess } from "./storage"
+import { getCachedEmbedding, setCachedEmbedding } from "./embedding-cache"
+
+// Timeout for memory operations (prevents blocking streaming)
+const MEMORY_OPERATION_TIMEOUT_MS = 200
 
 // ============================================================================
 // SEMANTIC SEARCH
@@ -37,8 +42,16 @@ export async function searchMemories(
       return []
     }
 
-    // Generate embedding for search query
-    const { embedding } = await generateEmbedding(params.query, apiKey)
+    // Check cache first for faster response
+    let embedding = getCachedEmbedding(params.query)
+
+    if (!embedding) {
+      // Generate embedding for search query
+      const result = await generateEmbedding(params.query, apiKey)
+      embedding = result.embedding
+      // Cache for future use
+      setCachedEmbedding(params.query, embedding)
+    }
 
     // Convert embedding to JSON string for Supabase
     const embeddingString = JSON.stringify(embedding)
@@ -73,8 +86,25 @@ export async function searchMemories(
 }
 
 /**
+ * Promise.race with timeout - returns empty result if operation takes too long
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  fallback: T
+): Promise<T> {
+  const timeout = new Promise<T>((resolve) =>
+    setTimeout(() => resolve(fallback), timeoutMs)
+  )
+  return Promise.race([promise, timeout])
+}
+
+/**
  * Get relevant memories for auto-injection into conversation context
  * Combines current conversation context to find most relevant memories
+ *
+ * OPTIMIZED: Uses timeout to prevent blocking streaming
+ * If memory retrieval takes > 200ms, returns empty and continues without memories
  *
  * @param params - Auto-injection parameters
  * @param apiKey - OpenRouter API key
@@ -92,7 +122,9 @@ export async function getMemoriesForAutoInject(
       return []
     }
 
-    return await searchMemories(
+    // Wrap in timeout to prevent blocking streaming
+    // If memory retrieval is slow, we skip it rather than delay response
+    const memoriesPromise = searchMemories(
       {
         query: searchQuery,
         userId: params.userId,
@@ -102,6 +134,8 @@ export async function getMemoriesForAutoInject(
       },
       apiKey
     )
+
+    return await withTimeout(memoriesPromise, MEMORY_OPERATION_TIMEOUT_MS, [])
   } catch (error) {
     console.error("Failed to get memories for auto-inject:", error)
     return []

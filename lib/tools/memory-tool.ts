@@ -1,10 +1,13 @@
 /**
  * Memory Search Tool
  * Allows AI to search user's memories for relevant context
+ *
+ * OPTIMIZED: Uses static imports for faster execution
  */
 
 import { tool } from "ai"
 import { z } from "zod"
+import { searchMemories } from "@/lib/memory/retrieval"
 
 /**
  * Create a memory search tool bound to a specific user
@@ -44,9 +47,6 @@ export const createMemorySearchTool = (userId: string) =>
             memories: [],
           }
         }
-
-        // Import dynamically to avoid circular dependencies
-        const { searchMemories } = await import("@/lib/memory/retrieval")
 
         // Search memories using the bound userId
         const results = await searchMemories(
