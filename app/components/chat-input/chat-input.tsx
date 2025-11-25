@@ -12,6 +12,7 @@ import { ArrowUpIcon, StopIcon } from "@phosphor-icons/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ButtonFileUpload } from "./button-file-upload"
 import { FileList } from "./file-list"
+import { PopoverContentUpgradeRequired } from "./popover-content-upgrade-required"
 import { PopoverContentWelcome } from "./popover-content-welcome"
 
 type ChatInputProps = {
@@ -35,6 +36,7 @@ type ChatInputProps = {
   showWelcome?: boolean
   firstName?: string | null
   onWelcomeDismiss?: () => void
+  hasActiveSubscription?: boolean
 }
 
 export function ChatInput({
@@ -57,10 +59,12 @@ export function ChatInput({
   showWelcome,
   firstName,
   onWelcomeDismiss,
+  hasActiveSubscription,
 }: ChatInputProps) {
   const isOnlyWhitespace = (text: string) => !/[^\s]/.test(text)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false)
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false)
 
   // Auto-open welcome popover when showWelcome prop changes to true
   useEffect(() => {
@@ -79,8 +83,14 @@ export function ChatInput({
       return
     }
 
+    // Check subscription before sending (only for authenticated users)
+    if (isUserAuthenticated && hasActiveSubscription === false) {
+      setIsUpgradeOpen(true)
+      return
+    }
+
     onSend()
-  }, [isSubmitting, onSend, status, stop])
+  }, [isSubmitting, onSend, status, stop, isUserAuthenticated, hasActiveSubscription])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -100,10 +110,17 @@ export function ChatInput({
         }
 
         e.preventDefault()
+
+        // Check subscription before sending (only for authenticated users)
+        if (isUserAuthenticated && hasActiveSubscription === false) {
+          setIsUpgradeOpen(true)
+          return
+        }
+
         onSend()
       }
     },
-    [isSubmitting, onSend, status, value]
+    [isSubmitting, onSend, status, value, isUserAuthenticated, hasActiveSubscription]
   )
 
   const handlePaste = useCallback(
@@ -161,14 +178,21 @@ export function ChatInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quotedText, onValueChange])
 
+  // Determine which popover should be open (upgrade takes priority)
+  const isWelcomePopoverOpen = isWelcomeOpen && showWelcome && !isUpgradeOpen
+
   return (
     <div className="relative flex w-full flex-col gap-4">
       <Popover
-        open={isWelcomeOpen && showWelcome}
+        open={isWelcomePopoverOpen || isUpgradeOpen}
         onOpenChange={(open) => {
-          setIsWelcomeOpen(open)
-          if (!open && onWelcomeDismiss) {
-            onWelcomeDismiss()
+          if (isUpgradeOpen) {
+            setIsUpgradeOpen(open)
+          } else {
+            setIsWelcomeOpen(open)
+            if (!open && onWelcomeDismiss) {
+              onWelcomeDismiss()
+            }
           }
         }}
       >
@@ -186,7 +210,7 @@ export function ChatInput({
               <FileList files={files} onFileRemove={onFileRemove} />
               <PromptInputTextarea
                 ref={textareaRef}
-                placeholder="Donor’s full name and street address (& employer if known)"
+                placeholder="Donor's full name and street address (& employer if known)"
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
                 className="min-h-[44px] pt-3 pl-4 text-base leading-[1.3] sm:text-base md:text-base"
@@ -221,7 +245,8 @@ export function ChatInput({
             </PromptInput>
           </div>
         </PopoverTrigger>
-        {showWelcome && (
+        {isUpgradeOpen && <PopoverContentUpgradeRequired />}
+        {isWelcomePopoverOpen && (
           <PopoverContentWelcome
             firstName={firstName || undefined}
             onGetStarted={() => {
