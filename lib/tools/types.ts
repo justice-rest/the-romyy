@@ -1,47 +1,36 @@
 import { z } from "zod"
 
 /**
- * Schema for Exa search parameters
+ * Schema for Linkup search parameters
  */
-export const exaSearchParametersSchema = z.object({
+export const linkupSearchParametersSchema = z.object({
   query: z.string().describe("The search query to execute"),
-  numResults: z
-    .number()
-    .min(1)
-    .max(25)
+  depth: z
+    .enum(["standard", "deep"])
     .optional()
-    .default(15)
-    .describe("Number of search results to return (1-25)"),
-  type: z
-    .enum(["keyword", "neural", "auto"])
-    .optional()
-    .default("auto")
-    .describe("Search type: 'keyword' for exact matching, 'neural' for semantic search, or 'auto' for optimal results"),
+    .default("standard")
+    .describe("Search depth: 'standard' for fast simple queries, 'deep' for complex queries requiring more analysis"),
 })
 
-export type ExaSearchParameters = z.infer<typeof exaSearchParametersSchema>
+export type LinkupSearchParameters = z.infer<typeof linkupSearchParametersSchema>
 
 /**
- * Single search result from Exa
+ * Single source from Linkup search
  */
-export interface ExaSearchResult {
-  id: string
-  title: string
+export interface LinkupSource {
+  name: string
   url: string
-  text?: string
-  highlights?: string[]
-  score?: number
-  publishedDate?: string
-  author?: string
+  snippet: string
 }
 
 /**
- * Response from Exa search tool
+ * Response from Linkup search tool (sourcedAnswer mode)
  */
-export interface ExaSearchResponse {
-  results: ExaSearchResult[]
+export interface LinkupSearchResponse {
+  answer: string
+  sources: LinkupSource[]
   query: string
-  searchType: "keyword" | "neural" | "auto"
+  depth: "standard" | "deep"
 }
 
 /**

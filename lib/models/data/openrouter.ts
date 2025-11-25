@@ -30,22 +30,11 @@ export const openrouterModels: ModelConfig[] = [
     releasedAt: "2025-11-01",
     icon: "xai",
     isPro: false, // Available for all users
-    // Web search powered by OpenRouter's native Exa integration
-    // When enableSearch is true, the web plugin fetches real-time data from the web
-    apiSdk: (apiKey?: string, opts?: { enableSearch?: boolean }) =>
+    // Web search is handled by standalone Linkup tool (see /lib/tools/linkup-search.ts)
+    // This provides pre-synthesized answers to prevent AI from getting stuck processing raw results
+    apiSdk: (apiKey?: string) =>
       createOpenRouter({
         apiKey: apiKey || process.env.OPENROUTER_API_KEY,
-      }).chat("x-ai/grok-4.1-fast", {
-        // Enable web search plugin when requested
-        ...(opts?.enableSearch ? {
-          extraBody: {
-            plugins: [{
-              id: "web",
-              max_results: 10, // Fetch up to 10 sources for comprehensive results
-              search_prompt: "Search the web for current, accurate information to help answer this query:",
-            }]
-          }
-        } : {}),
-      }),
+      }).chat("x-ai/grok-4.1-fast"),
   },
 ]

@@ -89,7 +89,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE=
 
 # Web Search
-EXA_API_KEY=                    # For enhanced web search
+LINKUP_API_KEY=                 # For enhanced web search (free at app.linkup.so)
 
 # Subscriptions
 AUTUMN_SECRET_KEY=              # For billing (am_sk_test_... or am_sk_live_...)
@@ -282,26 +282,22 @@ User sends message
 
 ---
 
-## Web Search (Exa)
+## Web Search (Linkup)
 
-Dual implementation for maximum reliability:
+Linkup provides pre-synthesized answers with source citations, preventing AI from getting stuck processing raw results.
 
-### 1. OpenRouter Native Search
-
-Models with `engine: "exa"` get automatic web search when toggled.
-
-### 2. Standalone Exa Tool
+### Linkup Search Tool
 
 ```typescript
-// /lib/tools/exa-search.ts
-const exaSearchTool = tool({
+// /lib/tools/linkup-search.ts
+const linkupSearchTool = tool({
   description: "Search the web for current information",
   parameters: z.object({
     query: z.string(),
-    numResults: z.number().optional(),
+    depth: z.enum(["standard", "deep"]).optional(),
   }),
-  execute: async ({ query, numResults }) => {
-    // Neural search with autoprompt
+  execute: async ({ query, depth }) => {
+    // Returns pre-synthesized answer with sources
   },
 })
 ```
@@ -309,12 +305,12 @@ const exaSearchTool = tool({
 ### Configuration
 
 ```bash
-EXA_API_KEY=your_exa_key  # Get from https://exa.ai
+LINKUP_API_KEY=your_linkup_key  # Get free at https://app.linkup.so
 ```
 
 Search is enabled when:
 - User toggles search button in chat
-- `EXA_API_KEY` is configured
+- `LINKUP_API_KEY` is configured
 
 ---
 

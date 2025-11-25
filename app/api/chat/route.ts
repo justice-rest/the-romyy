@@ -4,6 +4,7 @@ import { getProviderForModel } from "@/lib/openproviders/provider-map"
 import { createListDocumentsTool } from "@/lib/tools/list-documents"
 import { createRagSearchTool } from "@/lib/tools/rag-search"
 import { createMemorySearchTool } from "@/lib/tools/memory-tool"
+import { linkupSearchTool, shouldEnableLinkupTool } from "@/lib/tools/linkup-search"
 import type { ProviderWithoutOllama } from "@/lib/user-keys"
 import { getSystemPromptWithContext } from "@/lib/onboarding-context"
 import { optimizeMessagePayload } from "@/lib/message-payload-optimizer"
@@ -159,9 +160,18 @@ export async function POST(req: Request) {
     const userMessage = messages[messages.length - 1]
 
     // Combine system prompt with memory context (if retrieved)
-    const finalSystemPrompt = memoryResult
+    let finalSystemPrompt = memoryResult
       ? `${effectiveSystemPrompt}\n\n${memoryResult}`
       : effectiveSystemPrompt
+
+    // Add search guidance when search is enabled and Linkup tool is available
+    if (enableSearch && shouldEnableLinkupTool()) {
+      finalSystemPrompt += `\n\n## Web Search
+You have access to the searchWeb tool. The user has enabled web search for this conversation.
+- Use searchWeb proactively when the user asks about current events, recent information, or anything that requires up-to-date data
+- The tool returns a synthesized answer with sources - incorporate this information naturally into your response
+- Always cite sources when using search results`
+    }
 
     /**
      * OPTIMIZATION: Move non-critical operations to background
@@ -199,8 +209,7 @@ export async function POST(req: Request) {
       ]).catch((err: unknown) => console.error("Background operations failed:", err))
     }
 
-    // Build tools object - RAG tools and Memory search for authenticated users
-    // Web search is now handled natively by OpenRouter's web plugin (Exa-powered)
+    // Build tools object - RAG tools, Memory search, and Web search
     const tools: ToolSet = {
       ...(isAuthenticated
         ? {
@@ -208,6 +217,10 @@ export async function POST(req: Request) {
             rag_search: createRagSearchTool(userId),
             search_memory: createMemorySearchTool(userId),
           }
+        : {}),
+      // Add Linkup web search tool when search is enabled and API key is configured
+      ...(enableSearch && shouldEnableLinkupTool()
+        ? { searchWeb: linkupSearchTool }
         : {}),
     } as ToolSet
 

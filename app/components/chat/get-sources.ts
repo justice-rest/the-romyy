@@ -16,12 +16,17 @@ export function getSources(parts: MessageAISDK["parts"]) {
       ) {
         const result = part.toolInvocation.result
 
-        // Handle Exa search tool results
+        // Handle Linkup search tool results (sourcedAnswer format)
         if (
           part.toolInvocation.toolName === "searchWeb" &&
-          result?.results
+          result?.sources
         ) {
-          return result.results
+          // Map Linkup's source format to our standard format
+          return result.sources.map((source: { name?: string; url: string; snippet?: string }) => ({
+            title: source.name || "Untitled",
+            url: source.url,
+            text: source.snippet || "",
+          }))
         }
 
         // Handle summarizeSources tool results

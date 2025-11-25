@@ -295,55 +295,48 @@ User sends message
 - `/app/api/memories/` - REST API endpoints for memory CRUD
 - `/migrations/006_add_memory_system.sql` - Database schema
 
-### Exa Search Integration
-**Dual Implementation Strategy** for maximum reliability and control:
+### Linkup Search Integration
+**Standalone Tool Strategy** for reliable web search with pre-synthesized answers:
 
-**1. OpenRouter with Exa Engine** (`/lib/models/data/openrouter.ts`)
-- Models configured with `engine: "exa"` in web search plugins
-- Activated when user toggles search in chat input
-- Automatically includes sources in streaming response
-- No additional API key required (bundled with OpenRouter)
-
-**2. Standalone Exa Tool** (`/lib/tools/exa-search.ts`)
-- Separate tool implementation using `exa-js` package
-- Provides full control over search parameters
+**Linkup Search Tool** (`/lib/tools/linkup-search.ts`)
+- Uses `linkup-sdk` package with `sourcedAnswer` output mode
+- Returns pre-synthesized answers with source citations (reduces AI processing burden)
 - Features:
-  - **Neural search**: Semantic understanding vs keyword matching
-  - **Autoprompt**: Automatically enhances queries for better results
-  - **Highlights**: Extracts key passages from results
-  - **Configurable results**: 1-10 results (default: 5)
+  - **sourcedAnswer mode**: Linkup synthesizes the answer, AI just relays it
+  - **Two depth modes**: "standard" (fast) or "deep" (complex queries)
+  - **Built-in citations**: Sources come with name, url, snippet
+  - **#1 factuality**: Top score on OpenAI's SimpleQA benchmark
 - Only active when:
   - `enableSearch` is true in chat request
-  - `EXA_API_KEY` is configured in environment
+  - `LINKUP_API_KEY` is configured in environment
 - Tool automatically called by AI model when search needed
 
 **Search Flow**:
 ```
 User toggles search button
   → enableSearch=true sent to API
-  → OpenRouter uses Exa engine for native search
-  → Standalone Exa tool available for explicit searches
-  → Sources extracted from response.parts
+  → AI calls searchWeb tool when needed
+  → Linkup returns pre-synthesized answer + sources
+  → Sources extracted from tool result
   → Displayed in SourcesList component
 ```
 
 **Source Display** (`/app/components/chat/sources-list.tsx`):
-- Automatic source extraction from both implementations
+- Automatic source extraction from tool results
 - Shows title, URL, domain, and favicon
 - Collapsible list with expand/collapse animation
 - UTM tracking for analytics
-- Handles both `source` parts and `tool-invocation` results
 
-**Configuration** (`/lib/exa/config.ts`):
-- `isExaEnabled()`: Check if API key configured
-- `EXA_DEFAULTS`: Neural search, 5 results, autoprompt enabled
-- Graceful fallback if EXA_API_KEY missing
+**Configuration** (`/lib/linkup/config.ts`):
+- `isLinkupEnabled()`: Check if API key configured
+- `LINKUP_DEFAULTS`: standard depth, sourcedAnswer output
+- Graceful fallback if LINKUP_API_KEY missing
 
 **Key Files**:
-- `/lib/tools/exa-search.ts` - Main tool implementation
+- `/lib/tools/linkup-search.ts` - Main tool implementation
 - `/lib/tools/types.ts` - Type definitions and schemas
-- `/lib/exa/config.ts` - Configuration utilities
-- `/app/api/chat/route.ts` - Tool integration (line 109-112)
+- `/lib/linkup/config.ts` - Configuration utilities
+- `/app/api/chat/route.ts` - Tool integration
 - `/app/components/chat/get-sources.ts` - Source extraction
 - `/app/components/chat/sources-list.tsx` - UI display
 
@@ -363,10 +356,10 @@ ENCRYPTION_KEY=                 # 32-byte base64 (for BYOK)
 # AI Model API Key (required)
 OPENROUTER_API_KEY=             # Required for Grok 4.1 Fast model
 
-# Exa Search (optional - for enhanced web search)
-# Get your API key at https://exa.ai
-# Used for standalone Exa tool (OpenRouter bundles Exa for native search)
-EXA_API_KEY=                    # Optional - enables standalone Exa search tool
+# Linkup Search (optional - for enhanced web search)
+# Get your free API key at https://app.linkup.so (no credit card required)
+# Provides pre-synthesized answers with source citations
+LINKUP_API_KEY=                 # Optional - enables Linkup web search tool
 
 # PostHog Analytics (optional - for product analytics)
 # Get your API key at https://posthog.com
