@@ -7,7 +7,8 @@ import { MemoryForm } from "./memory-form"
 import { MemoryStats } from "./memory-stats"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { MagnifyingGlass, Plus } from "@phosphor-icons/react"
+import { MagnifyingGlass, Plus, Brain, Spinner } from "@phosphor-icons/react"
+import { motion, AnimatePresence } from "motion/react"
 
 export function MemoryList() {
   const { memories, stats, isLoading, searchMemories } = useMemory()
@@ -56,11 +57,8 @@ export function MemoryList() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <div className="text-sm text-muted-foreground">Loading memories...</div>
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }
@@ -95,31 +93,30 @@ export function MemoryList() {
       </div>
 
       {/* Memory List */}
-      <div className="flex-1 space-y-3 overflow-y-auto scrollbar-thin pb-6">
-        {displayedMemories.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-            <div className="animate-in fade-in zoom-in-95 duration-500">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                <MagnifyingGlass className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <div className="text-muted-foreground">
-                {searchQuery
-                  ? "No memories found matching your search."
-                  : "No memories yet. The AI will automatically save important facts as you chat."}
-              </div>
-            </div>
+      <div className="flex-1 overflow-y-auto scrollbar-thin pb-6">
+        {memories.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Brain className="mb-3 h-12 w-12 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              No memories yet. The AI will automatically save important facts as you chat.
+            </p>
           </div>
+        ) : displayedMemories.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <MagnifyingGlass className="mb-3 h-12 w-12 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              No memories match your search.
+            </p>
+          </div>
+        ) : (
+          <motion.div layout className="space-y-2">
+            <AnimatePresence mode="popLayout">
+              {displayedMemories.map((memory) => (
+                <MemoryCard key={memory.id} memory={memory} />
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
-
-        {displayedMemories.map((memory, index) => (
-          <div
-            key={memory.id}
-            className="animate-in fade-in slide-in-from-bottom-4 duration-500"
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
-            <MemoryCard memory={memory} />
-          </div>
-        ))}
       </div>
 
       {/* Add/Edit Form Modal */}

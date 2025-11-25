@@ -15,7 +15,7 @@ import { useUser } from "@/lib/user-store/provider"
  * Shown in the settings sidebar or a dedicated subscription settings page.
  */
 export function SubscriptionSection() {
-  const { customer, openBillingPortal, refetch } = useCustomer()
+  const { customer, refetch } = useCustomer()
   const { user } = useUser()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [dataLoadedAt, setDataLoadedAt] = useState<number>(Date.now())
@@ -81,16 +81,6 @@ export function SubscriptionSection() {
     }
   }
 
-  const handleOpenBillingPortal = async () => {
-    try {
-      await openBillingPortal({
-        returnUrl: window.location.href,
-      })
-    } catch (error) {
-      console.error("Error opening billing portal:", error)
-    }
-  }
-
   // Get current product - ensure we handle undefined customer
   const currentProduct = customer?.products?.[0]
   const scheduledProducts = customer?.products?.filter(
@@ -144,9 +134,6 @@ export function SubscriptionSection() {
       </div>
     )
   }
-
-  // Check if user has an active subscription - using the secure check
-  const hasActiveSubscription = isProductActive && currentProduct !== undefined
 
   return (
     <div className="space-y-4">
@@ -209,46 +196,6 @@ export function SubscriptionSection() {
         <SubscriptionProductCard features={features} />
       </div>
 
-      {/* Manage Billing Button - Styled like Upgrade button */}
-      {hasActiveSubscription && (
-        <div className="flex justify-center px-2 sm:px-4">
-          <button
-            onClick={handleOpenBillingPortal}
-            className="manage-billing-btn"
-          >
-            Manage Billing
-          </button>
-        </div>
-      )}
-
-      <style jsx>{`
-        .manage-billing-btn {
-          display: block;
-          border-radius: 4px;
-          color: black;
-          font-size: 16px;
-          font-weight: 700;
-          width: 100%;
-          max-width: 600px;
-          border: 1px solid rgb(255, 187, 16);
-          background-color: rgb(255, 187, 16);
-          height: 60px;
-          letter-spacing: 1px;
-          transition: all 0.3s ease;
-          cursor: pointer;
-        }
-
-        .manage-billing-btn:hover {
-          background-color: transparent;
-          border-color: rgb(255, 187, 16);
-          color: black;
-        }
-
-        :global(.dark) .manage-billing-btn:hover {
-          color: white;
-        }
-      `}</style>
-
       {/* Past Due Warning */}
       {currentProduct?.status === "past_due" && (
         <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/30 dark:text-red-400">
@@ -264,7 +211,7 @@ export function SubscriptionSection() {
           <div>Product ID: {currentProduct?.id || "none"}</div>
           <div>Status: {currentProduct?.status || "none"}</div>
           <div>Plan Type: {planType || "none"}</div>
-          <div>Has Active Sub: {hasActiveSubscription ? "yes" : "no"}</div>
+          <div>Has Active Sub: {isProductActive ? "yes" : "no"}</div>
           <div>Message Balance: {features?.messages?.balance ?? "undefined"}</div>
           <div>Unlimited: {hasUnlimitedMessages ? "yes" : "no"}</div>
           {scheduledProduct && (

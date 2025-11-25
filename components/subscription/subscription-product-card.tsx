@@ -14,7 +14,7 @@ interface SubscriptionProductCardProps {
 }
 
 export function SubscriptionProductCard({ features }: SubscriptionProductCardProps) {
-  const { customer, checkout } = useCustomer()
+  const { customer, checkout, openBillingPortal } = useCustomer()
   const { user } = useUser()
   const [selectedPlan, setSelectedPlan] = useState<"growth" | "pro" | "scale">("growth")
   const [isLoading, setIsLoading] = useState(false)
@@ -180,10 +180,6 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
 
       <hr />
 
-      <h3>
-        Purchase: <span className="sub-txt">Subscription</span>
-      </h3>
-
       <div className="checkout__opts">
         {/* Growth Plan */}
         <div
@@ -278,6 +274,18 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
             {getButtonText()}
           </button>
         </div>
+        {/* Manage Billing Button - only show for users with active subscription */}
+        {currentProduct && currentProductStatus && (currentProductStatus === "active" || currentProductStatus === "trialing") && (
+          <div className="cart_btn full-width" style={{ marginTop: "10px" }}>
+            <button
+              type="button"
+              className="btn manage-billing"
+              onClick={() => openBillingPortal({ returnUrl: window.location.href })}
+            >
+              Manage Billing
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="guarantee">
@@ -591,7 +599,8 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           width: 100%;
         }
 
-        .btn.addtocart {
+        .btn.addtocart,
+        .btn.manage-billing {
           display: block;
           border-radius: 4px;
           color: black;
@@ -602,13 +611,19 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           background-color: rgb(255, 187, 16);
           height: 60px;
           letter-spacing: 1px;
-          transition: 0.5s;
+          transition: all 0.3s ease;
           cursor: pointer;
         }
 
-        .btn.addtocart:hover:not(:disabled) {
-          background-color: #3ab54b;
-          border-color: #3ab54b;
+        .btn.addtocart:hover:not(:disabled),
+        .btn.manage-billing:hover {
+          background-color: transparent;
+          border-color: rgb(255, 187, 16);
+          color: black;
+        }
+
+        :global(.dark) .btn.addtocart:hover:not(:disabled),
+        :global(.dark) .btn.manage-billing:hover {
           color: white;
         }
 
