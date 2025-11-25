@@ -18,6 +18,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
   const { user } = useUser()
   const [selectedPlan, setSelectedPlan] = useState<"growth" | "pro" | "scale">("growth")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const isGuest = user?.anonymous === true || !user
   const currentProduct = customer?.products?.[0]?.id
@@ -67,14 +68,17 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
     if (isGuest) return
 
     setIsLoading(true)
+    setError(null)
     try {
       await checkout({
         productId: selectedPlan,
         dialog: CheckoutDialog,
         successUrl: window.location.origin + "/",
       })
+      // Checkout dialog handles the flow, so if we reach here without error, it's successful
     } catch (error) {
       console.error("Checkout error:", error)
+      setError("Failed to start checkout. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -86,10 +90,10 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
     ? "∞"
     : (features?.messages?.balance ?? currentPlan.credits)
 
-  // Calculate new credits when switching plans
+  // Calculate new credits when switching plans (for ALL users)
   const getNewCredits = () => {
-    if (!hasPaidPlan && selectedPlan !== currentProduct) {
-      // User is switching from free/no plan to a paid plan
+    // Show new credits whenever user selects a different plan from their current one
+    if (selectedPlan !== currentProduct) {
       return currentPlan.credits === "unlimited" ? "∞" : currentPlan.credits
     }
     return null
@@ -161,6 +165,13 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
             </div>
             <div className="radio_price">${plans.growth.price.toFixed(2)}</div>
           </div>
+          <div className="info-txt">{plans.growth.description}</div>
+          <div className="freq_drop">
+            <div className="freq_selected" style={{ cursor: "default" }}>
+              <CalendarBlank size={20} weight="regular" className="inline-block mr-1" />
+              <b>{plans.growth.messages}</b>
+            </div>
+          </div>
         </div>
 
         {/* Pro Plan */}
@@ -213,6 +224,12 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="error-message">
+          <span>⚠️ {error}</span>
+        </div>
+      )}
 
       <div className="checkout__btns">
         <div className="cart_btn full-width">
@@ -405,6 +422,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
           transform: translate(-50%, -50%);
         }
 
+        .checkout__opts .opt.opt1,
         .checkout__opts .opt.opt2,
         .checkout__opts .opt.opt3 {
           padding-bottom: 10px;
@@ -480,6 +498,23 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
 
         .freq_selected svg {
           vertical-align: middle;
+        }
+
+        .error-message {
+          background: #fee;
+          border: 1px solid #fcc;
+          border-radius: 4px;
+          padding: 12px;
+          margin-bottom: 15px;
+          color: #c33;
+          font-size: 14px;
+          text-align: center;
+        }
+
+        :global(.dark) .error-message {
+          background: #3d1f1f;
+          border-color: #5d2f2f;
+          color: #ff6b6b;
         }
 
         .checkout__btns {
