@@ -200,11 +200,9 @@ export async function POST(req: Request) {
       ]).catch((err: unknown) => console.error("Background operations failed:", err))
     }
 
-    // Build tools object - include Exa search, RAG tools, and Memory search for authenticated users
-    // NOTE: For OpenRouter models, both the built-in Exa plugin AND the standalone searchWeb tool are enabled
-    // - Built-in plugin: Automatic search via extraBody.plugins (returns sources in response)
-    // - Standalone tool: Explicit search the AI can call for follow-up queries
-    // The standalone tool has a 30-second timeout to prevent hanging
+    // Build tools object - include Exa search, RAG tools, and Memory search
+    // searchWeb tool is enabled for all models when search is active
+    // The model can call it multiple times to gather comprehensive results
     const tools: ToolSet = {
       ...(enableSearch && shouldEnableExaTool() ? { searchWeb: exaSearchTool } : {}),
       ...(isAuthenticated
@@ -225,9 +223,9 @@ export async function POST(req: Request) {
       system: finalSystemPrompt,
       messages: optimizedMessages,
       tools,
-      // Allow more steps for complex queries involving multiple tool calls
-      // Increased from 5 to 8 to handle: built-in search + standalone search + follow-ups
-      maxSteps: 8,
+      // Allow up to 10 steps for comprehensive search queries
+      // Model can call searchWeb multiple times to gather thorough results
+      maxSteps: 10,
       maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 16000 tokens ≈ 12000 words)
       // OPTIMIZATION: Experimental settings for faster streaming
       experimental_continueSteps: true, // Continue after tool calls without waiting

@@ -37,11 +37,9 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: st
 export const exaSearchTool = tool({
   description:
     "Search the web for current information, research, and real-time data. " +
-    "IMPORTANT: Use this tool whenever the user asks you to 'search', 'look up', 'find', 'research', or requests current/recent information. " +
-    "This provides high-quality results with full text content and sources. " +
-    "The search automatically optimizes queries and uses semantic understanding. " +
-    "CRITICAL: After receiving search results, you MUST synthesize the information and provide a comprehensive answer to the user's question. " +
-    "Do not just call the tool - analyze the results and respond with relevant insights.",
+    "You may call this tool multiple times with different queries to gather comprehensive results. " +
+    "CRITICAL: After gathering sufficient information, you MUST synthesize your findings and provide a complete, helpful answer to the user. " +
+    "Do not end your response with just tool results - always follow up with your analysis and insights.",
   parameters: exaSearchParametersSchema,
   execute: async ({
     query,

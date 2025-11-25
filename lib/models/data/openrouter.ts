@@ -30,21 +30,11 @@ export const openrouterModels: ModelConfig[] = [
     releasedAt: "2025-11-01",
     icon: "xai",
     isPro: false, // Available for all users
-    apiSdk: (apiKey?: string, opts?: { enableSearch?: boolean }) =>
+    // NOTE: Built-in Exa plugin disabled - using standalone searchWeb tool instead
+    // This gives better control over search behavior and prevents tool call loops
+    apiSdk: (apiKey?: string, _opts?: { enableSearch?: boolean }) =>
       createOpenRouter({
         apiKey: apiKey || process.env.OPENROUTER_API_KEY,
-        ...(opts?.enableSearch && {
-          extraBody: {
-            plugins: [
-              {
-                id: "web",
-                engine: "exa",
-                max_results: 35,
-                search_type: "auto",
-              },
-            ],
-          },
-        }),
       }).chat("x-ai/grok-4.1-fast"),
   },
 ]
