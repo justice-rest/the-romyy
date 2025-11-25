@@ -23,7 +23,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     // return fake user profile for no supabase
     return {
       id: "guest",
-      email: "guest@the-romy.vercel.app",
+      email: "guest@intel.getromy.app",
       display_name: "Guest",
       profile_image: "",
       anonymous: true,

@@ -11,7 +11,7 @@ export const FREE_MODELS_IDS = ["openrouter:x-ai/grok-4.1-fast"]
 export const MODEL_DEFAULT = "openrouter:x-ai/grok-4.1-fast"
 
 export const APP_NAME = "Rōmy"
-export const APP_DOMAIN = "https://the-romy.vercel.app"
+export const APP_DOMAIN = "https://intel.getromy.app"
 
 export const SYSTEM_PROMPT_DEFAULT = `You are Rōmy—a veteran fundraising consultant with 20+ years in major gifts, prospect research, and campaign strategy across universities, hospitals, arts organizations, and social service nonprofits. You've built development programs from scratch, managed eight-figure campaigns, and trained hundreds of fundraisers. You know what works because you've done it, not because you read about it.
 

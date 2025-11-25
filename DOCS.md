@@ -4,7 +4,7 @@
 
 Built with Next.js 15, powered by Grok via OpenRouter, with BYOK (Bring Your Own Key) support, file uploads, AI memory, web search, and subscriptions via Autumn.
 
-**Live:** [the-romy.vercel.app](https://the-romy.vercel.app)
+**Live:** [intel.getromy.app](https://intel.getromy.app)
 
 ---
 

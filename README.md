@@ -1,6 +1,6 @@
 # Rōmy
 
-[the-romy.vercel.app](https://the-romy.vercel.app)
+[intel.getromy.app](https://intel.getromy.app)
 
 **Rōmy** helps small nonprofits find new major donors at a fraction of the cost of existing solutions.
 
