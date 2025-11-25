@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import { API_ROUTE_CSRF } from "@/lib/routes"
 import { PostHogPageView } from "@/lib/posthog/provider"
 import { useQuery } from "@tanstack/react-query"
@@ -17,5 +18,9 @@ export function LayoutClient() {
     retry: false,
   })
 
-  return <PostHogPageView />
+  return (
+    <Suspense fallback={null}>
+      <PostHogPageView />
+    </Suspense>
+  )
 }

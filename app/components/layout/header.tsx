@@ -28,10 +28,9 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
             <div className="flex flex-1 items-center gap-2">
               <Link
                 href="/"
-                className="pointer-events-auto inline-flex items-center text-2xl font-medium tracking-tight"
+                className="pointer-events-auto inline-flex items-center text-2xl font-semibold tracking-tight group/logo"
               >
-                {APP_NAME}
-                <span className="relative ml-1 size-10 group/logo">
+                <span className="relative mr-1.5 size-10">
                   <Image
                     src="/PFPs/1.png"
                     alt="Rōmy"
@@ -47,6 +46,7 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
                     className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-200 group-hover/logo:opacity-100"
                   />
                 </span>
+                {APP_NAME}
               </Link>
               {hasSidebar && isMobile && <HeaderSidebarTrigger />}
             </div>

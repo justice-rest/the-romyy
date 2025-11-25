@@ -69,11 +69,11 @@ export default function OnboardingPage() {
   }
 
   if (isChecking) {
-    return <div className="h-dvh w-full overflow-hidden bg-white" />
+    return <div className="h-dvh w-full overflow-hidden bg-background" />
   }
 
   return (
-    <div className="h-dvh w-full overflow-hidden bg-white">
+    <div className="h-dvh w-full overflow-hidden bg-background">
       <OnboardingForm onComplete={handleComplete} />
     </div>
   )

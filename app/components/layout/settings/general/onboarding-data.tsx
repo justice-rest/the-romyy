@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -61,73 +62,67 @@ interface OnboardingData {
   additional_context: string | null
 }
 
+const defaultOnboardingData: OnboardingData = {
+  first_name: null,
+  nonprofit_name: null,
+  nonprofit_location: null,
+  nonprofit_sector: null,
+  annual_budget: null,
+  donor_count: null,
+  fundraising_primary: null,
+  prior_tools: null,
+  purpose: null,
+  agent_name: null,
+  additional_context: null,
+}
+
 export function OnboardingDataSection() {
+  const queryClient = useQueryClient()
   const [isEditing, setIsEditing] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [data, setData] = useState<OnboardingData>({
-    first_name: null,
-    nonprofit_name: null,
-    nonprofit_location: null,
-    nonprofit_sector: null,
-    annual_budget: null,
-    donor_count: null,
-    fundraising_primary: null,
-    prior_tools: null,
-    purpose: null,
-    agent_name: null,
-    additional_context: null,
-  })
+  const [editedData, setEditedData] = useState<OnboardingData>(defaultOnboardingData)
 
-  const [editedData, setEditedData] = useState<OnboardingData>(data)
-
-  useEffect(() => {
-    fetchOnboardingData()
-  }, [])
-
-  const fetchOnboardingData = async () => {
-    try {
+  // Use React Query for caching - data persists across tab switches
+  const { data = defaultOnboardingData, isLoading } = useQuery({
+    queryKey: ["onboarding-data"],
+    queryFn: async () => {
       const response = await fetch("/api/onboarding")
       if (response.ok) {
         const result = await response.json()
-        if (result) {
-          setData(result)
-          setEditedData(result)
-        }
+        return result || defaultOnboardingData
       }
-    } catch (error) {
-      console.error("Error fetching onboarding data:", error)
-    } finally {
-      setIsLoading(false)
-    }
+      return defaultOnboardingData
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+  })
+
+  // Update editedData when data changes
+  const startEditing = () => {
+    setEditedData(data)
+    setIsEditing(true)
   }
 
-  const handleSave = async () => {
-    setIsSaving(true)
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async (newData: OnboardingData) => {
       const response = await fetch("/api/onboarding", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editedData),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newData),
       })
-
-      if (response.ok) {
-        setData(editedData)
-        setIsEditing(false)
-        toast.success("Onboarding data updated successfully")
-      } else {
-        toast.error("Failed to update onboarding data")
-      }
-    } catch (error) {
-      console.error("Error saving onboarding data:", error)
+      if (!response.ok) throw new Error("Failed to save")
+      return newData
+    },
+    onSuccess: (newData) => {
+      queryClient.setQueryData(["onboarding-data"], newData)
+      setIsEditing(false)
+      toast.success("Onboarding data updated successfully")
+    },
+    onError: () => {
       toast.error("Failed to update onboarding data")
-    } finally {
-      setIsSaving(false)
-    }
-  }
+    },
+  })
 
+  const handleSave = () => saveMutation.mutate(editedData)
   const handleCancel = () => {
     setEditedData(data)
     setIsEditing(false)
@@ -159,7 +154,7 @@ export function OnboardingDataSection() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsEditing(true)}
+            onClick={startEditing}
             className="gap-2"
           >
             <Pencil className="size-4" />
@@ -422,16 +417,16 @@ export function OnboardingDataSection() {
             <div className="flex gap-2 pt-4">
               <Button
                 onClick={handleSave}
-                disabled={isSaving}
+                disabled={saveMutation.isPending}
                 className="gap-2 bg-blue-600 hover:bg-blue-600/90"
               >
                 <Check className="size-4" />
-                {isSaving ? "Saving..." : "Save Changes"}
+                {saveMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                disabled={isSaving}
+                disabled={saveMutation.isPending}
                 className="gap-2"
               >
                 <X className="size-4" />

@@ -18,6 +18,7 @@ import {
 import { ArrowRight, ArrowUpRight, CaretLeft, Check } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { OnboardingFormData } from "@/app/api/onboarding/route"
+import Image from "next/image"
 
 const TOTAL_QUESTIONS = 10
 
@@ -200,10 +201,10 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
   }
 
   return (
-    <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-white text-gray-900">
+    <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
       {/* Progress Bar */}
       {currentStep > 0 && (
-        <div className="fixed left-0 right-0 top-0 z-50 h-1 bg-gray-200">
+        <div className="fixed left-0 right-0 top-0 z-50 h-1 bg-muted">
           <motion.div
             className="h-full bg-blue-600"
             initial={{ width: 0 }}
@@ -220,7 +221,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={goBack}
-          className="fixed left-4 top-4 z-50 flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900 sm:left-8 sm:top-8"
+          className="fixed left-4 top-4 z-50 flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground sm:left-8 sm:top-8"
         >
           <CaretLeft className="size-5" weight="bold" />
           <span className="text-sm font-medium">Back</span>
@@ -229,7 +230,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
 
       {/* Step Counter */}
       {currentStep > 1 && (
-        <div className="fixed right-4 top-4 z-50 text-sm font-medium text-gray-600 sm:right-8 sm:top-8">
+        <div className="fixed right-4 top-4 z-50 text-sm font-medium text-muted-foreground sm:right-8 sm:top-8">
           {currentStep - 1} / {TOTAL_QUESTIONS}
         </div>
       )}
@@ -248,14 +249,31 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 transition={{ duration: 0.5 }}
                 className="flex h-[80vh] cursor-pointer items-center justify-center"
                 onClick={handleSplashClick}
+                onMouseEnter={() => setIsHoveringLogo(true)}
+                onMouseLeave={() => setIsHoveringLogo(false)}
               >
-                <img
-                  src={isHoveringLogo ? "/Romy-2.png" : "/romy.png"}
-                  alt="Rōmy"
-                  className="max-h-[112.5px] max-w-full object-contain transition-transform hover:scale-105"
-                  onMouseEnter={() => setIsHoveringLogo(true)}
-                  onMouseLeave={() => setIsHoveringLogo(false)}
-                />
+                <div className="relative size-28 transition-transform hover:scale-105">
+                  <Image
+                    src="/PFPs/1.png"
+                    alt="Rōmy"
+                    width={112}
+                    height={112}
+                    className={cn(
+                      "absolute inset-0 rounded-xl transition-opacity duration-200",
+                      isHoveringLogo ? "opacity-0" : "opacity-100"
+                    )}
+                  />
+                  <Image
+                    src="/PFPs/2.png"
+                    alt="Rōmy"
+                    width={112}
+                    height={112}
+                    className={cn(
+                      "absolute inset-0 rounded-xl transition-opacity duration-200",
+                      isHoveringLogo ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                </div>
               </motion.div>
             )}
 
@@ -315,7 +333,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 className="space-y-6"
               >
                 <div>
-                  <Label className="mb-3 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                  <Label className="mb-3 block text-2xl font-medium text-foreground sm:text-3xl">
                     What's your first name?
                   </Label>
                   <Input
@@ -324,7 +342,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                     onChange={(e) => updateField("first_name", e.target.value)}
                     onKeyDown={handleKeyPress}
                     autoFocus
-                    className="h-14 rounded-none border-b-2 border-l-0 border-r-0 border-t-0 border-gray-300 !bg-transparent px-0 text-xl text-gray-900 shadow-none placeholder:text-gray-400 focus-visible:border-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0 dark:!bg-transparent"
+                    className="h-14 rounded-none border-b-2 border-l-0 border-r-0 border-t-0 border-border !bg-transparent px-0 text-xl text-foreground shadow-none placeholder:text-muted-foreground focus-visible:border-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 <Button
@@ -352,7 +370,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 className="space-y-6"
               >
                 <div>
-                  <Label className="mb-3 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                  <Label className="mb-3 block text-2xl font-medium text-foreground sm:text-3xl">
                     What nonprofit do you work for/with?
                   </Label>
                   <Input
@@ -363,7 +381,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                     }
                     onKeyDown={handleKeyPress}
                     autoFocus
-                    className="h-14 rounded-none border-b-2 border-l-0 border-r-0 border-t-0 border-gray-300 !bg-transparent px-0 text-xl text-gray-900 shadow-none placeholder:text-gray-400 focus-visible:border-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0 dark:!bg-transparent"
+                    className="h-14 rounded-none border-b-2 border-l-0 border-r-0 border-t-0 border-border !bg-transparent px-0 text-xl text-foreground shadow-none placeholder:text-muted-foreground focus-visible:border-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 <Button
@@ -391,10 +409,10 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 className="space-y-6"
               >
                 <div>
-                  <Label className="mb-3 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                  <Label className="mb-3 block text-2xl font-medium text-foreground sm:text-3xl">
                     Where is it based?
                   </Label>
-                  <p className="mb-4 text-sm text-gray-600">
+                  <p className="mb-4 text-sm text-muted-foreground">
                     City/State or Country
                   </p>
                   <Input
@@ -405,7 +423,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                     }
                     onKeyDown={handleKeyPress}
                     autoFocus
-                    className="h-14 rounded-none border-b-2 border-l-0 border-r-0 border-t-0 border-gray-300 !bg-transparent px-0 text-xl text-gray-900 shadow-none placeholder:text-gray-400 focus-visible:border-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0 dark:!bg-transparent"
+                    className="h-14 rounded-none border-b-2 border-l-0 border-r-0 border-t-0 border-border !bg-transparent px-0 text-xl text-foreground shadow-none placeholder:text-muted-foreground focus-visible:border-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 <Button
@@ -432,7 +450,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
-                <Label className="mb-6 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                <Label className="mb-6 block text-2xl font-medium text-foreground sm:text-3xl">
                   What sector is it in?
                 </Label>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -444,7 +462,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                         setTimeout(goNext, 200)
                       }}
                       className={cn(
-                        "flex items-center justify-between rounded-lg border-2 border-gray-300 p-4 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
+                        "flex items-center justify-between rounded-lg border-2 border-border p-4 text-left text-foreground transition-all hover:border-blue-600 hover:bg-blue-600/10",
                         formData.nonprofit_sector === sector &&
                         "border-blue-600 bg-blue-600/10",
                       )}
@@ -469,7 +487,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
-                <Label className="mb-6 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                <Label className="mb-6 block text-2xl font-medium text-foreground sm:text-3xl">
                   Approximately what is the size of your annual budget?
                 </Label>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -481,7 +499,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                         setTimeout(goNext, 200)
                       }}
                       className={cn(
-                        "flex items-center justify-between rounded-lg border-2 border-gray-300 p-4 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
+                        "flex items-center justify-between rounded-lg border-2 border-border p-4 text-left text-foreground transition-all hover:border-blue-600 hover:bg-blue-600/10",
                         formData.annual_budget === range &&
                         "border-blue-600 bg-blue-600/10",
                       )}
@@ -506,7 +524,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
-                <Label className="mb-6 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                <Label className="mb-6 block text-2xl font-medium text-foreground sm:text-3xl">
                   Approximately how many individual donors are in your database?
                 </Label>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -518,7 +536,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                         setTimeout(goNext, 200)
                       }}
                       className={cn(
-                        "flex items-center justify-between rounded-lg border-2 border-gray-300 p-4 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
+                        "flex items-center justify-between rounded-lg border-2 border-border p-4 text-left text-foreground transition-all hover:border-blue-600 hover:bg-blue-600/10",
                         formData.donor_count === range &&
                         "border-blue-600 bg-blue-600/10",
                       )}
@@ -544,10 +562,10 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 className="space-y-6"
               >
                 <div>
-                  <Label className="mb-3 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                  <Label className="mb-3 block text-2xl font-medium text-foreground sm:text-3xl">
                     Is fundraising your primary responsibility?
                   </Label>
-                  <p className="mb-6 text-sm text-gray-600">
+                  <p className="mb-6 text-sm text-muted-foreground">
                     If you are a solo staff member, please answer 'Yes'
                   </p>
                 </div>
@@ -558,7 +576,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                       setTimeout(goNext, 200)
                     }}
                     className={cn(
-                      "flex flex-1 items-center justify-between rounded-lg border-2 border-gray-300 p-6 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
+                      "flex flex-1 items-center justify-between rounded-lg border-2 border-border p-6 text-left text-foreground transition-all hover:border-blue-600 hover:bg-blue-600/10",
                       formData.fundraising_primary === true &&
                       "border-blue-600 bg-blue-600/10",
                     )}
@@ -574,7 +592,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                       setTimeout(goNext, 200)
                     }}
                     className={cn(
-                      "flex flex-1 items-center justify-between rounded-lg border-2 border-gray-300 p-6 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
+                      "flex flex-1 items-center justify-between rounded-lg border-2 border-border p-6 text-left text-foreground transition-all hover:border-blue-600 hover:bg-blue-600/10",
                       formData.fundraising_primary === false &&
                       "border-blue-600 bg-blue-600/10",
                     )}
@@ -598,7 +616,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
-                <Label className="mb-6 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                <Label className="mb-6 block text-2xl font-medium text-foreground sm:text-3xl">
                   Have you ever worked with donor wealth screening tools before?
                 </Label>
                 <div className="space-y-3">
@@ -607,7 +625,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                       key={tool}
                       onClick={() => toggleTool(tool)}
                       className={cn(
-                        "flex w-full items-center justify-between rounded-lg border-2 border-gray-300 p-4 text-left text-gray-900 transition-all hover:border-blue-600 hover:bg-blue-600/10",
+                        "flex w-full items-center justify-between rounded-lg border-2 border-border p-4 text-left text-foreground transition-all hover:border-blue-600 hover:bg-blue-600/10",
                         formData.prior_tools?.includes(tool) &&
                         "border-blue-600 bg-blue-600/10",
                       )}
@@ -644,7 +662,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 className="space-y-6"
               >
                 <div>
-                  <Label className="mb-4 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                  <Label className="mb-4 block text-2xl font-medium text-foreground sm:text-3xl">
                     What&apos;s your purpose in trying Rōmy?
                   </Label>
                   <Textarea
@@ -653,7 +671,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                     onChange={(e) => updateField("purpose", e.target.value)}
                     autoFocus
                     rows={5}
-                    className="resize-none border-2 border-gray-300 text-lg text-gray-900 placeholder:text-gray-400"
+                    className="resize-none border-2 border-border text-lg text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
                 <Button
@@ -681,16 +699,16 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                 className="space-y-6"
               >
                 <div>
-                  <Label className="mb-4 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                  <Label className="mb-4 block text-2xl font-medium text-foreground sm:text-3xl">
                     Rōmy is named after the Lagotto Romagnolo dog breed, which is
                     specifically designed to hunt for truffles.
                   </Label>
-                  <Label className="mb-4 block text-2xl font-medium text-gray-900 sm:text-3xl">
+                  <Label className="mb-4 block text-2xl font-medium text-foreground sm:text-3xl">
                     You are launching your own agentic truffle hound that will
                     understand your goals, your nonprofit and your personal
                     workflows. What do you want to name it?
                   </Label>
-                  <p className="mb-4 text-sm text-gray-600">
+                  <p className="mb-4 text-sm text-muted-foreground">
                     (you can change the name later)
                   </p>
                   <Input
@@ -699,7 +717,7 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
                     onChange={(e) => updateField("agent_name", e.target.value)}
                     onKeyDown={handleKeyPress}
                     autoFocus
-                    className="h-14 rounded-none border-b-2 border-l-0 border-r-0 border-t-0 border-gray-300 !bg-transparent px-0 text-xl text-gray-900 shadow-none placeholder:text-gray-400 focus-visible:border-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0 dark:!bg-transparent"
+                    className="h-14 rounded-none border-b-2 border-l-0 border-r-0 border-t-0 border-border !bg-transparent px-0 text-xl text-foreground shadow-none placeholder:text-muted-foreground focus-visible:border-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 <Button
@@ -721,8 +739,8 @@ export function OnboardingForm({ onComplete }: OnboardingFormProps) {
 
       {/* Hint Text */}
       {currentStep > 1 && (
-        <div className="fixed bottom-6 left-0 right-0 text-center text-sm text-gray-600">
-          Press <kbd className="rounded bg-gray-100 px-1.5 py-0.5">Enter ↵</kbd> to
+        <div className="fixed bottom-6 left-0 right-0 text-center text-sm text-muted-foreground">
+          Press <kbd className="rounded bg-muted px-1.5 py-0.5">Enter ↵</kbd> to
           continue
         </div>
       )}
