@@ -1,7 +1,6 @@
 import { SYSTEM_PROMPT_DEFAULT, AI_MAX_OUTPUT_TOKENS } from "@/lib/config"
 import { getAllModels, normalizeModelId } from "@/lib/models"
 import { getProviderForModel } from "@/lib/openproviders/provider-map"
-import { exaSearchTool, shouldEnableExaTool } from "@/lib/tools/exa-search"
 import { createListDocumentsTool } from "@/lib/tools/list-documents"
 import { createRagSearchTool } from "@/lib/tools/rag-search"
 import { createMemorySearchTool } from "@/lib/tools/memory-tool"
@@ -200,11 +199,9 @@ export async function POST(req: Request) {
       ]).catch((err: unknown) => console.error("Background operations failed:", err))
     }
 
-    // Build tools object - include Exa search, RAG tools, and Memory search
-    // searchWeb tool is enabled for all models when search is active
-    // The model can call it multiple times to gather comprehensive results
+    // Build tools object - RAG tools and Memory search for authenticated users
+    // Web search is now handled natively by OpenRouter's web plugin (Exa-powered)
     const tools: ToolSet = {
-      ...(enableSearch && shouldEnableExaTool() ? { searchWeb: exaSearchTool } : {}),
       ...(isAuthenticated
         ? {
             list_documents: createListDocumentsTool(userId),
@@ -218,68 +215,17 @@ export async function POST(req: Request) {
     // This limits message history, removes blob URLs, and truncates large tool results
     const optimizedMessages = optimizeMessagePayload(messages)
 
-    // Log the last message to help debug
-    const lastMessage = optimizedMessages[optimizedMessages.length - 1]
-    console.log("[Chat API] Starting streamText with:", {
-      model: normalizedModel,
-      enableSearch,
-      toolsEnabled: Object.keys(tools),
-      messageCount: optimizedMessages.length,
-      maxSteps: 10,
-      timestamp: new Date().toISOString(),
-      lastMessageRole: lastMessage?.role,
-      lastMessageContentLength: typeof lastMessage?.content === 'string'
-        ? lastMessage.content.length
-        : JSON.stringify(lastMessage?.content).length,
-    })
-
-    let result
-    try {
-      result = streamText({
-        model: modelConfig.apiSdk(apiKey, { enableSearch }),
-        system: finalSystemPrompt,
-        messages: optimizedMessages,
-        tools,
-        // Allow up to 10 steps for comprehensive search queries
-        // Model can call searchWeb multiple times to gather thorough results
-        maxSteps: 10,
-        maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 16000 tokens ≈ 12000 words)
-        // OPTIMIZATION: Disable telemetry to reduce overhead
-        experimental_telemetry: { isEnabled: false },
-        onError: (err: unknown) => {
-          console.error("[Chat API] Streaming error occurred:", err)
-          // Log additional context for debugging
-          if (err instanceof Error) {
-            console.error("[Chat API] Error name:", err.name)
-            console.error("[Chat API] Error message:", err.message)
-            console.error("[Chat API] Error stack:", err.stack)
-          }
-        },
-
-        // Log each step to debug stuck issues
-        onStepFinish: ({ stepType, toolCalls, toolResults, finishReason, text }) => {
-          console.log("[Chat API] onStepFinish called at:", new Date().toISOString())
-        // Calculate tool result sizes for debugging (with safe type handling)
-        const resultSizes = toolResults && Array.isArray(toolResults)
-          ? toolResults.map((tr: unknown) => {
-              try {
-                return JSON.stringify(tr).length
-              } catch {
-                return 0
-              }
-            })
-          : []
-
-        console.log("[Chat API] Step finished:", {
-          stepType,
-          finishReason,
-          textLength: text?.length ?? 0,
-          toolCallsCount: toolCalls?.length ?? 0,
-          toolResultsCount: toolResults?.length ?? 0,
-          toolNames: toolCalls?.map(tc => tc.toolName) ?? [],
-          // Track tool result sizes to debug payload issues
-          toolResultSizes: resultSizes,
-        })
+    const result = streamText({
+      model: modelConfig.apiSdk(apiKey, { enableSearch }),
+      system: finalSystemPrompt,
+      messages: optimizedMessages,
+      tools,
+      // Allow multiple tool call steps for RAG and memory search
+      maxSteps: 5,
+      maxTokens: AI_MAX_OUTPUT_TOKENS,
+      experimental_telemetry: { isEnabled: false },
+      onError: (err: unknown) => {
+        console.error("[Chat API] Streaming error:", err)
       },
 
       onFinish: async ({ response, text, finishReason, usage }) => {
@@ -415,24 +361,16 @@ export async function POST(req: Request) {
         }
       },
     })
-    } catch (streamError) {
-      console.error("[Chat API] Failed to create streamText:", streamError)
-      throw streamError
-    }
 
-    console.log("[Chat API] streamText created, converting to response...")
-
-    // OPTIMIZATION: Return streaming response with optimized headers
+    // Return streaming response with sources enabled
     const response = result.toDataStreamResponse({
       sendReasoning: true,
       sendSources: true,
       getErrorMessage: (error: unknown) => {
-        console.error("[Chat API] Error in toDataStreamResponse:", error)
+        console.error("[Chat API] Response error:", error)
         return extractErrorMessage(error)
       },
     })
-
-    console.log("[Chat API] Response created, returning to client")
 
     // Add headers to optimize streaming delivery
     response.headers.set("X-Accel-Buffering", "no") // Disable nginx buffering

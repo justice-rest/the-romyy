@@ -30,12 +30,22 @@ export const openrouterModels: ModelConfig[] = [
     releasedAt: "2025-11-01",
     icon: "xai",
     isPro: false, // Available for all users
-    // Web search is handled by the standalone searchWeb tool (Exa)
-    // The :online suffix is NOT used to avoid conflicts with tool-based search
-    // This gives the model explicit control over when and how to search
-    apiSdk: (apiKey?: string, _opts?: { enableSearch?: boolean }) =>
+    // Web search powered by OpenRouter's native Exa integration
+    // When enableSearch is true, the web plugin fetches real-time data from the web
+    apiSdk: (apiKey?: string, opts?: { enableSearch?: boolean }) =>
       createOpenRouter({
         apiKey: apiKey || process.env.OPENROUTER_API_KEY,
-      }).chat("x-ai/grok-4.1-fast"),
+      }).chat("x-ai/grok-4.1-fast", {
+        // Enable web search plugin when requested
+        ...(opts?.enableSearch ? {
+          extraBody: {
+            plugins: [{
+              id: "web",
+              max_results: 10, // Fetch up to 10 sources for comprehensive results
+              search_prompt: "Search the web for current, accurate information to help answer this query:",
+            }]
+          }
+        } : {}),
+      }),
   },
 ]
