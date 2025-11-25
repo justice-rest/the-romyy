@@ -14,7 +14,30 @@ export async function POST(request: Request) {
     }
 
     if (!supabase) {
-      return NextResponse.json({ success: true }, { status: 200 })
+      return NextResponse.json(
+        { error: "Database not available" },
+        { status: 503 }
+      )
+    }
+
+    // Verify user owns this chat
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Check chat ownership before updating
+    const { data: chat } = await supabase
+      .from("chats")
+      .select("user_id")
+      .eq("id", chatId)
+      .single()
+
+    if (!chat || chat.user_id !== user.id) {
+      return NextResponse.json({ error: "Chat not found" }, { status: 404 })
     }
 
     const toggle = pinned
@@ -25,6 +48,7 @@ export async function POST(request: Request) {
       .from("chats")
       .update(toggle)
       .eq("id", chatId)
+      .eq("user_id", user.id)
 
     if (error) {
       return NextResponse.json(

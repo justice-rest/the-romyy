@@ -13,10 +13,35 @@ export async function POST(request: Request) {
       )
     }
 
-    // If Supabase is not available, we still return success
     if (!supabase) {
-      console.log("Supabase not enabled, skipping DB update")
-      return new Response(JSON.stringify({ success: true }), { status: 200 })
+      return new Response(
+        JSON.stringify({ error: "Database not available" }),
+        { status: 503 }
+      )
+    }
+
+    // Verify user owns this chat
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      })
+    }
+
+    // Check chat ownership before updating
+    const { data: chat } = await supabase
+      .from("chats")
+      .select("user_id")
+      .eq("id", chatId)
+      .single()
+
+    if (!chat || chat.user_id !== user.id) {
+      return new Response(JSON.stringify({ error: "Chat not found" }), {
+        status: 404,
+      })
     }
 
     // Normalize model ID for backwards compatibility (e.g., grok-4-fast → grok-4.1-fast)
@@ -26,6 +51,7 @@ export async function POST(request: Request) {
       .from("chats")
       .update({ model: normalizedModel })
       .eq("id", chatId)
+      .eq("user_id", user.id)
 
     if (error) {
       console.error("Error updating chat model:", error)
