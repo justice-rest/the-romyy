@@ -48,16 +48,18 @@ export function ButtonFileUpload({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="border-border dark:bg-secondary size-9 cursor-not-allowed rounded-full border bg-transparent opacity-50"
-            type="button"
-            disabled
-            aria-label="Add files (Coming Soon)"
-          >
-            <Paperclip className="size-4" />
-          </Button>
+          <span className="inline-flex">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="border-border dark:bg-secondary size-9 !cursor-not-allowed rounded-full border bg-transparent opacity-50"
+              type="button"
+              disabled
+              aria-label="Add files (Coming Soon)"
+            >
+              <Paperclip className="size-4" />
+            </Button>
+          </span>
         </TooltipTrigger>
         <TooltipContent>Add files (Coming Soon)</TooltipContent>
       </Tooltip>

@@ -104,10 +104,10 @@ export function FeedbackForm({ authUserId, onClose }: FeedbackFormProps) {
               <SealCheck className="size-6 text-green-500" />
             </div>
             <p className="text-foreground mt-3 mb-1 text-center text-sm font-medium">
-              Thank you for your time!
+              Message received!
             </p>
             <p className="text-muted-foreground text-sm">
-              Your feedback makes Rōmy better.
+              We&apos;ll get back to you ASAP.
             </p>
           </motion.div>
         ) : (
@@ -133,7 +133,7 @@ export function FeedbackForm({ authUserId, onClose }: FeedbackFormProps) {
               }}
               className="text-muted-foreground pointer-events-none absolute top-3.5 left-4 text-sm leading-[1.4] select-none"
             >
-              What would make Rōmy better for you?
+              How can we help you?
             </motion.span>
             <textarea
               className="text-foreground h-full w-full resize-none rounded-md bg-transparent px-4 py-3.5 text-sm outline-hidden"

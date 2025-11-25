@@ -26,7 +26,7 @@ export function FeedbackTrigger() {
   const trigger = (
     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
       <Question className="size-4" />
-      <span>Feedback</span>
+      <span>Support</span>
     </DropdownMenuItem>
   )
 
@@ -49,7 +49,7 @@ export function FeedbackTrigger() {
         <DialogTrigger asChild>{trigger}</DialogTrigger>
         <DialogContent className="[&>button:last-child]:bg-background overflow-hidden p-0 shadow-xs sm:max-w-md [&>button:last-child]:top-3.5 [&>button:last-child]:right-3 [&>button:last-child]:rounded-full [&>button:last-child]:p-1">
           <DialogHeader className="sr-only">
-            <DialogTitle>Feedback</DialogTitle>
+            <DialogTitle>Support</DialogTitle>
           </DialogHeader>
           <FeedbackForm authUserId={user?.id} onClose={handleClose} />
         </DialogContent>

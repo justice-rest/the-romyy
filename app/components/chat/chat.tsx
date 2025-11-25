@@ -279,7 +279,7 @@ export function Chat({
               },
             }}
           >
-            <h1 className="mb-6 text-3xl font-medium tracking-tight">
+            <h1 className="mb-6 text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-center md:text-left">
               Who should I search for, {firstName?.split(' ')[0]}?
             </h1>
           </motion.div>

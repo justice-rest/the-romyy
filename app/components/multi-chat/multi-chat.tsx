@@ -408,7 +408,7 @@ export function MultiChat() {
             layoutId="onboarding"
             transition={{ layout: { duration: 0 } }}
           >
-            <h1 className="mb-6 text-3xl font-medium tracking-tight">
+            <h1 className="mb-6 text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-center md:text-left">
               Who should I search for, {firstName}?
             </h1>
           </motion.div>
