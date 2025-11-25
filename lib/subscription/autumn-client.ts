@@ -9,7 +9,50 @@ import { Autumn } from "autumn-js"
  * - Managing subscriptions
  *
  * This is used in API routes to enforce subscription limits.
+ *
+ * OPTIMIZED: Added caching and timeouts to reduce latency
  */
+
+// ============================================================================
+// CACHING LAYER - Reduces API calls dramatically
+// ============================================================================
+
+interface CachedAccess {
+  allowed: boolean
+  balance?: number
+  limit?: number
+  timestamp: number
+}
+
+interface CachedCustomer {
+  data: any
+  timestamp: number
+}
+
+// Cache access checks for 30 seconds (most users send multiple messages)
+const accessCache = new Map<string, CachedAccess>()
+const ACCESS_CACHE_TTL = 30 * 1000 // 30 seconds
+
+// Cache customer data for 5 minutes (subscription status rarely changes)
+const customerCache = new Map<string, CachedCustomer>()
+const CUSTOMER_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+// Timeout for Autumn API calls (prevents blocking)
+const AUTUMN_API_TIMEOUT = 150 // 150ms max
+
+/**
+ * Promise.race with timeout - returns fallback if API is slow
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  fallback: T
+): Promise<T> {
+  const timeout = new Promise<T>((resolve) =>
+    setTimeout(() => resolve(fallback), timeoutMs)
+  )
+  return Promise.race([promise, timeout])
+}
 
 /**
  * Circuit Breaker for Autumn API
@@ -91,9 +134,10 @@ export function getAutumnClient(): Autumn | null {
  * Check if a user has access to send messages
  * Returns the allowed status and current balance
  *
- * Implements circuit breaker pattern:
- * - On repeated failures, switches to degraded mode with limited access
- * - Prevents abuse by malicious users blocking Autumn API
+ * OPTIMIZED:
+ * - Caches access checks for 30 seconds (most users send multiple messages quickly)
+ * - Uses timeout to prevent blocking if Autumn API is slow
+ * - Implements circuit breaker pattern for resilience
  */
 export async function checkMessageAccess(
   userId: string,
@@ -104,6 +148,16 @@ export async function checkMessageAccess(
   if (!autumn) {
     // If Autumn is not enabled, allow access (fallback to existing rate limits)
     return { allowed: true }
+  }
+
+  // OPTIMIZATION: Check cache first (30 second TTL)
+  const cached = accessCache.get(userId)
+  if (cached && Date.now() - cached.timestamp < ACCESS_CACHE_TTL) {
+    return {
+      allowed: cached.allowed,
+      balance: cached.balance,
+      limit: cached.limit,
+    }
   }
 
   // Check circuit breaker state
@@ -124,52 +178,55 @@ export async function checkMessageAccess(
     }
   }
 
+  // OPTIMIZATION: Wrap in timeout - if Autumn is slow, allow access
+  const fallbackResult = { allowed: true }
+
   try {
-    // First check if customer has any past_due subscriptions
-    const customerData = await getCustomerData(userId)
-    const hasPastDueSubscription = customerData?.products?.some(
-      (product) => product.status === "past_due"
+    const result = await withTimeout(
+      (async () => {
+        // First check if customer has any past_due subscriptions
+        const customerData = await getCustomerData(userId)
+        const hasPastDueSubscription = customerData?.products?.some(
+          (product: { status: string }) => product.status === "past_due"
+        )
+
+        // Block access if payment is past due
+        if (hasPastDueSubscription) {
+          console.log("[Autumn] Blocking access due to past_due payment", { userId })
+          circuitBreaker.recordSuccess()
+          return { allowed: false, balance: 0, limit: 0 }
+        }
+
+        const { data, error } = await autumn.check({
+          customer_id: userId,
+          feature_id: "messages",
+        })
+
+        if (error) {
+          console.error("[Autumn] Check error:", error)
+          circuitBreaker.recordFailure()
+          return fallbackResult
+        }
+
+        // Success - reset circuit breaker
+        circuitBreaker.recordSuccess()
+
+        const accessResult = {
+          allowed: data.allowed,
+          balance: data.balance ?? undefined,
+          limit: undefined,
+        }
+
+        // Cache the result
+        accessCache.set(userId, { ...accessResult, timestamp: Date.now() })
+
+        return accessResult
+      })(),
+      AUTUMN_API_TIMEOUT,
+      fallbackResult
     )
 
-    // Block access if payment is past due
-    if (hasPastDueSubscription) {
-      console.log("[Autumn] Blocking access due to past_due payment", { userId })
-      circuitBreaker.recordSuccess() // This is a successful API call even if denied
-      return { allowed: false, balance: 0, limit: 0 }
-    }
-
-    const { data, error } = await autumn.check({
-      customer_id: userId,
-      feature_id: "messages",
-    })
-
-    if (error) {
-      console.error("[Autumn] Check error:", error)
-      circuitBreaker.recordFailure()
-
-      // If circuit just opened, use degraded mode
-      if (circuitBreaker.isCircuitOpen()) {
-        const currentCount = dailyMessageCount ?? 0
-        const degradedLimit = circuitBreaker.getDegradedLimit()
-        return {
-          allowed: currentCount < degradedLimit,
-          balance: currentCount,
-          limit: degradedLimit,
-        }
-      }
-
-      // Still within failure threshold, fail open but record failure
-      return { allowed: true }
-    }
-
-    // Success - reset circuit breaker
-    circuitBreaker.recordSuccess()
-
-    return {
-      allowed: data.allowed,
-      balance: data.balance ?? undefined,
-      limit: undefined, // Autumn doesn't return limit in check response
-    }
+    return result
   } catch (error) {
     console.error("[Autumn] Exception checking message access:", error)
     circuitBreaker.recordFailure()
@@ -218,6 +275,7 @@ export async function trackMessageUsage(userId: string): Promise<void> {
 
 /**
  * Get customer subscription data
+ * OPTIMIZED: Cached for 5 minutes to reduce API calls
  */
 export async function getCustomerData(userId: string) {
   const autumn = getAutumnClient()
@@ -226,15 +284,31 @@ export async function getCustomerData(userId: string) {
     return null
   }
 
-  try {
-    const { data, error } = await autumn.customers.get(userId)
+  // OPTIMIZATION: Check cache first (5 minute TTL)
+  const cached = customerCache.get(userId)
+  if (cached && Date.now() - cached.timestamp < CUSTOMER_CACHE_TTL) {
+    return cached.data
+  }
 
-    if (error) {
-      console.error("Error fetching customer data:", error)
+  try {
+    // OPTIMIZATION: Use timeout to prevent blocking
+    const result = await withTimeout(
+      autumn.customers.get(userId),
+      AUTUMN_API_TIMEOUT,
+      { data: null, error: undefined } as any
+    )
+
+    if (result.error) {
+      console.error("Error fetching customer data:", result.error)
       return null
     }
 
-    return data
+    // Cache the result
+    if (result.data) {
+      customerCache.set(userId, { data: result.data, timestamp: Date.now() })
+    }
+
+    return result.data
   } catch (error) {
     console.error("Error fetching customer data:", error)
     return null

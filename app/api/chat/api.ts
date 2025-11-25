@@ -160,7 +160,7 @@ export async function validateAndTrackUsage({
         autumnBalance: autumnCheck.balance,
         hasCustomerData: !!customerData,
         productsCount: customerData?.products?.length || 0,
-        products: customerData?.products?.map((p) => ({
+        products: customerData?.products?.map((p: { id: string; status: string }) => ({
           id: p.id,
           status: p.status,
         })),
@@ -168,7 +168,7 @@ export async function validateAndTrackUsage({
 
       // Check if payment is past due
       const hasPastDueSubscription = customerData?.products?.some(
-        (product) => product.status === "past_due"
+        (product: { status: string }) => product.status === "past_due"
       )
 
       if (hasPastDueSubscription) {
@@ -182,7 +182,7 @@ export async function validateAndTrackUsage({
 
       // Check if user has any active subscription
       const hasActiveSubscription = customerData?.products?.some(
-        (product) => product.status === "active"
+        (product: { status: string }) => product.status === "active"
       )
 
       // If no active subscription at all, show upgrade modal
