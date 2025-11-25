@@ -252,7 +252,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
         <div className="line"></div>
         <div>
           <Truck size={28} weight="regular" className="mx-auto mb-2" />
-          Cancel Anytime
+          Free Shipping
         </div>
       </div>
 
