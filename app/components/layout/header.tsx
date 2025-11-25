@@ -46,7 +46,9 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
                     className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-200 group-hover/logo:opacity-100"
                   />
                 </span>
-                {APP_NAME}
+                <span style={{ fontFamily: 'rb-freigeist-neue, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"' }}>
+                  {APP_NAME}
+                </span>
               </Link>
               {hasSidebar && isMobile && <HeaderSidebarTrigger />}
             </div>
