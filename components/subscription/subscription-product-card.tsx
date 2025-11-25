@@ -58,7 +58,12 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
     }
   }, [currentProduct])
 
-  const currentPlan = plans[selectedPlan]
+  const selectedPlanConfig = plans[selectedPlan]
+
+  // Get the actual current subscribed plan config (not the selected one)
+  const currentSubscribedPlanConfig = currentProduct && (currentProduct === "growth" || currentProduct === "pro" || currentProduct === "scale")
+    ? plans[currentProduct]
+    : null
 
   const handlePlanClick = (planId: "growth" | "pro" | "scale") => {
     setSelectedPlan(planId)
@@ -84,17 +89,19 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
     }
   }
 
-  // Show current credits balance only for paying users
+  // Show current credits balance only for paying users - based on ACTUAL subscription, not selected plan
   const hasPaidPlan = currentProduct && currentProduct !== "free"
-  const displayCredits = currentPlan.credits === "unlimited"
-    ? "∞"
-    : (features?.messages?.balance ?? currentPlan.credits)
+  const displayCredits = currentSubscribedPlanConfig
+    ? (currentSubscribedPlanConfig.credits === "unlimited"
+        ? "∞"
+        : (features?.messages?.balance ?? currentSubscribedPlanConfig.credits))
+    : null
 
   // Calculate new credits when switching plans (for ALL users)
   const getNewCredits = () => {
     // Show new credits whenever user selects a different plan from their current one
     if (selectedPlan !== currentProduct) {
-      return currentPlan.credits === "unlimited" ? "∞" : currentPlan.credits
+      return selectedPlanConfig.credits === "unlimited" ? "∞" : selectedPlanConfig.credits
     }
     return null
   }
@@ -124,11 +131,11 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
       <h2>Credits</h2>
       <h4 className="price">
         <span className="price_name">Price</span>
-        <span className="sub_price">${currentPlan.price.toFixed(2)}</span>
+        <span className="sub_price">${selectedPlanConfig.price.toFixed(2)}</span>
         <br />
       </h4>
 
-      {hasPaidPlan && (
+      {hasPaidPlan && displayCredits !== null && (
         <div className="credits-line">
           <span className="credits_name">Credits</span>
           <span className="credits_value">{displayCredits}</span>
