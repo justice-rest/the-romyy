@@ -22,6 +22,28 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
 
   const isGuest = user?.anonymous === true || !user
   const currentProduct = customer?.products?.[0]?.id
+  const currentProductStatus = customer?.products?.[0]?.status
+
+  // Determine display status
+  const getDisplayStatus = (): { label: string; color: string } => {
+    if (!currentProductStatus || !currentProduct) {
+      return { label: "None", color: "text-muted-foreground" }
+    }
+    switch (currentProductStatus) {
+      case "active":
+        return { label: "Active", color: "text-green-600 dark:text-green-400" }
+      case "trialing":
+        return { label: "Trial", color: "text-blue-600 dark:text-blue-400" }
+      case "past_due":
+        return { label: "Past Due", color: "text-red-600 dark:text-red-400" }
+      case "expired":
+        return { label: "Cancelled", color: "text-orange-600 dark:text-orange-400" }
+      default:
+        return { label: "None", color: "text-muted-foreground" }
+    }
+  }
+
+  const displayStatus = getDisplayStatus()
 
   // Plan configurations with message limits and features
   const plans = {
@@ -129,6 +151,13 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
   return (
     <div className="checkout__box">
       <h2>Credits</h2>
+
+      {/* Status Section */}
+      <div className="status-line">
+        <span className="status_name">Status</span>
+        <span className={`status_value ${displayStatus.color}`}>{displayStatus.label}</span>
+      </div>
+
       <h4 className="price">
         <span className="price_name">Price</span>
         <span className="sub_price">${selectedPlanConfig.price.toFixed(2)}</span>
@@ -329,6 +358,35 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
 
         :global(.dark) .sub_price {
           color: white;
+        }
+
+        .status-line {
+          text-align: right;
+          font-size: 16px;
+          font-weight: 700;
+          color: black;
+          margin-bottom: 10px;
+          position: relative;
+        }
+
+        :global(.dark) .status-line {
+          color: white;
+        }
+
+        .status_name {
+          position: absolute;
+          left: 0;
+          font-weight: 400;
+          color: #666;
+        }
+
+        :global(.dark) .status_name {
+          color: #999;
+        }
+
+        .status_value {
+          font-size: 16px;
+          font-weight: 600;
         }
 
         .credits-line {

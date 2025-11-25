@@ -116,7 +116,9 @@ export function SubscriptionSection() {
 
   // For security: Always check product status directly from the customer object
   // This prevents manipulation by checking server-side data
-  const isProductActive = currentProduct?.status === "active"
+  // Include trialing status as active for trial users
+  const isProductActive =
+    currentProduct?.status === "active" || currentProduct?.status === "trialing"
 
   // Validate subscription data integrity
   const hasValidProduct = currentProduct?.id && currentProduct?.name

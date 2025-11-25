@@ -74,9 +74,10 @@ export function UserMenu() {
     router.refresh()
   }
 
-  // Check if user has an active subscription (any paid plan)
+  // Check if user has an active subscription (any paid plan, including trials)
+  const productStatus = customer?.products?.[0]?.status
   const hasActiveSubscription =
-    customer?.products?.[0]?.status === "active"
+    productStatus === "active" || productStatus === "trialing"
 
   // Get the subscription tier
   const currentProductId = customer?.products?.[0]?.id

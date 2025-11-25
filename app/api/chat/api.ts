@@ -180,9 +180,10 @@ export async function validateAndTrackUsage({
         )
       }
 
-      // Check if user has any active subscription
+      // Check if user has any active subscription (including trials)
       const hasActiveSubscription = customerData?.products?.some(
-        (product: { status: string }) => product.status === "active"
+        (product: { status: string }) =>
+          product.status === "active" || product.status === "trialing"
       )
 
       // If no active subscription at all, show upgrade modal
