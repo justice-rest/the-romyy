@@ -5,9 +5,6 @@ import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import {
   ChartConfig,
@@ -76,28 +73,22 @@ export function MemoryChart({ stats }: MemoryChartProps) {
 
   return (
     <Card className="py-0">
-      <CardHeader className="flex flex-col justify-center gap-1 px-6 py-5">
-        <CardTitle>Memory Distribution</CardTitle>
-        <CardDescription>
-          Auto-extracted vs manually added memories over the last 30 days
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-2 sm:p-6">
+      <CardContent className="px-2 pt-4 sm:p-6 sm:pt-6">
         {isLoading ? (
-          <div className="flex h-[250px] items-center justify-center">
+          <div className="flex h-[280px] items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <p className="text-sm text-muted-foreground">Loading timeline...</p>
             </div>
           </div>
         ) : error ? (
-          <div className="flex h-[250px] items-center justify-center">
+          <div className="flex h-[280px] items-center justify-center">
             <p className="text-sm text-muted-foreground">
               Unable to load timeline data
             </p>
           </div>
         ) : chartData.length === 0 ? (
-          <div className="flex h-[250px] items-center justify-center">
+          <div className="flex h-[280px] items-center justify-center">
             <p className="text-sm text-muted-foreground">
               No memory data available yet
             </p>
@@ -105,7 +96,7 @@ export function MemoryChart({ stats }: MemoryChartProps) {
         ) : (
           <ChartContainer
             config={chartConfig}
-            className="aspect-auto h-[250px] w-full"
+            className="aspect-auto h-[280px] w-full"
           >
             <BarChart
               accessibilityLayer

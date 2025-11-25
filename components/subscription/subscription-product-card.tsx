@@ -150,7 +150,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
 
   return (
     <div className="checkout__box">
-      <h2>Credits</h2>
+      <h2>Subscription</h2>
 
       {/* Status Section */}
       <div className="status-line">

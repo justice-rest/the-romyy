@@ -146,9 +146,14 @@ export function SettingsContent({
               {isSupabaseEnabled && (
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-lg font-semibold">AI Memory</h2>
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                      AI Memory
+                      <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-400">
+                        BETA
+                      </span>
+                    </h2>
                     <p className="text-sm text-muted-foreground">
-                      Manage what the AI remembers about you across conversations.
+                      Manage what the AI remembers about you across conversations. The graph below shows memories that have been added by either you or by the AI.
                     </p>
                   </div>
                   <MemoryList />
@@ -265,9 +270,14 @@ export function SettingsContent({
                 {isSupabaseEnabled && (
                   <div className="space-y-4">
                     <div>
-                      <h2 className="text-lg font-semibold">AI Memory</h2>
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        AI Memory
+                        <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-400">
+                          BETA
+                        </span>
+                      </h2>
                       <p className="text-sm text-muted-foreground">
-                        Manage what the AI remembers about you across conversations.
+                        Manage what the AI remembers about you across conversations. The graph below shows memories that have been added by either you or by the AI.
                       </p>
                     </div>
                     <MemoryList />

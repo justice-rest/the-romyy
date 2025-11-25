@@ -5,12 +5,11 @@ import { AppInfoTrigger } from "@/app/components/layout/app-info/app-info-trigge
 import { ButtonNewChat } from "@/app/components/layout/button-new-chat"
 import { UserMenu } from "@/app/components/layout/user-menu"
 import { useBreakpoint } from "@/app/hooks/use-breakpoint"
-import { RomyLogo } from "@/components/icons/romy-logo"
 import { Button } from "@/components/ui/button"
 import { APP_NAME } from "@/lib/config"
-import { useUserPreferences } from "@/lib/user-preference-store/provider"
 import { useUser } from "@/lib/user-store/provider"
 import { Info } from "@phosphor-icons/react"
+import Image from "next/image"
 import Link from "next/link"
 import { DialogPublish } from "./dialog-publish"
 import { HeaderSidebarTrigger } from "./header-sidebar-trigger"
@@ -31,8 +30,23 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
                 href="/"
                 className="pointer-events-auto inline-flex items-center text-2xl font-medium tracking-tight"
               >
-                <RomyLogo className="mr-0.5 size-10" />
                 {APP_NAME}
+                <span className="relative ml-1 size-10 group/logo">
+                  <Image
+                    src="/PFPs/1.png"
+                    alt="Rōmy"
+                    width={40}
+                    height={40}
+                    className="absolute inset-0 rounded-lg transition-opacity duration-200 group-hover/logo:opacity-0"
+                  />
+                  <Image
+                    src="/PFPs/2.png"
+                    alt="Rōmy"
+                    width={40}
+                    height={40}
+                    className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-200 group-hover/logo:opacity-100"
+                  />
+                </span>
               </Link>
               {hasSidebar && isMobile && <HeaderSidebarTrigger />}
             </div>
