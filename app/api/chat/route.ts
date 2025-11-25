@@ -22,6 +22,10 @@ import { createErrorResponse, extractErrorMessage } from "./utils"
 // Note: Vercel Pro allows up to 300 seconds (5 min) for serverless functions
 export const maxDuration = 300
 
+// OPTIMIZATION: Prefer streaming for faster response delivery
+export const preferredRegion = "auto" // Use closest region to reduce latency
+export const dynamic = "force-dynamic" // Ensure fresh responses
+
 type ChatRequest = {
   messages: MessageAISDK[]
   chatId: string
@@ -216,9 +220,11 @@ export async function POST(req: Request) {
       // OPTIMIZATION: Reduced from 10 to 5 for faster tool loops
       // Most queries need at most 2-3 tool calls
       maxSteps: 5,
-      maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 8000 tokens ≈ 6000 words)
+      maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 16000 tokens ≈ 12000 words)
       // OPTIMIZATION: Experimental settings for faster streaming
       experimental_continueSteps: true, // Continue after tool calls without waiting
+      // OPTIMIZATION: Disable telemetry to reduce overhead
+      experimental_telemetry: { isEnabled: false },
       onError: (err: unknown) => {
         console.error("Streaming error occurred:", err)
         // Don't set streamError anymore - let the AI SDK handle it through the stream
@@ -351,7 +357,8 @@ export async function POST(req: Request) {
       },
     })
 
-    return result.toDataStreamResponse({
+    // OPTIMIZATION: Return streaming response with optimized headers
+    const response = result.toDataStreamResponse({
       sendReasoning: true,
       sendSources: true,
       getErrorMessage: (error: unknown) => {
@@ -359,6 +366,12 @@ export async function POST(req: Request) {
         return extractErrorMessage(error)
       },
     })
+
+    // Add headers to optimize streaming delivery
+    response.headers.set("X-Accel-Buffering", "no") // Disable nginx buffering
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
+
+    return response
   } catch (err: unknown) {
     console.error("Error in /api/chat:", err)
     const error = err as {

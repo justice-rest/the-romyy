@@ -382,7 +382,7 @@ export const MAX_MESSAGE_CONTENT_SIZE = 100000
  * - Claude Sonnet: Up to 8K tokens
  * - GPT-4o: Up to 16K tokens
  */
-export const AI_MAX_OUTPUT_TOKENS = 8000
+export const AI_MAX_OUTPUT_TOKENS = 16000
 
 // ============================================================================
 // RAG (Retrieval-Augmented Generation) CONFIGURATION
