@@ -227,8 +227,6 @@ export async function POST(req: Request) {
       // Model can call searchWeb multiple times to gather thorough results
       maxSteps: 10,
       maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 16000 tokens ≈ 12000 words)
-      // OPTIMIZATION: Experimental settings for faster streaming
-      experimental_continueSteps: true, // Continue after tool calls without waiting
       // OPTIMIZATION: Disable telemetry to reduce overhead
       experimental_telemetry: { isEnabled: false },
       onError: (err: unknown) => {
@@ -243,6 +241,17 @@ export async function POST(req: Request) {
 
       // Log each step to debug stuck issues
       onStepFinish: ({ stepType, toolCalls, toolResults, finishReason, text }) => {
+        // Calculate tool result sizes for debugging (with safe type handling)
+        const resultSizes = toolResults && Array.isArray(toolResults)
+          ? toolResults.map((tr: unknown) => {
+              try {
+                return JSON.stringify(tr).length
+              } catch {
+                return 0
+              }
+            })
+          : []
+
         console.log("[Chat API] Step finished:", {
           stepType,
           finishReason,
@@ -250,6 +259,8 @@ export async function POST(req: Request) {
           toolCallsCount: toolCalls?.length ?? 0,
           toolResultsCount: toolResults?.length ?? 0,
           toolNames: toolCalls?.map(tc => tc.toolName) ?? [],
+          // Track tool result sizes to debug payload issues
+          toolResultSizes: resultSizes,
         })
       },
 

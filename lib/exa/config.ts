@@ -37,7 +37,7 @@ export function getExaApiKeyOptional(): string | null {
  * Default configuration for Exa search
  */
 export const EXA_DEFAULTS = {
-  numResults: 35,
+  numResults: 15, // Reduced from 35 for better performance while maintaining good coverage
   type: "auto" as const, // Auto search for optimal results
   useAutoprompt: true, // Let Exa enhance the query
   text: true, // Include full text
@@ -47,4 +47,4 @@ export const EXA_DEFAULTS = {
 /**
  * Maximum number of results Exa can return
  */
-export const EXA_MAX_RESULTS = 35
+export const EXA_MAX_RESULTS = 25

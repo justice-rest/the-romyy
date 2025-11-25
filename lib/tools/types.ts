@@ -8,10 +8,10 @@ export const exaSearchParametersSchema = z.object({
   numResults: z
     .number()
     .min(1)
-    .max(35)
+    .max(25)
     .optional()
-    .default(35)
-    .describe("Number of search results to return (1-35)"),
+    .default(15)
+    .describe("Number of search results to return (1-25)"),
   type: z
     .enum(["keyword", "neural", "auto"])
     .optional()
