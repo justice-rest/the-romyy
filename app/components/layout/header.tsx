@@ -30,19 +30,19 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
                 href="/"
                 className="pointer-events-auto inline-flex items-center text-2xl font-semibold tracking-tight group/logo"
               >
-                <span className="relative mr-1.5 size-10">
+                <span className="relative mr-1.5 size-9">
                   <Image
                     src="/PFPs/1.png"
                     alt="Rōmy"
-                    width={40}
-                    height={40}
+                    width={36}
+                    height={36}
                     className="absolute inset-0 rounded-lg transition-opacity duration-200 group-hover/logo:opacity-0"
                   />
                   <Image
                     src="/PFPs/2.png"
                     alt="Rōmy"
-                    width={40}
-                    height={40}
+                    width={36}
+                    height={36}
                     className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-200 group-hover/logo:opacity-100"
                   />
                 </span>

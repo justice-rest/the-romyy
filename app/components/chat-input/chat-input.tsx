@@ -179,7 +179,7 @@ export function ChatInput({
           >
             <PromptInput
               className="bg-popover relative z-10 p-0 pt-1 shadow-xs backdrop-blur-xl"
-              maxHeight={200}
+              maxHeight={300}
               value={value}
               onValueChange={onValueChange}
             >

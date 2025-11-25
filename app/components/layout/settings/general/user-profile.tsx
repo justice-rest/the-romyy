@@ -3,19 +3,20 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useUser } from "@/lib/user-store/provider"
 import { User } from "@phosphor-icons/react"
-import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { createClient } from "@/lib/supabase/client"
 
 export function UserProfile() {
   const { user } = useUser()
-  const [onboardingFirstName, setOnboardingFirstName] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchOnboardingName = async () => {
-      if (!user?.id) return
+  // Use React Query for caching - prevents glitch when switching tabs
+  const { data: onboardingFirstName } = useQuery({
+    queryKey: ["onboarding-first-name", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null
 
       const supabase = createClient()
-      if (!supabase) return
+      if (!supabase) return null
 
       const { data } = await supabase
         .from("onboarding_data")
@@ -23,11 +24,12 @@ export function UserProfile() {
         .eq("user_id", user.id)
         .single()
 
-      setOnboardingFirstName(data?.first_name || null)
-    }
-
-    fetchOnboardingName()
-  }, [user?.id])
+      return data?.first_name || null
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+  })
 
   if (!user) return null
 
