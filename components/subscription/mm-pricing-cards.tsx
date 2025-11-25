@@ -154,7 +154,7 @@ export function MMPricingCards() {
               "File uploads",
               "Email support",
             ]}
-            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "growth" ? "Current Plan" : "Get Started")}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "growth" ? "Current Plan" : currentProduct ? "Subscribe" : "Start Trial")}
             ctaVariant="outline"
             onCtaClick={() => handleCheckout("growth")}
             disabled={currentProduct === "growth"}
@@ -169,7 +169,7 @@ export function MMPricingCards() {
               "Dedicated support",
               "Everything in Growth",
             ]}
-            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "pro" ? "Current Plan" : "Get Started")}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "pro" ? "Current Plan" : currentProduct ? "Subscribe" : "Start Trial")}
             ctaVariant="solid"
             badge="Popular"
             onCtaClick={() => handleCheckout("pro")}
@@ -185,7 +185,7 @@ export function MMPricingCards() {
               "Upload & search your own documents (RAG)",
               "Fundraising consultation",
             ]}
-            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "scale" ? "Current Plan" : "Get Started")}
+            ctaText={isGuest ? "Sign In to Subscribe" : (currentProduct === "scale" ? "Current Plan" : currentProduct ? "Subscribe" : "Start Trial")}
             ctaVariant="outline"
             onCtaClick={() => handleCheckout("scale")}
             disabled={currentProduct === "scale"}

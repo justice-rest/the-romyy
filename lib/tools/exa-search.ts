@@ -8,6 +8,21 @@ import {
   type ExaSearchResult,
 } from "./types"
 
+// Timeout for Exa search requests (30 seconds)
+const EXA_SEARCH_TIMEOUT_MS = 30000
+
+/**
+ * Helper to add timeout to a promise
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+    ),
+  ])
+}
+
 /**
  * Exa Search Tool
  * Performs semantic web search using Exa's neural search engine
@@ -17,6 +32,7 @@ import {
  * - Autoprompt for query enhancement
  * - Text content and highlights extraction
  * - Structured source format compatible with UI
+ * - 30 second timeout to prevent hanging
  */
 export const exaSearchTool = tool({
   description:
@@ -43,14 +59,18 @@ export const exaSearchTool = tool({
       // Initialize Exa client
       const exa = new Exa(getExaApiKey())
 
-      // Perform search with enhanced configuration
-      const searchResults = await exa.searchAndContents(query, {
-        numResults,
-        type,
-        useAutoprompt: EXA_DEFAULTS.useAutoprompt,
-        text: true,
-        highlights: true,
-      })
+      // Perform search with enhanced configuration and timeout
+      const searchResults = await withTimeout(
+        exa.searchAndContents(query, {
+          numResults,
+          type,
+          useAutoprompt: EXA_DEFAULTS.useAutoprompt,
+          text: true,
+          highlights: true,
+        }),
+        EXA_SEARCH_TIMEOUT_MS,
+        `Exa search timed out after ${EXA_SEARCH_TIMEOUT_MS / 1000} seconds`
+      )
 
       // Transform results to match expected format
       const results: ExaSearchResult[] = searchResults.results.map((result) => ({

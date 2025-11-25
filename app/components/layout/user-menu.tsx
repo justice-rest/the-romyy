@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation"
 import { AppInfoTrigger } from "./app-info/app-info-trigger"
 import { FeedbackTrigger } from "./feedback/feedback-trigger"
 import { SettingsTrigger } from "./settings/settings-trigger"
+import type { TabType } from "./settings/settings-content"
 
 export function UserMenu() {
   const { user } = useUser()
@@ -31,6 +32,7 @@ export function UserMenu() {
   const router = useRouter()
   const [isMenuOpen, setMenuOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
+  const [settingsDefaultTab, setSettingsDefaultTab] = useState<TabType>("general")
   const [onboardingFirstName, setOnboardingFirstName] = useState<string | null>(null)
 
   // Fetch full name from onboarding data
@@ -53,6 +55,22 @@ export function UserMenu() {
     fetchOnboardingName()
   }, [user?.id])
 
+  // Listen for custom event to open settings with a specific tab
+  useEffect(() => {
+    const handleOpenSettings = (event: CustomEvent<{ tab?: TabType }>) => {
+      const tab = event.detail?.tab || "general"
+      setSettingsDefaultTab(tab)
+      setSettingsOpen(true)
+      setMenuOpen(true)
+    }
+
+    window.addEventListener("open-settings", handleOpenSettings as EventListener)
+
+    return () => {
+      window.removeEventListener("open-settings", handleOpenSettings as EventListener)
+    }
+  }, [])
+
   if (!user) return null
 
   // Use onboarding full first_name if available, otherwise fall back to display_name
@@ -62,6 +80,8 @@ export function UserMenu() {
     setSettingsOpen(isOpen)
     if (!isOpen) {
       setMenuOpen(false)
+      // Reset to general tab when closing
+      setSettingsDefaultTab("general")
     }
   }
 
@@ -142,7 +162,11 @@ export function UserMenu() {
           </span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <SettingsTrigger onOpenChange={handleSettingsOpenChange} />
+        <SettingsTrigger
+          onOpenChange={handleSettingsOpenChange}
+          defaultTab={settingsDefaultTab}
+          externalOpen={isSettingsOpen}
+        />
         <FeedbackTrigger />
         <AppInfoTrigger />
         <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">

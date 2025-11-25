@@ -49,7 +49,7 @@ export function DialogAuth({ open, setOpen }: DialogAuthProps) {
       console.error("Error signing in with Google:", err)
       setError(
         (err as Error).message ||
-          "An unexpected error occurred. Please try again."
+        "An unexpected error occurred. Please try again."
       )
     } finally {
       setIsLoading(false)
@@ -87,7 +87,7 @@ export function DialogAuth({ open, setOpen }: DialogAuthProps) {
               height={20}
               className="mr-2 size-4"
             />
-            <span>{isLoading ? "Connecting..." : "Continue with Google"}</span>
+            <span>{isLoading ? "Connecting..." : "Sign-In with Google"}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

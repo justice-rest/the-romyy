@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog"
 import { APP_NAME } from "@/lib/config"
 import Image from "next/image"
-import Link from "next/link"
 
 type DialogSubscriptionRequiredProps = {
   open: boolean
@@ -21,6 +20,14 @@ export function DialogSubscriptionRequired({
   open,
   setOpen,
 }: DialogSubscriptionRequiredProps) {
+  const handleViewPlans = () => {
+    setOpen(false)
+    // Dispatch event to open settings with subscription tab
+    window.dispatchEvent(
+      new CustomEvent("open-settings", { detail: { tab: "subscription" } })
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="w-[90%] max-w-[300px] overflow-hidden rounded-xl p-0 sm:max-w-[300px]">
@@ -42,10 +49,18 @@ export function DialogSubscriptionRequired({
             <div className="text-primary mb-1 text-base font-medium">
               Upgrade to use Rōmy
             </div>
-            <p className="text-muted-foreground mb-5 text-base">
+            <p className="text-muted-foreground mb-4 text-base">
               Subscribe to start chatting with AI models and unlock all
-              features. Visit Settings → Subscription to view plans.
+              features.
             </p>
+            <Button
+              variant="default"
+              className="mb-2 w-full text-base"
+              size="lg"
+              onClick={handleViewPlans}
+            >
+              <span>View Plans</span>
+            </Button>
             <Button
               variant="secondary"
               className="w-full text-base"

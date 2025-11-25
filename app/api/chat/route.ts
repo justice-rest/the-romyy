@@ -201,6 +201,10 @@ export async function POST(req: Request) {
     }
 
     // Build tools object - include Exa search, RAG tools, and Memory search for authenticated users
+    // NOTE: For OpenRouter models, both the built-in Exa plugin AND the standalone searchWeb tool are enabled
+    // - Built-in plugin: Automatic search via extraBody.plugins (returns sources in response)
+    // - Standalone tool: Explicit search the AI can call for follow-up queries
+    // The standalone tool has a 30-second timeout to prevent hanging
     const tools: ToolSet = {
       ...(enableSearch && shouldEnableExaTool() ? { searchWeb: exaSearchTool } : {}),
       ...(isAuthenticated
@@ -221,20 +225,44 @@ export async function POST(req: Request) {
       system: finalSystemPrompt,
       messages: optimizedMessages,
       tools,
-      // OPTIMIZATION: Reduced from 10 to 5 for faster tool loops
-      // Most queries need at most 2-3 tool calls
-      maxSteps: 5,
+      // Allow more steps for complex queries involving multiple tool calls
+      // Increased from 5 to 8 to handle: built-in search + standalone search + follow-ups
+      maxSteps: 8,
       maxTokens: AI_MAX_OUTPUT_TOKENS, // Configurable in lib/config.ts (default: 16000 tokens ≈ 12000 words)
       // OPTIMIZATION: Experimental settings for faster streaming
       experimental_continueSteps: true, // Continue after tool calls without waiting
       // OPTIMIZATION: Disable telemetry to reduce overhead
       experimental_telemetry: { isEnabled: false },
       onError: (err: unknown) => {
-        console.error("Streaming error occurred:", err)
-        // Don't set streamError anymore - let the AI SDK handle it through the stream
+        console.error("[Chat API] Streaming error occurred:", err)
+        // Log additional context for debugging
+        if (err instanceof Error) {
+          console.error("[Chat API] Error name:", err.name)
+          console.error("[Chat API] Error message:", err.message)
+          console.error("[Chat API] Error stack:", err.stack)
+        }
       },
 
-      onFinish: async ({ response }) => {
+      // Log each step to debug stuck issues
+      onStepFinish: ({ stepType, toolCalls, toolResults, finishReason, text }) => {
+        console.log("[Chat API] Step finished:", {
+          stepType,
+          finishReason,
+          textLength: text?.length ?? 0,
+          toolCallsCount: toolCalls?.length ?? 0,
+          toolResultsCount: toolResults?.length ?? 0,
+          toolNames: toolCalls?.map(tc => tc.toolName) ?? [],
+        })
+      },
+
+      onFinish: async ({ response, text, finishReason, usage }) => {
+        // Log completion details for debugging stuck issues
+        console.log("[Chat API] Stream finished:", {
+          finishReason,
+          textLength: text?.length ?? 0,
+          messageCount: response.messages?.length ?? 0,
+          usage,
+        })
         if (supabase) {
           // Store assistant message
           await storeAssistantMessage({

@@ -141,7 +141,7 @@ export function SubscriptionProductCard({ features }: SubscriptionProductCardPro
     const currentOrder = currentProduct ? planOrder[currentProduct as keyof typeof planOrder] ?? 0 : 0
     const selectedOrder = planOrder[selectedPlan]
 
-    if (currentOrder === 0) return "Subscribe"
+    if (currentOrder === 0) return "Start Trial"
     if (selectedOrder > currentOrder) return "Upgrade"
     if (selectedOrder < currentOrder) return "Downgrade"
 

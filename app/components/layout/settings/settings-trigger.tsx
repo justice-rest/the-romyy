@@ -12,20 +12,39 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { User } from "@phosphor-icons/react"
 import type React from "react"
-import { useState } from "react"
-import { SettingsContent } from "./settings-content"
+import { useState, useEffect } from "react"
+import { SettingsContent, TabType } from "./settings-content"
 
 type SettingsTriggerProps = {
   onOpenChange: (open: boolean) => void
+  defaultTab?: TabType
+  externalOpen?: boolean
 }
 
-export function SettingsTrigger({ onOpenChange }: SettingsTriggerProps) {
+export function SettingsTrigger({ onOpenChange, defaultTab = "general", externalOpen }: SettingsTriggerProps) {
   const [open, setOpen] = useState(false)
+  const [currentTab, setCurrentTab] = useState<TabType>(defaultTab)
   const isMobile = useBreakpoint(768)
+
+  // Sync with external open state
+  useEffect(() => {
+    if (externalOpen !== undefined) {
+      setOpen(externalOpen)
+    }
+  }, [externalOpen])
+
+  // Update current tab when defaultTab changes
+  useEffect(() => {
+    setCurrentTab(defaultTab)
+  }, [defaultTab])
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen)
     onOpenChange(isOpen)
+    // Reset to general tab when closing
+    if (!isOpen) {
+      setCurrentTab("general")
+    }
   }
 
   const trigger = (
@@ -40,7 +59,7 @@ export function SettingsTrigger({ onOpenChange }: SettingsTriggerProps) {
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>{trigger}</DrawerTrigger>
         <DrawerContent>
-          <SettingsContent isDrawer />
+          <SettingsContent isDrawer defaultTab={currentTab} />
         </DrawerContent>
       </Drawer>
     )
@@ -53,7 +72,7 @@ export function SettingsTrigger({ onOpenChange }: SettingsTriggerProps) {
         <DialogHeader className="border-border border-b px-6 py-5">
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>
-        <SettingsContent />
+        <SettingsContent defaultTab={currentTab} />
       </DialogContent>
     </Dialog>
   )

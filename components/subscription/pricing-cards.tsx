@@ -194,7 +194,9 @@ export function PricingCards() {
                     ? "Loading..."
                     : isGuest
                       ? "Sign In to Subscribe"
-                      : "Subscribe"}
+                      : currentProduct
+                        ? "Subscribe"
+                        : "Start Trial"}
               </div>
             </div>
           </button>
@@ -278,7 +280,9 @@ export function PricingCards() {
                     ? "Loading..."
                     : isGuest
                       ? "Sign In to Subscribe"
-                      : "Subscribe"}
+                      : currentProduct
+                        ? "Subscribe"
+                        : "Start Trial"}
               </div>
             </div>
           </button>
@@ -343,7 +347,9 @@ export function PricingCards() {
                     ? "Loading..."
                     : isGuest
                       ? "Sign In to Subscribe"
-                      : "Subscribe"}
+                      : currentProduct
+                        ? "Subscribe"
+                        : "Start Trial"}
               </div>
             </div>
           </button>

@@ -14,7 +14,7 @@ import {
   XIcon,
   HardDrives,
 } from "@phosphor-icons/react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SubscriptionSection } from "@/components/subscription/subscription-section"
 import { InteractionPreferences } from "./appearance/interaction-preferences"
 import { LayoutSettings } from "./appearance/layout-settings"
@@ -28,16 +28,23 @@ import { UserProfile } from "./general/user-profile"
 import { DataSection } from "./data/data-section"
 import { MemoryList } from "@/app/components/memory"
 
+export type TabType = "general" | "appearance" | "data" | "memory" | "subscription" | "connections"
+
 type SettingsContentProps = {
   isDrawer?: boolean
+  defaultTab?: TabType
 }
-
-type TabType = "general" | "appearance" | "data" | "memory" | "subscription" | "connections"
 
 export function SettingsContent({
   isDrawer = false,
+  defaultTab = "general",
 }: SettingsContentProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("general")
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab)
+
+  // Update active tab when defaultTab changes (e.g., when opening settings with a specific tab)
+  useEffect(() => {
+    setActiveTab(defaultTab)
+  }, [defaultTab])
 
   return (
     <div
