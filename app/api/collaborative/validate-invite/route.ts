@@ -1,6 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
+import { createGuestServerClient } from "@/lib/supabase/server-guest"
 
 // GET - Validate an invite code and return chat/owner info
+// Uses service role to bypass RLS since this is accessed by unauthenticated users
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
       })
     }
 
-    const supabase = await createClient()
+    const supabase = await createGuestServerClient()
     if (!supabase) {
       return new Response(
         JSON.stringify({ error: "Database not available" }),
