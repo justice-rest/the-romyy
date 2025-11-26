@@ -1,4 +1,5 @@
-import { validateUserIdentity } from "@/lib/server/api"
+import { createClient } from "@/lib/supabase/server"
+import { createGuestServerClient } from "@/lib/supabase/server-guest"
 
 type RouteContext = {
   params: Promise<{ chatId: string }>
@@ -30,17 +31,31 @@ export async function POST(request: Request, context: RouteContext) {
       )
     }
 
-    const supabase = await validateUserIdentity(userId, isAuthenticated)
-    if (!supabase) {
+    // Use service role client for join operations to bypass RLS
+    // The invite code itself serves as authorization
+    const supabaseServiceRole = await createGuestServerClient()
+    if (!supabaseServiceRole) {
       return new Response(
         JSON.stringify({ error: "Database not available" }),
         { status: 503 }
       )
     }
 
+    // Also get the authenticated client to verify the user
+    const supabaseAuth = await createClient()
+    if (supabaseAuth) {
+      const { data: authData, error: authError } = await supabaseAuth.auth.getUser()
+      if (authError || !authData?.user?.id || authData.user.id !== userId) {
+        return new Response(
+          JSON.stringify({ error: "User authentication failed" }),
+          { status: 401 }
+        )
+      }
+    }
+
     // Use atomic function to handle join with proper locking
     // This prevents race conditions where multiple users join simultaneously
-    const { data: result, error: rpcError } = await (supabase.rpc as CallableFunction)(
+    const { data: result, error: rpcError } = await (supabaseServiceRole.rpc as CallableFunction)(
       "join_collaborative_chat",
       {
         p_chat_id: chatId,
@@ -53,7 +68,7 @@ export async function POST(request: Request, context: RouteContext) {
       // If function doesn't exist, fall back to non-atomic flow
       if (rpcError.code === "42883") {
         console.warn("[Join] Atomic function not available, using fallback flow")
-        return await fallbackJoin(supabase, chatId, userId, inviteCode)
+        return await fallbackJoin(supabaseServiceRole, chatId, userId, inviteCode)
       }
       console.error("Error in join RPC:", rpcError)
       return new Response(
@@ -92,7 +107,7 @@ export async function POST(request: Request, context: RouteContext) {
 
 // Fallback for when atomic function is not available (migration not run)
 async function fallbackJoin(
-  supabase: Awaited<ReturnType<typeof validateUserIdentity>>,
+  supabase: Awaited<ReturnType<typeof createGuestServerClient>>,
   chatId: string,
   userId: string,
   inviteCode: string
