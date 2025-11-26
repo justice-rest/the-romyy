@@ -65,6 +65,9 @@ export function InviteContent({ code }: InviteContentProps) {
         user.id,
         isAuthenticated
       )
+      // Small delay to allow chats list to refresh before navigation
+      // This prevents the chat page from redirecting due to stale cache
+      await new Promise(resolve => setTimeout(resolve, 500))
       router.push(`/c/${inviteData.chatId}`)
     } catch (err) {
       setError((err as Error).message)

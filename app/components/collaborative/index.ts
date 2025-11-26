@@ -1,4 +1,5 @@
 export { MessageUserCollaborative } from "./message-user-collaborative"
 export { CollaborativeChatHeader } from "./collaborative-chat-header"
+export { CollaborativeMenu } from "./collaborative-menu"
 export { LockIndicator } from "./lock-indicator"
 export { TypingIndicator } from "./typing-indicator"

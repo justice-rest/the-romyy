@@ -9,7 +9,7 @@ import {
   API_ROUTE_UPDATE_CHAT_MODEL,
 } from "../../routes"
 
-export async function getChatsForUserInDb(userId: string): Promise<Chats[]> {
+export async function getChatsForUserInDb(userId: string, isAuthenticated: boolean = true): Promise<Chats[]> {
   const supabase = createClient()
   if (!supabase) return []
 
@@ -27,23 +27,16 @@ export async function getChatsForUserInDb(userId: string): Promise<Chats[]> {
     return []
   }
 
-  // Try to fetch collaborative chats (gracefully handle if table doesn't exist yet)
+  // Fetch collaborative chats via API (uses service role to bypass RLS)
   let collaborativeChats: Chats[] = []
   try {
-    const { data: collaboratorData, error: collabError } = await supabase
-      .from("chat_collaborators")
-      .select("chat_id, chats(*)")
-      .eq("user_id", userId)
-      .eq("status", "accepted")
-
-    // Only process if table exists and query succeeded
-    if (!collabError && collaboratorData) {
-      collaborativeChats = collaboratorData
-        .map((item) => item.chats as unknown as Chats)
-        .filter((chat): chat is Chats => chat !== null)
-    } else if (collabError?.code !== "42P01") {
-      // Log error only if it's not "table does not exist"
-      console.error("Failed to fetch collaborative chats:", collabError)
+    const res = await fetchClient(
+      `/api/collaborative/my-chats?userId=${userId}&isAuthenticated=${isAuthenticated}`,
+      { method: "GET" }
+    )
+    if (res.ok) {
+      const data = await res.json()
+      collaborativeChats = data.chats || []
     }
   } catch {
     // Collaborative feature not available - continue with owned chats only

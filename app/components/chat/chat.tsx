@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "motion/react"
 import dynamic from "next/dynamic"
 import { redirect } from "next/navigation"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useChatCore } from "./use-chat-core"
 import { useChatOperations } from "./use-chat-operations"
 import { useFileUpload } from "./use-file-upload"
@@ -46,13 +46,6 @@ const DialogLimitReached = dynamic(
   { ssr: false }
 )
 
-const CollaborativeChatHeader = dynamic(
-  () =>
-    import("@/app/components/collaborative").then(
-      (mod) => mod.CollaborativeChatHeader
-    ),
-  { ssr: false }
-)
 
 const LockIndicator = dynamic(
   () =>
@@ -89,6 +82,7 @@ export function Chat({
     getChatById,
     updateChatModel,
     bumpChat,
+    refresh,
     isLoading: isChatsLoading,
   } = useChats()
 
@@ -301,11 +295,34 @@ export function Chat({
     ]
   )
 
+  // Track if we've already tried to refresh chats for this chatId
+  const hasTriedRefreshRef = useRef<string | null>(null)
+  const [isWaitingForChat, setIsWaitingForChat] = useState(false)
+
+  // Try to refresh chats if chatId exists but chat not found (handles collaborative chats)
+  useEffect(() => {
+    if (
+      chatId &&
+      !isChatsLoading &&
+      !currentChat &&
+      hasTriedRefreshRef.current !== chatId
+    ) {
+      hasTriedRefreshRef.current = chatId
+      setIsWaitingForChat(true)
+      // Refresh chats to get any collaborative chats from server
+      refresh().finally(() => {
+        // Give a brief moment for state to update
+        setTimeout(() => setIsWaitingForChat(false), 300)
+      })
+    }
+  }, [chatId, isChatsLoading, currentChat, refresh])
+
   // Handle redirect for invalid chatId - only redirect if we're certain the chat doesn't exist
   // and we're not in a transient state during chat creation
   if (
     chatId &&
     !isChatsLoading &&
+    !isWaitingForChat &&
     !currentChat &&
     !isSubmitting &&
     status === "ready" &&
@@ -338,13 +355,6 @@ export function Chat({
         open={hasDialogLimitReached}
         setOpen={setHasDialogLimitReached}
       />
-
-      {/* Collaborative chat header - positioned below main header (14 = 56px) */}
-      {isCollaborative && chatId && (
-        <div className="absolute top-14 inset-x-0 z-30">
-          <CollaborativeChatHeader />
-        </div>
-      )}
 
       <AnimatePresence initial={false} mode="popLayout">
         {showOnboarding ? (

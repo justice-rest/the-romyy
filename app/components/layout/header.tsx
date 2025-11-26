@@ -12,6 +12,7 @@ import { useUser } from "@/lib/user-store/provider"
 import { Info } from "@phosphor-icons/react"
 import Image from "next/image"
 import Link from "next/link"
+import { CollaborativeMenu } from "@/app/components/collaborative"
 import { DialogPublish } from "./dialog-publish"
 import { HeaderSidebarTrigger } from "./header-sidebar-trigger"
 
@@ -89,6 +90,7 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
                 </div>
               ) : (
                 <div className="pointer-events-auto flex flex-1 items-center justify-end gap-2">
+                  <CollaborativeMenu />
                   <DialogPublish />
                   <ButtonNewChat />
                   {!hasSidebar && <HistoryTrigger hasSidebar={hasSidebar} />}
