@@ -9,7 +9,7 @@ import { SplitPanelHeader } from "./split-panel-header"
 import { cn } from "@/lib/utils"
 
 interface SplitPanelProps {
-  chatId: string | null
+  chatId: string
   side: "left" | "right"
   style?: React.CSSProperties
 }
@@ -31,10 +31,10 @@ export function SplitPanel({ chatId, side, style }: SplitPanelProps) {
     >
       <SplitPanelHeader chatId={chatId} side={side} />
       <StandaloneChatSessionProvider chatId={chatId}>
-        <MessagesProvider>
+        <MessagesProvider chatIdOverride={chatId}>
           <div className="relative flex-1 overflow-hidden">
             <DropZone onDrop={handleDrop} currentChatId={chatId} />
-            <Chat />
+            <Chat chatIdOverride={chatId} />
           </div>
         </MessagesProvider>
       </StandaloneChatSessionProvider>

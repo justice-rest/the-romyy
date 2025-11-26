@@ -49,14 +49,19 @@ interface ChatProps {
   showWelcome?: boolean
   firstName?: string | null
   onWelcomeDismiss?: () => void
+  /** Override chatId for split view panels */
+  chatIdOverride?: string | null
 }
 
 export function Chat({
   showWelcome,
   firstName,
   onWelcomeDismiss,
+  chatIdOverride,
 }: ChatProps = {}) {
-  const chatId = useChatId()
+  const contextChatId = useChatId()
+  // Use override if provided (for split view), otherwise use context
+  const chatId = chatIdOverride !== undefined ? chatIdOverride : contextChatId
   const { isActive: isSplitActive, activateSplit } = useSplitView()
   const {
     createNewChat,

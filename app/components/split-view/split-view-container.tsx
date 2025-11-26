@@ -13,7 +13,8 @@ export function SplitViewContainer() {
   const containerRef = useRef<HTMLDivElement>(null)
   const isMobile = useBreakpoint(768)
 
-  if (!isActive) return null
+  // Don't render until we have valid chat IDs
+  if (!isActive || !leftChatId || !rightChatId) return null
 
   return (
     <div

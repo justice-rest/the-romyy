@@ -6,14 +6,14 @@ import { cn } from "@/lib/utils"
 import { ArrowsLeftRight, X } from "@phosphor-icons/react"
 
 interface SplitPanelHeaderProps {
-  chatId: string | null
+  chatId: string
   side: "left" | "right"
 }
 
 export function SplitPanelHeader({ chatId, side }: SplitPanelHeaderProps) {
   const { getChatById } = useChats()
   const { closePanel, swapPanels } = useSplitView()
-  const chat = chatId ? getChatById(chatId) : null
+  const chat = getChatById(chatId)
 
   return (
     <div className="bg-background/80 border-border/40 flex h-10 flex-shrink-0 items-center justify-between border-b px-3 backdrop-blur-sm">
