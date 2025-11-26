@@ -13,10 +13,11 @@ import {
   MessageContent,
 } from "@/components/prompt-kit/message"
 import { Button } from "@/components/ui/button"
+import { exportToPdf } from "@/lib/pdf-export"
 import { cn } from "@/lib/utils"
 import type { Message as MessageAISDK } from "@ai-sdk/react"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr"
-import { Check, Copy } from "@phosphor-icons/react"
+import { Check, Copy, FilePdf, SpinnerGap } from "@phosphor-icons/react"
 import Link from "next/link"
 import { useState } from "react"
 import { Header } from "./header"
@@ -37,11 +38,33 @@ export default function Article({
   messages,
 }: ArticleProps) {
   const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [exportingId, setExportingId] = useState<number | null>(null)
 
   const copyToClipboard = (messageId: number, content: string) => {
     navigator.clipboard.writeText(content)
     setCopiedId(messageId)
     setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const handleExportPdf = async (messageId: number, content: string) => {
+    setExportingId(messageId)
+    try {
+      const formattedDate = new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+
+      await exportToPdf(content, {
+        title,
+        date: formattedDate,
+        logoSrc: "/BrandmarkRōmy.png",
+      })
+    } catch (error) {
+      console.error("Failed to export PDF:", error)
+    } finally {
+      setExportingId(null)
+    }
   }
 
   return (
@@ -159,7 +182,7 @@ export default function Article({
                       <SourcesList sources={sources} />
                     )}
 
-                    {/* Copy button for assistant messages */}
+                    {/* Copy and Export PDF buttons for assistant messages */}
                     {message.role === "assistant" && !contentNullOrEmpty && (
                       <MessageActions
                         className={cn(
@@ -180,6 +203,24 @@ export default function Article({
                               <Check className="size-4" />
                             ) : (
                               <Copy className="size-4" />
+                            )}
+                          </button>
+                        </MessageAction>
+                        <MessageAction
+                          tooltip={exportingId === message.id ? "Exporting..." : "Export PDF"}
+                          side="bottom"
+                        >
+                          <button
+                            className="hover:bg-accent/60 text-muted-foreground hover:text-foreground flex size-7.5 items-center justify-center rounded-full bg-transparent transition disabled:opacity-50"
+                            aria-label="Export PDF"
+                            onClick={() => handleExportPdf(message.id, message.content!)}
+                            type="button"
+                            disabled={exportingId === message.id}
+                          >
+                            {exportingId === message.id ? (
+                              <SpinnerGap className="size-4 animate-spin" />
+                            ) : (
+                              <FilePdf className="size-4" />
                             )}
                           </button>
                         </MessageAction>
