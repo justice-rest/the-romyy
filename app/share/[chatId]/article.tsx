@@ -1,15 +1,24 @@
+"use client"
+
 import { getSources } from "@/app/components/chat/get-sources"
 import { Reasoning } from "@/app/components/chat/reasoning"
 import { SearchImages } from "@/app/components/chat/search-images"
 import { SourcesList } from "@/app/components/chat/sources-list"
 import { ToolInvocation } from "@/app/components/chat/tool-invocation"
 import type { Tables } from "@/app/types/database.types"
-import { Message, MessageContent } from "@/components/prompt-kit/message"
+import {
+  Message,
+  MessageAction,
+  MessageActions,
+  MessageContent,
+} from "@/components/prompt-kit/message"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Message as MessageAISDK } from "@ai-sdk/react"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr"
+import { Check, Copy } from "@phosphor-icons/react"
 import Link from "next/link"
+import { useState } from "react"
 import { Header } from "./header"
 
 type MessageType = Tables<"messages">
@@ -27,6 +36,14 @@ export default function Article({
   subtitle,
   messages,
 }: ArticleProps) {
+  const [copiedId, setCopiedId] = useState<number | null>(null)
+
+  const copyToClipboard = (messageId: number, content: string) => {
+    navigator.clipboard.writeText(content)
+    setCopiedId(messageId)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
   return (
     <>
       <Header />
@@ -96,7 +113,7 @@ export default function Article({
               <div key={message.id} className="mb-8">
                 <Message
                   className={cn(
-                    "mb-4 flex flex-col gap-0",
+                    "group mb-4 flex flex-col gap-0",
                     message.role === "assistant" && "w-full items-start",
                     message.role === "user" && "w-full items-end"
                   )}
@@ -140,6 +157,33 @@ export default function Article({
                     {/* Render sources for assistant messages */}
                     {message.role === "assistant" && sources && sources.length > 0 && (
                       <SourcesList sources={sources} />
+                    )}
+
+                    {/* Copy button for assistant messages */}
+                    {message.role === "assistant" && !contentNullOrEmpty && (
+                      <MessageActions
+                        className={cn(
+                          "-ml-2 flex gap-0 opacity-0 transition-opacity group-hover:opacity-100"
+                        )}
+                      >
+                        <MessageAction
+                          tooltip={copiedId === message.id ? "Copied!" : "Copy text"}
+                          side="bottom"
+                        >
+                          <button
+                            className="hover:bg-accent/60 text-muted-foreground hover:text-foreground flex size-7.5 items-center justify-center rounded-full bg-transparent transition"
+                            aria-label="Copy text"
+                            onClick={() => copyToClipboard(message.id, message.content!)}
+                            type="button"
+                          >
+                            {copiedId === message.id ? (
+                              <Check className="size-4" />
+                            ) : (
+                              <Copy className="size-4" />
+                            )}
+                          </button>
+                        </MessageAction>
+                      </MessageActions>
                     )}
                   </div>
                 </Message>
