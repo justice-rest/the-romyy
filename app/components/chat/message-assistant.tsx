@@ -4,11 +4,14 @@ import {
   MessageActions,
   MessageContent,
 } from "@/components/prompt-kit/message"
+import { useChats } from "@/lib/chat-store/chats/provider"
+import { useChatSession } from "@/lib/chat-store/session/provider"
+import { exportToPdf } from "@/lib/pdf-export"
 import { useUserPreferences } from "@/lib/user-preference-store/provider"
 import { cn } from "@/lib/utils"
 import type { Message as MessageAISDK } from "@ai-sdk/react"
-import { ArrowClockwise, Check, Copy } from "@phosphor-icons/react"
-import { useCallback, useRef } from "react"
+import { ArrowClockwise, Check, Copy, FilePdf, SpinnerGap } from "@phosphor-icons/react"
+import { useCallback, useRef, useState } from "react"
 import { getSources } from "./get-sources"
 import { getCitations } from "./get-citations"
 import { QuoteButton } from "./quote-button"
@@ -47,6 +50,9 @@ export function MessageAssistant({
   onQuote,
 }: MessageAssistantProps) {
   const { preferences } = useUserPreferences()
+  const { chatId } = useChatSession()
+  const { getChatById } = useChats()
+  const [isExporting, setIsExporting] = useState(false)
   const sources = getSources(parts)
   const citations = getCitations(parts) // Extract RAG citations
   const toolInvocationParts = parts?.filter(
@@ -85,6 +91,31 @@ export function MessageAssistant({
       clearSelection()
     }
   }, [selectionInfo, onQuote, clearSelection])
+
+  const handleExportPdf = async () => {
+    if (!children) return
+
+    setIsExporting(true)
+    try {
+      const chat = chatId ? getChatById(chatId) : null
+      const title = chat?.title || "Rōmy Response"
+      const formattedDate = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+
+      await exportToPdf(children, {
+        title,
+        date: formattedDate,
+        logoSrc: "/BrandmarkRōmy.png",
+      })
+    } catch (error) {
+      console.error("Failed to export PDF:", error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   return (
     <Message
@@ -157,6 +188,24 @@ export function MessageAssistant({
                   <Check className="size-4" />
                 ) : (
                   <Copy className="size-4" />
+                )}
+              </button>
+            </MessageAction>
+            <MessageAction
+              tooltip={isExporting ? "Exporting..." : "Export PDF"}
+              side="bottom"
+            >
+              <button
+                className="hover:bg-accent/60 text-muted-foreground hover:text-foreground flex size-7.5 items-center justify-center rounded-full bg-transparent transition disabled:opacity-50"
+                aria-label="Export PDF"
+                onClick={handleExportPdf}
+                type="button"
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <SpinnerGap className="size-4 animate-spin" />
+                ) : (
+                  <FilePdf className="size-4" />
                 )}
               </button>
             </MessageAction>

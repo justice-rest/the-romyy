@@ -14,12 +14,13 @@ import {
 } from "@/components/prompt-kit/message"
 import { Button } from "@/components/ui/button"
 import { exportToPdf } from "@/lib/pdf-export"
+import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import type { Message as MessageAISDK } from "@ai-sdk/react"
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr"
 import { Check, Copy, FilePdf, SpinnerGap } from "@phosphor-icons/react"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Header } from "./header"
 
 type MessageType = Tables<"messages">
@@ -39,6 +40,30 @@ export default function Article({
 }: ArticleProps) {
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [exportingId, setExportingId] = useState<number | null>(null)
+  const [authHref, setAuthHref] = useState("/auth")
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      if (!supabase) {
+        setAuthHref("/auth")
+        return
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      // If authenticated (and not a guest), go to home; otherwise go to auth
+      if (user && !user.is_anonymous) {
+        setAuthHref("/")
+      } else {
+        setAuthHref("/auth")
+      }
+    }
+
+    checkAuth()
+  }, [])
 
   const copyToClipboard = (messageId: number, content: string) => {
     navigator.clipboard.writeText(content)
@@ -91,7 +116,7 @@ export default function Article({
         <p className="text-foreground mb-8 text-center text-lg">{subtitle}</p>
 
         <div className="fixed bottom-6 left-0 z-50 flex w-full justify-center">
-          <Link href="/">
+          <Link href={authHref}>
             <Button
               variant="secondary"
               className="group"
