@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ChatsProvider } from "@/lib/chat-store/chats/provider"
 import { ChatSessionProvider } from "@/lib/chat-store/session/provider"
+import { SplitViewProvider } from "@/lib/split-view-store/provider"
 import { ModelProvider } from "@/lib/model-store/provider"
 import { AutumnWrapper } from "@/lib/subscription/autumn-wrapper"
 import { TanstackQueryProvider } from "@/lib/tanstack-query/tanstack-query-provider"
@@ -16,6 +17,7 @@ import { PostHogProvider } from "@/lib/posthog/provider"
 import { MemoryProvider } from "@/lib/memory-store"
 import { ThemeProvider } from "next-themes"
 import Script from "next/script"
+import { Suspense } from "react"
 import { LayoutClient } from "./layout-client"
 
 const geistSans = Geist({
@@ -63,29 +65,33 @@ export default async function RootLayout({
                 <ModelProvider>
                   <ChatsProvider userId={userProfile?.id}>
                     <ChatSessionProvider>
-                      <UserPreferencesProvider
-                        userId={userProfile?.id}
-                        initialPreferences={userProfile?.preferences}
-                      >
-                        <MemoryProvider userId={userProfile?.id || null}>
-                          <TooltipProvider
-                            delayDuration={200}
-                            skipDelayDuration={500}
+                      <Suspense fallback={null}>
+                        <SplitViewProvider>
+                          <UserPreferencesProvider
+                            userId={userProfile?.id}
+                            initialPreferences={userProfile?.preferences}
                           >
-                            <ThemeProvider
-                              attribute="class"
-                              defaultTheme="light"
-                              enableSystem
-                              disableTransitionOnChange
-                            >
-                              <SidebarProvider defaultOpen>
-                                <Toaster position="top-center" />
-                                {children}
-                              </SidebarProvider>
-                            </ThemeProvider>
-                          </TooltipProvider>
-                        </MemoryProvider>
-                      </UserPreferencesProvider>
+                            <MemoryProvider userId={userProfile?.id || null}>
+                              <TooltipProvider
+                                delayDuration={200}
+                                skipDelayDuration={500}
+                              >
+                                <ThemeProvider
+                                  attribute="class"
+                                  defaultTheme="light"
+                                  enableSystem
+                                  disableTransitionOnChange
+                                >
+                                  <SidebarProvider defaultOpen>
+                                    <Toaster position="top-center" />
+                                    {children}
+                                  </SidebarProvider>
+                                </ThemeProvider>
+                              </TooltipProvider>
+                            </MemoryProvider>
+                          </UserPreferencesProvider>
+                        </SplitViewProvider>
+                      </Suspense>
                     </ChatSessionProvider>
                   </ChatsProvider>
                 </ModelProvider>

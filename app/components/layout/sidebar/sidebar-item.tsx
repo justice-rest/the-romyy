@@ -2,11 +2,14 @@ import { useBreakpoint } from "@/app/hooks/use-breakpoint"
 import useClickOutside from "@/app/hooks/use-click-outside"
 import { useChats } from "@/lib/chat-store/chats/provider"
 import { Chat } from "@/lib/chat-store/types"
+import { useDragDrop } from "@/lib/drag-drop-store/provider"
+import { useSplitView } from "@/lib/split-view-store/provider"
 import { cn } from "@/lib/utils"
 import { Check, X } from "@phosphor-icons/react"
 import Link from "next/link"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { SidebarItemMenu } from "./sidebar-item-menu"
+import { PanelChoiceMenu } from "./panel-choice-menu"
 
 type SidebarItemProps = {
   chat: Chat
@@ -17,9 +20,12 @@ export function SidebarItem({ chat, currentChatId }: SidebarItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(chat.title || "")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isPanelChoiceOpen, setIsPanelChoiceOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const lastChatTitleRef = useRef(chat.title)
   const { updateTitle } = useChats()
+  const { startDrag, endDrag } = useDragDrop()
+  const { isActive: isSplitActive } = useSplitView()
   const isMobile = useBreakpoint(768)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -109,9 +115,30 @@ export function SidebarItem({ chat, currentChatId }: SidebarItemProps) {
     [handleCancel]
   )
 
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-  }, [])
+  const handleLinkClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      // In split mode, intercept clicks to show panel choice menu
+      if (isSplitActive) {
+        e.preventDefault()
+        setIsPanelChoiceOpen(true)
+      }
+    },
+    [isSplitActive]
+  )
+
+  const handleDragStart = useCallback(
+    (e: React.DragEvent) => {
+      e.dataTransfer.setData("application/x-chat-id", chat.id)
+      e.dataTransfer.effectAllowed = "move"
+      startDrag(chat.id, chat.title || "Untitled Chat")
+    },
+    [chat.id, chat.title, startDrag]
+  )
+
+  const handleDragEnd = useCallback(() => {
+    endDrag()
+  }, [endDrag])
 
   // Memoize computed values
   const isActive = useMemo(
@@ -177,19 +204,28 @@ export function SidebarItem({ chat, currentChatId }: SidebarItemProps) {
         </div>
       ) : (
         <>
-          <Link
-            href={`/c/${chat.id}`}
-            className="block w-full"
-            prefetch
-            onClick={handleLinkClick}
+          <PanelChoiceMenu
+            chatId={chat.id}
+            open={isPanelChoiceOpen}
+            onOpenChange={setIsPanelChoiceOpen}
           >
-            <div
-              className="text-primary relative line-clamp-1 mask-r-from-80% mask-r-to-85% px-2 py-2 text-sm text-ellipsis whitespace-nowrap"
-              title={displayTitle}
+            <Link
+              href={`/c/${chat.id}`}
+              className="block w-full"
+              prefetch
+              onClick={handleLinkClick}
+              draggable
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
             >
-              {displayTitle}
-            </div>
-          </Link>
+              <div
+                className="text-primary relative line-clamp-1 mask-r-from-80% mask-r-to-85% px-2 py-2 text-sm text-ellipsis whitespace-nowrap"
+                title={displayTitle}
+              >
+                {displayTitle}
+              </div>
+            </Link>
+          </PanelChoiceMenu>
 
           <div className={menuClassName} key={chat.id}>
             <SidebarItemMenu

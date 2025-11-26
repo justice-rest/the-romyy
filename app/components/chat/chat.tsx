@@ -2,12 +2,14 @@
 
 import { ChatInput } from "@/app/components/chat-input/chat-input"
 import { Conversation } from "@/app/components/chat/conversation"
+import { DropZone } from "@/app/components/split-view"
 import { useModel } from "@/app/components/chat/use-model"
 import { useChatDraft } from "@/app/hooks/use-chat-draft"
 import { useChats } from "@/lib/chat-store/chats/provider"
 import { useMessages } from "@/lib/chat-store/messages/provider"
-import { useChatSession } from "@/lib/chat-store/session/provider"
+import { useChatId } from "@/lib/chat-store/session/use-chat-id"
 import { SYSTEM_PROMPT_DEFAULT } from "@/lib/config"
+import { useSplitView } from "@/lib/split-view-store/provider"
 import { useUserPreferences } from "@/lib/user-preference-store/provider"
 import { useUser } from "@/lib/user-store/provider"
 import { cn } from "@/lib/utils"
@@ -54,7 +56,8 @@ export function Chat({
   firstName,
   onWelcomeDismiss,
 }: ChatProps = {}) {
-  const { chatId } = useChatSession()
+  const chatId = useChatId()
+  const { isActive: isSplitActive, activateSplit } = useSplitView()
   const {
     createNewChat,
     getChatById,
@@ -62,6 +65,16 @@ export function Chat({
     bumpChat,
     isLoading: isChatsLoading,
   } = useChats()
+
+  // Handle drop event to activate split view
+  const handleSplitDrop = useCallback(
+    (droppedChatId: string) => {
+      if (chatId && droppedChatId !== chatId) {
+        activateSplit(chatId, droppedChatId)
+      }
+    },
+    [chatId, activateSplit]
+  )
 
   const currentChat = useMemo(
     () => (chatId ? getChatById(chatId) : null),
@@ -262,6 +275,11 @@ export function Chat({
         "@container/main relative flex h-full flex-col items-center justify-end md:justify-center"
       )}
     >
+      {/* Drop zone for initiating split view - only show when not already in split mode */}
+      {!isSplitActive && (
+        <DropZone onDrop={handleSplitDrop} currentChatId={chatId} />
+      )}
+
       <DialogAuth open={hasDialogAuth} setOpen={setHasDialogAuth} />
       <DialogSubscriptionRequired
         open={hasDialogSubscriptionRequired}
