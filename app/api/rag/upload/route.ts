@@ -76,7 +76,10 @@ export async function POST(request: Request) {
     const currentProductId = customerData?.products?.[0]?.id
     const planType = normalizePlanId(currentProductId)
 
+    console.log(`[RAG Upload] Plan check - userId: ${user.id}, productId: ${currentProductId}, planType: ${planType}, hasCustomerData: ${!!customerData}`)
+
     if (planType !== "scale") {
+      console.log(`[RAG Upload] Access denied - planType "${planType}" is not "scale"`)
       return NextResponse.json(
         { error: "Scale plan required for RAG features" },
         { status: 403 }
