@@ -35,6 +35,8 @@ type UseChatCoreProps = {
   bumpChat: (chatId: string) => void
   setHasDialogSubscriptionRequired: (value: boolean) => void
   setHasDialogLimitReached: (value: boolean) => void
+  // Collaborative chat support
+  isCollaborative?: boolean
 }
 
 export function useChatCore({
@@ -55,6 +57,7 @@ export function useChatCore({
   bumpChat,
   setHasDialogSubscriptionRequired,
   setHasDialogLimitReached,
+  isCollaborative,
 }: UseChatCoreProps) {
   // State management
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -83,6 +86,15 @@ export function useChatCore({
       console.error("Chat error:", error)
       console.error("Error message:", error.message)
       let errorMsg = error.message || "Something went wrong."
+
+      // Check for collaborative chat lock error
+      if (errorMsg.includes("CHAT_LOCKED") || errorMsg.includes("is currently prompting")) {
+        toast({
+          title: errorMsg.replace("CHAT_LOCKED", "").trim() || "Another user is currently prompting. Please wait.",
+          status: "error",
+        })
+        return
+      }
 
       // Check for subscription required error
       if (
@@ -254,6 +266,11 @@ export function useChatCore({
           isAuthenticated,
           systemPrompt: systemPrompt || SYSTEM_PROMPT_DEFAULT,
           enableSearch,
+          // Include sender info for collaborative chats
+          ...(isCollaborative && {
+            senderDisplayName: user?.display_name,
+            senderProfileImage: user?.profile_image,
+          }),
         },
         experimental_attachments: attachments || undefined,
       }
@@ -296,6 +313,7 @@ export function useChatCore({
     messages.length,
     bumpChat,
     setIsSubmitting,
+    isCollaborative,
   ])
 
   const submitEdit = useCallback(
@@ -395,6 +413,11 @@ export function useChatCore({
             systemPrompt: systemPrompt || SYSTEM_PROMPT_DEFAULT,
             enableSearch,
             editCutoffTimestamp: cutoffIso, // Backend will delete messages from this timestamp
+            // Include sender info for collaborative chats
+            ...(isCollaborative && {
+              senderDisplayName: user?.display_name,
+              senderProfileImage: user?.profile_image,
+            }),
           },
           experimental_attachments:
             target.experimental_attachments || undefined,
@@ -441,6 +464,7 @@ export function useChatCore({
       updateTitle,
       isSubmitting,
       status,
+      isCollaborative,
     ]
   )
 
@@ -488,6 +512,11 @@ export function useChatCore({
             model: selectedModel,
             isAuthenticated,
             systemPrompt: SYSTEM_PROMPT_DEFAULT,
+            // Include sender info for collaborative chats
+            ...(isCollaborative && {
+              senderDisplayName: user?.display_name,
+              senderProfileImage: user?.profile_image,
+            }),
           },
         }
 
@@ -515,6 +544,7 @@ export function useChatCore({
       isAuthenticated,
       setMessages,
       setIsSubmitting,
+      isCollaborative,
     ]
   )
 
@@ -532,11 +562,16 @@ export function useChatCore({
         model: selectedModel,
         isAuthenticated,
         systemPrompt: systemPrompt || SYSTEM_PROMPT_DEFAULT,
+        // Include sender info for collaborative chats
+        ...(isCollaborative && {
+          senderDisplayName: user?.display_name,
+          senderProfileImage: user?.profile_image,
+        }),
       },
     }
 
     reload(options)
-  }, [user, chatId, selectedModel, isAuthenticated, systemPrompt, reload])
+  }, [user, chatId, selectedModel, isAuthenticated, systemPrompt, reload, isCollaborative])
 
   // Handle input change - now with access to the real setInput function!
   const { setDraftValue } = useChatDraft(chatId)

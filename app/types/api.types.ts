@@ -44,6 +44,9 @@ export interface LogUserMessageParams {
   model: string
   isAuthenticated: boolean
   message_group_id?: string
+  // Collaborative chat fields
+  senderDisplayName?: string
+  senderProfileImage?: string | null
 }
 
 export interface StoreAssistantMessageParams {

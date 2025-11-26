@@ -1,3 +1,5 @@
+import { MessageUserCollaborative } from "@/app/components/collaborative"
+import type { Participant } from "@/lib/collaborative-store/types"
 import { Message as MessageType } from "@ai-sdk/react"
 import React, { useState } from "react"
 import { MessageAssistant } from "./message-assistant"
@@ -19,6 +21,13 @@ type MessageProps = {
   onQuote?: (text: string, messageId: string) => void
   messageGroupId?: string | null
   isUserAuthenticated?: boolean
+  // Collaborative props
+  isCollaborative?: boolean
+  participants?: Participant[]
+  currentUserId?: string
+  senderUserId?: string
+  senderDisplayName?: string
+  senderProfileImage?: string | null
 }
 
 export function Message({
@@ -36,6 +45,13 @@ export function Message({
   onQuote,
   messageGroupId,
   isUserAuthenticated,
+  // Collaborative props
+  isCollaborative,
+  participants,
+  currentUserId,
+  senderUserId,
+  senderDisplayName,
+  senderProfileImage,
 }: MessageProps) {
   const [copied, setCopied] = useState(false)
 
@@ -46,6 +62,35 @@ export function Message({
   }
 
   if (variant === "user") {
+    // Use collaborative message component when in collaborative mode
+    if (isCollaborative && senderUserId) {
+      const participant = participants?.find((p) => p.userId === senderUserId)
+      const isCurrentUser = senderUserId === currentUserId
+      const displayName = senderDisplayName || participant?.displayName || "User"
+      const profileImage = senderProfileImage ?? participant?.profileImage ?? null
+      const colorIndex = participant?.colorIndex ?? 1
+
+      return (
+        <MessageUserCollaborative
+          copied={copied}
+          copyToClipboard={copyToClipboard}
+          onEdit={onEdit}
+          id={id}
+          hasScrollAnchor={hasScrollAnchor}
+          attachments={attachments}
+          className={className}
+          messageGroupId={messageGroupId}
+          isUserAuthenticated={isUserAuthenticated}
+          isCurrentUser={isCurrentUser}
+          senderDisplayName={displayName}
+          senderProfileImage={profileImage}
+          senderColorIndex={colorIndex}
+        >
+          {children}
+        </MessageUserCollaborative>
+      )
+    }
+
     return (
       <MessageUser
         copied={copied}

@@ -13,7 +13,8 @@ export async function getChatsForUserInDb(userId: string): Promise<Chats[]> {
   const supabase = createClient()
   if (!supabase) return []
 
-  const { data, error } = await supabase
+  // Fetch chats owned by the user
+  const { data: ownedChats, error: ownedError } = await supabase
     .from("chats")
     .select("*")
     .eq("user_id", userId)
@@ -21,12 +22,52 @@ export async function getChatsForUserInDb(userId: string): Promise<Chats[]> {
     .order("pinned_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
 
-  if (!data || error) {
-    console.error("Failed to fetch chats:", error)
+  if (ownedError) {
+    console.error("Failed to fetch owned chats:", ownedError)
     return []
   }
 
-  return data
+  // Try to fetch collaborative chats (gracefully handle if table doesn't exist yet)
+  let collaborativeChats: Chats[] = []
+  try {
+    const { data: collaboratorData, error: collabError } = await supabase
+      .from("chat_collaborators")
+      .select("chat_id, chats(*)")
+      .eq("user_id", userId)
+      .eq("status", "accepted")
+
+    // Only process if table exists and query succeeded
+    if (!collabError && collaboratorData) {
+      collaborativeChats = collaboratorData
+        .map((item) => item.chats as unknown as Chats)
+        .filter((chat): chat is Chats => chat !== null)
+    } else if (collabError?.code !== "42P01") {
+      // Log error only if it's not "table does not exist"
+      console.error("Failed to fetch collaborative chats:", collabError)
+    }
+  } catch {
+    // Collaborative feature not available - continue with owned chats only
+  }
+
+  // If no collaborative chats, return owned chats directly (no overhead)
+  if (collaborativeChats.length === 0) {
+    return ownedChats || []
+  }
+
+  // Combine and deduplicate (user might be both owner and collaborator in edge cases)
+  const allChats = [...(ownedChats || []), ...collaborativeChats]
+  const uniqueChats = Array.from(
+    new Map(allChats.map((chat) => [chat.id, chat])).values()
+  )
+
+  // Sort by pinned, then updated_at
+  return uniqueChats.sort((a, b) => {
+    // Pinned chats first
+    if (a.pinned && !b.pinned) return -1
+    if (!a.pinned && b.pinned) return 1
+    // Then by updated_at
+    return new Date(b.updated_at || "").getTime() - new Date(a.updated_at || "").getTime()
+  })
 }
 
 export async function updateChatTitleInDb(id: string, title: string) {
@@ -260,6 +301,8 @@ export async function createNewChat(
       project_id: responseData.chat.project_id || null,
       pinned: responseData.chat.pinned ?? false,
       pinned_at: responseData.chat.pinned_at ?? null,
+      is_collaborative: responseData.chat.is_collaborative ?? false,
+      max_participants: responseData.chat.max_participants ?? 3,
     }
 
     await writeToIndexedDB("chats", chat)

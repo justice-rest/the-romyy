@@ -11,6 +11,148 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_collaborators: {
+        Row: {
+          id: string
+          chat_id: string
+          user_id: string
+          role: "owner" | "participant"
+          status: "pending" | "accepted" | "declined" | "removed"
+          color_index: number | null
+          joined_at: string | null
+          invited_by: string | null
+        }
+        Insert: {
+          id?: string
+          chat_id: string
+          user_id: string
+          role?: "owner" | "participant"
+          status?: "pending" | "accepted" | "declined" | "removed"
+          color_index?: number | null
+          joined_at?: string | null
+          invited_by?: string | null
+        }
+        Update: {
+          id?: string
+          chat_id?: string
+          user_id?: string
+          role?: "owner" | "participant"
+          status?: "pending" | "accepted" | "declined" | "removed"
+          color_index?: number | null
+          joined_at?: string | null
+          invited_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_collaborators_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_collaborators_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_collaborators_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_invites: {
+        Row: {
+          id: string
+          chat_id: string
+          invite_code: string
+          created_by: string
+          expires_at: string | null
+          max_uses: number | null
+          use_count: number | null
+          is_active: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          chat_id: string
+          invite_code: string
+          created_by: string
+          expires_at?: string | null
+          max_uses?: number | null
+          use_count?: number | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          chat_id?: string
+          invite_code?: string
+          created_by?: string
+          expires_at?: string | null
+          max_uses?: number | null
+          use_count?: number | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_invites_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_locks: {
+        Row: {
+          chat_id: string
+          locked_by: string | null
+          locked_at: string | null
+          expires_at: string | null
+        }
+        Insert: {
+          chat_id: string
+          locked_by?: string | null
+          locked_at?: string | null
+          expires_at?: string | null
+        }
+        Update: {
+          chat_id?: string
+          locked_by?: string | null
+          locked_at?: string | null
+          expires_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_locks_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: true
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_locks_locked_by_fkey"
+            columns: ["locked_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           id: string
@@ -100,6 +242,8 @@ export type Database = {
           public: boolean
           pinned: boolean
           pinned_at: string | null
+          is_collaborative: boolean | null
+          max_participants: number | null
         }
         Insert: {
           created_at?: string | null
@@ -112,6 +256,8 @@ export type Database = {
           public?: boolean
           pinned?: boolean
           pinned_at?: string | null
+          is_collaborative?: boolean | null
+          max_participants?: number | null
         }
         Update: {
           created_at?: string | null
@@ -124,6 +270,8 @@ export type Database = {
           public?: boolean
           pinned?: boolean
           pinned_at?: string | null
+          is_collaborative?: boolean | null
+          max_participants?: number | null
         }
         Relationships: [
           {
@@ -154,6 +302,8 @@ export type Database = {
           user_id?: string | null
           message_group_id: string | null
           model: string | null
+          sender_display_name: string | null
+          sender_profile_image: string | null
         }
         Insert: {
           experimental_attachments?: Attachment[]
@@ -166,6 +316,8 @@ export type Database = {
           user_id?: string | null
           message_group_id?: string | null
           model?: string | null
+          sender_display_name?: string | null
+          sender_profile_image?: string | null
         }
         Update: {
           experimental_attachments?: Attachment[]
@@ -178,6 +330,8 @@ export type Database = {
           user_id?: string | null
           message_group_id?: string | null
           model?: string | null
+          sender_display_name?: string | null
+          sender_profile_image?: string | null
         }
         Relationships: [
           {
@@ -650,6 +804,39 @@ export type Database = {
           memory_id: string
         }
         Returns: void
+      }
+      acquire_chat_lock: {
+        Args: {
+          p_chat_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      release_chat_lock: {
+        Args: {
+          p_chat_id: string
+          p_user_id: string
+        }
+        Returns: void
+      }
+      can_user_prompt: {
+        Args: {
+          p_chat_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      get_chat_participant_count: {
+        Args: {
+          p_chat_id: string
+        }
+        Returns: number
+      }
+      assign_collaborator_color: {
+        Args: {
+          p_chat_id: string
+        }
+        Returns: number
       }
     }
     Enums: Record<string, never>

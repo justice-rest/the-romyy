@@ -143,6 +143,8 @@ export function ChatsProvider({
       project_id: null,
       pinned: false,
       pinned_at: null,
+      is_collaborative: false,
+      max_participants: 3,
     }
     setChats((prev) => [optimisticChat, ...prev])
 

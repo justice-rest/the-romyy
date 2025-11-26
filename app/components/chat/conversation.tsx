@@ -5,6 +5,7 @@ import {
 import { Loader } from "@/components/prompt-kit/loader"
 import { ScrollButton } from "@/components/prompt-kit/scroll-button"
 import { ExtendedMessageAISDK } from "@/lib/chat-store/messages/api"
+import type { Participant } from "@/lib/collaborative-store/types"
 import { Message as MessageType } from "@ai-sdk/react"
 import { useRef } from "react"
 import { Message } from "./message"
@@ -17,6 +18,10 @@ type ConversationProps = {
   onReload: () => void
   onQuote?: (text: string, messageId: string) => void
   isUserAuthenticated?: boolean
+  // Collaborative props
+  isCollaborative?: boolean
+  participants?: Participant[]
+  currentUserId?: string
 }
 
 export function Conversation({
@@ -27,6 +32,9 @@ export function Conversation({
   onReload,
   onQuote,
   isUserAuthenticated,
+  isCollaborative,
+  participants,
+  currentUserId,
 }: ConversationProps) {
   const initialMessageCount = useRef(messages.length)
 
@@ -53,6 +61,9 @@ export function Conversation({
             const hasScrollAnchor =
               isLast && messages.length > initialMessageCount.current
 
+            // Get extended message properties for collaborative chats
+            const extendedMessage = message as ExtendedMessageAISDK
+
             return (
               <Message
                 key={message.id}
@@ -67,10 +78,15 @@ export function Conversation({
                 parts={message.parts}
                 status={status}
                 onQuote={onQuote}
-                messageGroupId={
-                  (message as ExtendedMessageAISDK).message_group_id ?? null
-                }
+                messageGroupId={extendedMessage.message_group_id ?? null}
                 isUserAuthenticated={isUserAuthenticated}
+                // Collaborative props
+                isCollaborative={isCollaborative}
+                participants={participants}
+                currentUserId={currentUserId}
+                senderUserId={extendedMessage.user_id}
+                senderDisplayName={extendedMessage.sender_display_name}
+                senderProfileImage={extendedMessage.sender_profile_image}
               >
                 {message.content}
               </Message>

@@ -36,6 +36,9 @@ type ChatRequest = {
   enableSearch: boolean
   message_group_id?: string
   editCutoffTimestamp?: string
+  // Collaborative chat fields
+  senderDisplayName?: string
+  senderProfileImage?: string | null
 }
 
 export async function POST(req: Request) {
@@ -50,6 +53,8 @@ export async function POST(req: Request) {
       enableSearch,
       message_group_id,
       editCutoffTimestamp,
+      senderDisplayName,
+      senderProfileImage,
     } = (await req.json()) as ChatRequest
 
     if (!messages || !chatId || !userId) {
@@ -75,7 +80,8 @@ export async function POST(req: Request) {
       allModels,
       effectiveSystemPrompt,
       apiKey,
-      memoryResult
+      memoryResult,
+      collaborativeChatData
     ] = await Promise.all([
       // 1. Validate user and check rate limits (critical - blocks streaming)
       validateAndTrackUsage({
@@ -134,6 +140,27 @@ export async function POST(req: Request) {
           console.error("Failed to retrieve memories:", error)
           return null
         }
+      })(),
+      // 6. COLLABORATIVE CHECK - Runs in parallel to avoid sequential latency
+      (async (): Promise<{ is_collaborative: boolean; user_id: string } | null> => {
+        if (!isAuthenticated) return null
+        try {
+          const { createClient } = await import("@/lib/supabase/server")
+          const sb = await createClient()
+          if (!sb) return null
+
+          const { data, error } = await sb
+            .from("chats")
+            .select("is_collaborative, user_id")
+            .eq("id", chatId)
+            .single()
+
+          // If column doesn't exist (migration not run), return null
+          if (error?.code === "42703" || !data) return null
+          return data as { is_collaborative: boolean; user_id: string }
+        } catch {
+          return null
+        }
       })()
     ])
 
@@ -141,6 +168,63 @@ export async function POST(req: Request) {
     const modelConfig = allModels.find((m) => m.id === normalizedModel)
     if (!modelConfig || !modelConfig.apiSdk) {
       throw new Error(`Model ${normalizedModel} not found`)
+    }
+
+    // Check if this is a collaborative chat and handle accordingly
+    // OPTIMIZATION: Uses pre-fetched collaborativeChatData from parallel Promise.all
+    // This ensures zero additional latency for non-collaborative users
+    let isCollaborativeChat = false
+    if (supabase && collaborativeChatData?.is_collaborative === true) {
+      isCollaborativeChat = true
+
+      try {
+        // Verify user is a collaborator or owner
+        const isOwner = collaborativeChatData.user_id === userId
+        if (!isOwner) {
+          const { data: collaborator } = await supabase
+            .from("chat_collaborators")
+            .select("id")
+            .eq("chat_id", chatId)
+            .eq("user_id", userId)
+            .eq("status", "accepted")
+            .single()
+
+          if (!collaborator) {
+            return new Response(
+              JSON.stringify({ error: "Not authorized for this collaborative chat" }),
+              { status: 403 }
+            )
+          }
+        }
+
+        // Try to acquire lock for collaborative chat
+        const { data: lockAcquired } = await supabase.rpc("acquire_chat_lock", {
+          p_chat_id: chatId,
+          p_user_id: userId,
+        })
+
+        if (!lockAcquired) {
+          // Get who has the lock
+          const { data: lockData } = await supabase
+            .from("chat_locks")
+            .select("locked_by, users:locked_by(display_name)")
+            .eq("chat_id", chatId)
+            .single()
+
+          const lockerName = (lockData?.users as { display_name?: string })?.display_name || "Another user"
+          return new Response(
+            JSON.stringify({
+              error: `${lockerName} is currently prompting. Please wait.`,
+              code: "CHAT_LOCKED",
+            }),
+            { status: 423 } // 423 Locked
+          )
+        }
+      } catch (err) {
+        // If collaborative tables don't exist, continue without collaborative features
+        console.warn("[Collaborative] Feature not available:", err)
+        isCollaborativeChat = false
+      }
     }
 
     /**
@@ -204,6 +288,9 @@ You have access to the searchWeb tool. The user has enabled web search for this 
               model: normalizedModel,
               isAuthenticated,
               message_group_id,
+              // Include sender info for collaborative chats
+              senderDisplayName: isCollaborativeChat ? senderDisplayName : undefined,
+              senderProfileImage: isCollaborativeChat ? senderProfileImage : undefined,
             })
           : Promise.resolve()
       ]).catch((err: unknown) => console.error("Background operations failed:", err))
@@ -237,8 +324,20 @@ You have access to the searchWeb tool. The user has enabled web search for this 
       maxSteps: 5,
       maxTokens: AI_MAX_OUTPUT_TOKENS,
       experimental_telemetry: { isEnabled: false },
-      onError: (err: unknown) => {
+      onError: async (err: unknown) => {
         console.error("[Chat API] Streaming error:", err)
+        // Release collaborative chat lock on error to prevent blocking other users
+        if (isCollaborativeChat && supabase) {
+          try {
+            await supabase.rpc("release_chat_lock", {
+              p_chat_id: chatId,
+              p_user_id: userId,
+            })
+            console.log("[Collaborative] Lock released on error for chat:", chatId)
+          } catch (lockErr) {
+            console.error("[Collaborative] Failed to release lock on error:", lockErr)
+          }
+        }
       },
 
       onFinish: async ({ response, text, finishReason, usage }) => {
@@ -259,6 +358,19 @@ You have access to the searchWeb tool. The user has enabled web search for this 
             message_group_id,
             model: normalizedModel,
           })
+
+          // Release collaborative chat lock after streaming completes
+          if (isCollaborativeChat) {
+            try {
+              await supabase.rpc("release_chat_lock", {
+                p_chat_id: chatId,
+                p_user_id: userId,
+              })
+              console.log("[Collaborative] Lock released for chat:", chatId)
+            } catch (lockErr) {
+              console.error("[Collaborative] Failed to release lock:", lockErr)
+            }
+          }
 
           // MEMORY EXTRACTION: Extract and save important facts (background operation)
           if (isAuthenticated) {

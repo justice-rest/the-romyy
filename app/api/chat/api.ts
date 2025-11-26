@@ -318,6 +318,8 @@ export async function logUserMessage({
   model,
   isAuthenticated,
   message_group_id,
+  senderDisplayName,
+  senderProfileImage,
 }: LogUserMessageParams): Promise<void> {
   if (!supabase) return
 
@@ -328,6 +330,9 @@ export async function logUserMessage({
     experimental_attachments: attachments,
     user_id: userId,
     message_group_id,
+    // Include sender info for collaborative chats
+    ...(senderDisplayName && { sender_display_name: senderDisplayName }),
+    ...(senderProfileImage !== undefined && { sender_profile_image: senderProfileImage }),
   })
 
   if (error) {

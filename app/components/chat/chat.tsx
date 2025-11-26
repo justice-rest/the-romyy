@@ -8,6 +8,7 @@ import { useChatDraft } from "@/app/hooks/use-chat-draft"
 import { useChats } from "@/lib/chat-store/chats/provider"
 import { useMessages } from "@/lib/chat-store/messages/provider"
 import { useChatId } from "@/lib/chat-store/session/use-chat-id"
+import { useCollaborative } from "@/lib/collaborative-store/provider"
 import { SYSTEM_PROMPT_DEFAULT } from "@/lib/config"
 import { useSplitView } from "@/lib/split-view-store/provider"
 import { useUserPreferences } from "@/lib/user-preference-store/provider"
@@ -42,6 +43,26 @@ const DialogSubscriptionRequired = dynamic(
 
 const DialogLimitReached = dynamic(
   () => import("./dialog-limit-reached").then((mod) => mod.DialogLimitReached),
+  { ssr: false }
+)
+
+const CollaborativeChatHeader = dynamic(
+  () =>
+    import("@/app/components/collaborative").then(
+      (mod) => mod.CollaborativeChatHeader
+    ),
+  { ssr: false }
+)
+
+const LockIndicator = dynamic(
+  () =>
+    import("@/app/components/collaborative").then((mod) => mod.LockIndicator),
+  { ssr: false }
+)
+
+const TypingIndicator = dynamic(
+  () =>
+    import("@/app/components/collaborative").then((mod) => mod.TypingIndicator),
   { ssr: false }
 )
 
@@ -88,8 +109,19 @@ export function Chat({
 
   const { messages: initialMessages, cacheAndAddMessage } = useMessages()
   const { user } = useUser()
-  const { preferences } = useUserPreferences()
+  useUserPreferences() // Ensure preferences are loaded
   const { customer } = useCustomer()
+
+  // Collaborative chat state
+  const {
+    isCollaborative,
+    participants,
+    currentLock,
+    canPrompt,
+  } = useCollaborative()
+
+  // Derived state: locked by another user means they can't prompt
+  const lockedByOther = isCollaborative && !canPrompt && currentLock !== null
 
   // Check if user has an active subscription (any paid plan, including trials)
   const productStatus = customer?.products?.[0]?.status
@@ -186,6 +218,7 @@ export function Chat({
     bumpChat,
     setHasDialogSubscriptionRequired,
     setHasDialogLimitReached,
+    isCollaborative,
   })
 
   // Memoize the conversation props to prevent unnecessary rerenders
@@ -198,6 +231,10 @@ export function Chat({
       onReload: handleReload,
       onQuote: handleQuotedSelected,
       isUserAuthenticated: isAuthenticated,
+      // Collaborative props
+      isCollaborative,
+      participants,
+      currentUserId: user?.id,
     }),
     [
       messages,
@@ -207,6 +244,9 @@ export function Chat({
       handleReload,
       handleQuotedSelected,
       isAuthenticated,
+      isCollaborative,
+      participants,
+      user?.id,
     ]
   )
 
@@ -233,6 +273,8 @@ export function Chat({
       firstName,
       onWelcomeDismiss,
       hasActiveSubscription,
+      // Collaborative: disable input when locked by another user
+      isDisabled: lockedByOther,
     }),
     [
       input,
@@ -255,6 +297,7 @@ export function Chat({
       firstName,
       onWelcomeDismiss,
       hasActiveSubscription,
+      lockedByOther,
     ]
   )
 
@@ -295,6 +338,13 @@ export function Chat({
         setOpen={setHasDialogLimitReached}
       />
 
+      {/* Collaborative chat header */}
+      {isCollaborative && chatId && (
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <CollaborativeChatHeader />
+        </div>
+      )}
+
       <AnimatePresence initial={false} mode="popLayout">
         {showOnboarding ? (
           <motion.div
@@ -332,6 +382,13 @@ export function Chat({
           },
         }}
       >
+        {/* Collaborative indicators */}
+        {isCollaborative && (
+          <>
+            <LockIndicator />
+            <TypingIndicator />
+          </>
+        )}
         <ChatInput {...chatInputProps} />
       </motion.div>
 
