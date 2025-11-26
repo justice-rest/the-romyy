@@ -11,6 +11,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useChats } from "@/lib/chat-store/chats/provider"
+import { useSplitView } from "@/lib/split-view-store/provider"
+import { APP_NAME } from "@/lib/config"
 import {
   ChatTeardropText,
   InstagramLogo,
@@ -19,9 +21,13 @@ import {
   X,
 } from "@phosphor-icons/react"
 import { Pin } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useMemo } from "react"
 import { HistoryTrigger } from "../../history/history-trigger"
+import { UserMenu } from "../user-menu"
+import { DialogPublish } from "../dialog-publish"
 import { SidebarList } from "./sidebar-list"
 import { SidebarProject } from "./sidebar-project"
 
@@ -29,6 +35,7 @@ export function AppSidebar() {
   const isMobile = useBreakpoint(768)
   const { setOpenMobile } = useSidebar()
   const { chats, pinnedChats, isLoading } = useChats()
+  const { isActive: isSplitActive } = useSplitView()
   const params = useParams<{ chatId: string }>()
   const currentChatId = params.chatId
 
@@ -46,7 +53,7 @@ export function AppSidebar() {
       className="border-border/40 border-r bg-transparent"
     >
       <SidebarHeader className="h-14 pl-3">
-        <div className="flex justify-between">
+        <div className="flex items-center justify-between">
           {isMobile ? (
             <button
               type="button"
@@ -55,8 +62,46 @@ export function AppSidebar() {
             >
               <X size={24} />
             </button>
+          ) : isSplitActive ? (
+            <Link
+              href="/"
+              className="inline-flex items-center text-xl font-semibold tracking-tight group/logo"
+            >
+              <span className="relative mr-1.5 size-7">
+                <Image
+                  src="/PFPs/1.png"
+                  alt="Rōmy"
+                  width={28}
+                  height={28}
+                  className="absolute inset-0 rounded-md transition-opacity duration-200 group-hover/logo:opacity-0"
+                />
+                <Image
+                  src="/PFPs/2.png"
+                  alt="Rōmy"
+                  width={28}
+                  height={28}
+                  className="absolute inset-0 rounded-md opacity-0 transition-opacity duration-200 group-hover/logo:opacity-100"
+                />
+              </span>
+              <span
+                className="text-foreground"
+                style={{
+                  fontFamily:
+                    'rb-freigeist-neue, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+                }}
+              >
+                {APP_NAME}
+              </span>
+            </Link>
           ) : (
             <div className="h-full" />
+          )}
+          {/* Show header actions in sidebar when in split view */}
+          {isSplitActive && !isMobile && (
+            <div className="flex items-center gap-1">
+              <DialogPublish />
+              <UserMenu />
+            </div>
           )}
         </div>
       </SidebarHeader>

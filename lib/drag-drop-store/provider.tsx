@@ -1,6 +1,13 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, useMemo } from "react"
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react"
 
 interface DragDropState {
   isDragging: boolean
@@ -44,6 +51,28 @@ export function DragDropProvider({ children }: { children: React.ReactNode }) {
       draggedChatId: null,
       draggedChatTitle: null,
     })
+  }, [])
+
+  // Global dragend listener to ensure drag state is always cleared
+  // This handles cases where drop happens outside valid zones or browser window
+  useEffect(() => {
+    const handleGlobalDragEnd = () => {
+      setState({
+        isDragging: false,
+        draggedChatId: null,
+        draggedChatTitle: null,
+      })
+    }
+
+    // Listen for dragend on the document to catch all drag end events
+    document.addEventListener("dragend", handleGlobalDragEnd)
+    // Also listen for drop in case dragend doesn't fire
+    document.addEventListener("drop", handleGlobalDragEnd)
+
+    return () => {
+      document.removeEventListener("dragend", handleGlobalDragEnd)
+      document.removeEventListener("drop", handleGlobalDragEnd)
+    }
   }, [])
 
   const value = useMemo<DragDropContextType>(

@@ -7,6 +7,7 @@ import { UserMenu } from "@/app/components/layout/user-menu"
 import { useBreakpoint } from "@/app/hooks/use-breakpoint"
 import { Button } from "@/components/ui/button"
 import { APP_NAME } from "@/lib/config"
+import { useSplitView } from "@/lib/split-view-store/provider"
 import { useUser } from "@/lib/user-store/provider"
 import { Info } from "@phosphor-icons/react"
 import Image from "next/image"
@@ -17,8 +18,14 @@ import { HeaderSidebarTrigger } from "./header-sidebar-trigger"
 export function Header({ hasSidebar }: { hasSidebar: boolean }) {
   const isMobile = useBreakpoint(768)
   const { user } = useUser()
+  const { isActive: isSplitActive } = useSplitView()
 
   const isLoggedIn = !!user
+
+  // In split view: hide logo (it's in sidebar), show only sidebar trigger on mobile
+  // On desktop split view: hide entire header content (logo + actions are in sidebar)
+  const showLogo = !isSplitActive
+  const showActions = !isSplitActive
 
   return (
     <header className="h-app-header pointer-events-none fixed top-0 right-0 left-0 z-50">
@@ -26,62 +33,69 @@ export function Header({ hasSidebar }: { hasSidebar: boolean }) {
         <div className="flex flex-1 items-center justify-between">
           <div className="-ml-0.5 flex flex-1 items-center gap-2 lg:-ml-2.5">
             <div className="flex flex-1 items-center gap-2">
-              <Link
-                href="/"
-                className="pointer-events-auto inline-flex items-center text-2xl font-semibold tracking-tight group/logo"
-              >
-                <span className="relative mr-1.5 size-9">
-                  <Image
-                    src="/PFPs/1.png"
-                    alt="Rōmy"
-                    width={36}
-                    height={36}
-                    className="absolute inset-0 rounded-lg transition-opacity duration-200 group-hover/logo:opacity-0"
-                  />
-                  <Image
-                    src="/PFPs/2.png"
-                    alt="Rōmy"
-                    width={36}
-                    height={36}
-                    className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-200 group-hover/logo:opacity-100"
-                  />
-                </span>
-                <span style={{ fontFamily: 'rb-freigeist-neue, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"' }}>
-                  {APP_NAME}
-                </span>
-              </Link>
+              {showLogo && (
+                <Link
+                  href="/"
+                  className="pointer-events-auto inline-flex items-center text-2xl font-semibold tracking-tight group/logo"
+                >
+                  <span className="relative mr-1.5 size-9">
+                    <Image
+                      src="/PFPs/1.png"
+                      alt="Rōmy"
+                      width={36}
+                      height={36}
+                      className="absolute inset-0 rounded-lg transition-opacity duration-200 group-hover/logo:opacity-0"
+                    />
+                    <Image
+                      src="/PFPs/2.png"
+                      alt="Rōmy"
+                      width={36}
+                      height={36}
+                      className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-200 group-hover/logo:opacity-100"
+                    />
+                  </span>
+                  <span style={{ fontFamily: 'rb-freigeist-neue, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"' }}>
+                    {APP_NAME}
+                  </span>
+                </Link>
+              )}
+              {/* Always show sidebar trigger on mobile when sidebar is enabled */}
               {hasSidebar && isMobile && <HeaderSidebarTrigger />}
             </div>
           </div>
           <div />
-          {!isLoggedIn ? (
-            <div className="pointer-events-auto flex flex-1 items-center justify-end gap-4">
-              <AppInfoTrigger
-                trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="bg-background hover:bg-muted text-muted-foreground h-8 w-8 rounded-full"
-                    aria-label={`About ${APP_NAME}`}
+          {showActions && (
+            <>
+              {!isLoggedIn ? (
+                <div className="pointer-events-auto flex flex-1 items-center justify-end gap-4">
+                  <AppInfoTrigger
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="bg-background hover:bg-muted text-muted-foreground h-8 w-8 rounded-full"
+                        aria-label={`About ${APP_NAME}`}
+                      >
+                        <Info className="size-4" />
+                      </Button>
+                    }
+                  />
+                  <Link
+                    href="/auth"
+                    className="font-base text-muted-foreground hover:text-foreground text-base transition-colors"
                   >
-                    <Info className="size-4" />
-                  </Button>
-                }
-              />
-              <Link
-                href="/auth"
-                className="font-base text-muted-foreground hover:text-foreground text-base transition-colors"
-              >
-                Login
-              </Link>
-            </div>
-          ) : (
-            <div className="pointer-events-auto flex flex-1 items-center justify-end gap-2">
-              <DialogPublish />
-              <ButtonNewChat />
-              {!hasSidebar && <HistoryTrigger hasSidebar={hasSidebar} />}
-              <UserMenu />
-            </div>
+                    Login
+                  </Link>
+                </div>
+              ) : (
+                <div className="pointer-events-auto flex flex-1 items-center justify-end gap-2">
+                  <DialogPublish />
+                  <ButtonNewChat />
+                  {!hasSidebar && <HistoryTrigger hasSidebar={hasSidebar} />}
+                  <UserMenu />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
