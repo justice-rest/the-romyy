@@ -38,6 +38,7 @@ interface ChatsContextType {
   bumpChat: (id: string) => Promise<void>
   togglePinned: (id: string, pinned: boolean) => Promise<void>
   pinnedChats: Chats[]
+  collaborativeChats: Chats[]
 }
 const ChatsContext = createContext<ChatsContextType | null>(null)
 
@@ -241,6 +242,20 @@ export function ChatsProvider({
     [chats]
   )
 
+  // Filter collaborative chats for dedicated sidebar section
+  const collaborativeChats = useMemo(
+    () =>
+      chats
+        .filter((c) => c.is_collaborative === true && !c.project_id)
+        .slice()
+        .sort((a, b) => {
+          const at = a.updated_at ? +new Date(a.updated_at) : 0
+          const bt = b.updated_at ? +new Date(b.updated_at) : 0
+          return bt - at
+        }),
+    [chats]
+  )
+
   return (
     <ChatsContext.Provider
       value={{
@@ -257,6 +272,7 @@ export function ChatsProvider({
         isLoading,
         togglePinned,
         pinnedChats,
+        collaborativeChats,
       }}
     >
       {children}

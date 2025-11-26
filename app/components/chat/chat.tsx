@@ -315,7 +315,8 @@ export function Chat({
     return redirect("/")
   }
 
-  const showOnboarding = !chatId && messages.length === 0
+  // Don't show welcome message for collaborative chats or when there's an existing chat
+  const showOnboarding = !chatId && messages.length === 0 && !isCollaborative
 
   return (
     <div
@@ -338,9 +339,9 @@ export function Chat({
         setOpen={setHasDialogLimitReached}
       />
 
-      {/* Collaborative chat header */}
+      {/* Collaborative chat header - positioned below main header (14 = 56px) */}
       {isCollaborative && chatId && (
-        <div className="absolute top-0 left-0 right-0 z-20">
+        <div className="absolute top-14 inset-x-0 z-30">
           <CollaborativeChatHeader />
         </div>
       )}

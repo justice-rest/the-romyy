@@ -84,7 +84,15 @@ export async function GET(request: Request) {
       user_id: string
       is_collaborative: boolean
       max_participants: number
-      users: { id: string; display_name: string; profile_image: string }
+      users: { id: string; display_name: string; profile_image: string } | null
+    } | null
+
+    // Handle null chat or missing data
+    if (!chat) {
+      return new Response(
+        JSON.stringify({ error: "Chat not found", valid: false }),
+        { status: 200 }
+      )
     }
 
     // Check if chat is full
@@ -95,16 +103,25 @@ export async function GET(request: Request) {
       )
     }
 
+    // Get owner info safely
+    const ownerInfo = chat.users
+      ? {
+          id: chat.users.id,
+          displayName: chat.users.display_name || "Chat Owner",
+          profileImage: chat.users.profile_image || null,
+        }
+      : {
+          id: chat.user_id,
+          displayName: "Chat Owner",
+          profileImage: null,
+        }
+
     return new Response(
       JSON.stringify({
         valid: true,
         chatId: chat.id,
         chatTitle: chat.title || "Collaborative Chat",
-        owner: {
-          id: chat.users.id,
-          displayName: chat.users.display_name || "Unknown",
-          profileImage: chat.users.profile_image || null,
-        },
+        owner: ownerInfo,
         participantCount: count || 1,
         maxParticipants: chat.max_participants || 3,
       }),

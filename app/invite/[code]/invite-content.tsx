@@ -2,19 +2,13 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { validateInvite, joinCollaborativeChat } from "@/lib/collaborative-store/api"
 import { useUser } from "@/lib/user-store/provider"
-import { Users, WarningCircle, ChatCircleDots } from "@phosphor-icons/react"
+import { Users, WarningCircle, ChatCircleDots, ArrowRight } from "@phosphor-icons/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 interface InviteContentProps {
   code: string
@@ -78,130 +72,165 @@ export function InviteContent({ code }: InviteContentProps) {
     }
   }
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Card className="w-[400px]">
-          <CardContent className="flex items-center justify-center py-12">
-            <div className="flex flex-col items-center gap-3">
-              <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm text-muted-foreground">Validating invite...</span>
+      <div className="flex min-h-dvh w-full items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md">
+          <div className="flex flex-col items-center justify-center gap-4 py-16">
+            <div className="relative">
+              <div className="size-12 rounded-full border-2 border-muted" />
+              <div className="absolute inset-0 size-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
             </div>
-          </CardContent>
-        </Card>
+            <span className="text-sm text-muted-foreground animate-pulse">
+              Validating invite...
+            </span>
+          </div>
+        </div>
       </div>
     )
   }
 
+  // Error state
   if (error || !inviteData?.valid) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <Card className="w-[400px]">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10">
-              <WarningCircle className="size-8 text-destructive" />
-            </div>
-            <CardTitle>Invalid Invite</CardTitle>
-            <CardDescription>
-              {error || inviteData?.error || "This invite link is invalid or has expired."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/">Go to Home</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-dvh w-full items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md text-center">
+          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-destructive/10">
+            <WarningCircle className="size-10 text-destructive" weight="duotone" />
+          </div>
+          <h1 className="mb-2 text-2xl font-semibold tracking-tight">
+            Invalid Invite
+          </h1>
+          <p className="mb-8 text-muted-foreground">
+            {error || inviteData?.error || "This invite link is invalid or has expired."}
+          </p>
+          <Button asChild size="lg" className="px-8">
+            <Link href="/">Go to Home</Link>
+          </Button>
+        </div>
       </div>
     )
   }
 
+  // Not authenticated state
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <Card className="w-[400px]">
-          <CardHeader className="text-center">
-            <Avatar className="mx-auto mb-4 size-16">
+      <div className="flex min-h-dvh w-full items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md text-center">
+          {/* Avatar with gradient ring */}
+          <div className="relative mx-auto mb-6 inline-block">
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-green-500 opacity-75 blur-sm" />
+            <Avatar className="relative size-20 border-4 border-background">
               <AvatarImage src={inviteData.owner?.profileImage || undefined} />
-              <AvatarFallback className="text-lg">
+              <AvatarFallback className="text-2xl font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                 {inviteData.owner?.displayName?.charAt(0).toUpperCase() || "?"}
               </AvatarFallback>
             </Avatar>
-            <CardTitle>{inviteData.owner?.displayName} invited you</CardTitle>
-            <CardDescription>
-              Join &ldquo;{inviteData.chatTitle}&rdquo; and chat with AI together
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Users className="size-4" />
-              <span>
-                {inviteData.participantCount}/{inviteData.maxParticipants} participants
-              </span>
-            </div>
-            <div className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/auth/login?redirect=/invite/${code}`}>
-                  Sign in to join
-                </Link>
-              </Button>
-              <p className="text-xs text-center text-muted-foreground">
-                You need to sign in to join collaborative chats
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+          </div>
 
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-[400px]">
-        <CardHeader className="text-center">
-          <Avatar className="mx-auto mb-4 size-16">
-            <AvatarImage src={inviteData.owner?.profileImage || undefined} />
-            <AvatarFallback className="text-lg bg-primary text-primary-foreground">
-              {inviteData.owner?.displayName?.charAt(0).toUpperCase() || "?"}
-            </AvatarFallback>
-          </Avatar>
-          <CardTitle>{inviteData.owner?.displayName} invited you</CardTitle>
-          <CardDescription>
+          <h1 className="mb-2 text-2xl font-semibold tracking-tight">
+            {inviteData.owner?.displayName} invited you
+          </h1>
+          <p className="mb-6 text-muted-foreground">
             Join &ldquo;{inviteData.chatTitle}&rdquo; and chat with AI together
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-center gap-4 py-2">
+          </p>
+
+          {/* Stats */}
+          <div className="mb-8 flex items-center justify-center gap-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="size-4" />
-              <span>
-                {inviteData.participantCount}/{inviteData.maxParticipants}
-              </span>
+              <Users className="size-4" weight="duotone" />
+              <span>{inviteData.participantCount}/{inviteData.maxParticipants} participants</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <ChatCircleDots className="size-4" />
+              <ChatCircleDots className="size-4" weight="duotone" />
               <span>Collaborative</span>
             </div>
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive text-center">{error}</p>
-          )}
-
-          <Button
-            onClick={handleJoin}
-            disabled={isJoining}
-            className="w-full"
-            size="lg"
-          >
-            {isJoining ? "Joining..." : "Join Chat"}
+          <Button asChild size="lg" className="w-full max-w-xs">
+            <Link href={`/auth/login?redirect=/invite/${code}`}>
+              Sign in to join
+              <ArrowRight className="ml-2 size-4" />
+            </Link>
           </Button>
 
-          <p className="text-xs text-center text-muted-foreground">
-            You&apos;ll be able to collaborate with others in real-time
+          <p className="mt-4 text-xs text-muted-foreground">
+            You need to sign in to join collaborative chats
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // Authenticated - ready to join
+  return (
+    <div className="flex min-h-dvh w-full items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md text-center">
+        {/* Avatar with gradient ring */}
+        <div className="relative mx-auto mb-6 inline-block">
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-green-500 opacity-75 blur-sm" />
+          <Avatar className="relative size-20 border-4 border-background">
+            <AvatarImage src={inviteData.owner?.profileImage || undefined} />
+            <AvatarFallback className="text-2xl font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+              {inviteData.owner?.displayName?.charAt(0).toUpperCase() || "?"}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+
+        <h1 className="mb-2 text-2xl font-semibold tracking-tight">
+          {inviteData.owner?.displayName} invited you
+        </h1>
+        <p className="mb-6 text-muted-foreground">
+          Join &ldquo;{inviteData.chatTitle}&rdquo; and chat with AI together
+        </p>
+
+        {/* Stats */}
+        <div className="mb-8 flex items-center justify-center gap-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="size-4" weight="duotone" />
+            <span>{inviteData.participantCount}/{inviteData.maxParticipants} participants</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <ChatCircleDots className="size-4" weight="duotone" />
+            <span>Collaborative</span>
+          </div>
+        </div>
+
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        {/* Join button */}
+        <Button
+          onClick={handleJoin}
+          disabled={isJoining}
+          size="lg"
+          className={cn(
+            "w-full max-w-xs transition-all",
+            isJoining && "animate-pulse"
+          )}
+        >
+          {isJoining ? (
+            <>
+              <div className="mr-2 size-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              Joining...
+            </>
+          ) : (
+            <>
+              Join Chat
+              <ArrowRight className="ml-2 size-4" />
+            </>
+          )}
+        </Button>
+
+        <p className="mt-4 text-xs text-muted-foreground">
+          You&apos;ll be able to collaborate with others in real-time
+        </p>
+      </div>
     </div>
   )
 }

@@ -49,7 +49,9 @@ export function Conversation({
       </div>
       <ChatContainerRoot className="relative w-full">
         <ChatContainerContent
-          className="flex w-full flex-col items-center pt-20 pb-4"
+          className={`flex w-full flex-col items-center pb-4 ${
+            isCollaborative ? "pt-28" : "pt-20"
+          }`}
           style={{
             scrollbarGutter: "stable both-edges",
             scrollbarWidth: "none",

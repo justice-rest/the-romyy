@@ -134,6 +134,52 @@ async function fallbackJoin(
     )
   }
 
+  // Atomically claim a slot by incrementing use_count with optimistic locking
+  // This prevents race conditions where multiple users read the same use_count
+  if (invite.max_uses) {
+    const currentUseCount = invite.use_count || 0
+    const { data: claimedInvite, error: claimError } = await supabase
+      .from("chat_invites")
+      .update({ use_count: currentUseCount + 1 })
+      .eq("id", invite.id)
+      .eq("use_count", currentUseCount) // Optimistic lock - only update if unchanged
+      .select("id")
+      .single()
+
+    if (claimError || !claimedInvite) {
+      // Another user claimed a slot - re-check if still valid
+      const { data: freshInvite } = await supabase
+        .from("chat_invites")
+        .select("use_count, max_uses")
+        .eq("id", invite.id)
+        .single()
+
+      if (!freshInvite || (freshInvite.use_count || 0) >= (freshInvite.max_uses || 0)) {
+        return new Response(
+          JSON.stringify({ error: "Invite has reached maximum uses" }),
+          { status: 400 }
+        )
+      }
+
+      // Retry once with fresh data
+      const freshUseCount = freshInvite.use_count || 0
+      const { data: retryInvite } = await supabase
+        .from("chat_invites")
+        .update({ use_count: freshUseCount + 1 })
+        .eq("id", invite.id)
+        .eq("use_count", freshUseCount)
+        .select("id")
+        .single()
+
+      if (!retryInvite) {
+        return new Response(
+          JSON.stringify({ error: "Failed to join - please try again" }),
+          { status: 409 }
+        )
+      }
+    }
+  }
+
   // Check if already a member
   const { data: existingCollaborator } = await supabase
     .from("chat_collaborators")
@@ -184,21 +230,39 @@ async function fallbackJoin(
       .update({ status: "accepted", joined_at: new Date().toISOString() })
       .eq("id", existingCollaborator.id)
   } else {
+    // Find the next available color index (1 or 2, since 0 is for owner)
+    const { data: existingColors } = await supabase
+      .from("chat_collaborators")
+      .select("color_index")
+      .eq("chat_id", chatId)
+      .eq("status", "accepted")
+      .order("color_index", { ascending: true })
+
+    // Find first available color (1 or 2)
+    const usedColors = new Set(existingColors?.map((c) => c.color_index) || [])
+    let colorIndex = 1
+    if (usedColors.has(1)) {
+      colorIndex = 2
+    }
+
     await supabase.from("chat_collaborators").insert({
       chat_id: chatId,
       user_id: userId,
       role: "participant",
       status: "accepted",
-      color_index: 1,
+      color_index: colorIndex,
       invited_by: invite.created_by,
     })
   }
 
-  // Increment use count
-  await supabase
-    .from("chat_invites")
-    .update({ use_count: (invite.use_count || 0) + 1 })
-    .eq("id", invite.id)
+  // Increment use count for invites without max_uses (unlimited)
+  // Invites with max_uses are already incremented above with optimistic locking
+  if (!invite.max_uses) {
+    await supabase
+      .from("chat_invites")
+      .update({ use_count: (invite.use_count || 0) + 1 })
+      .eq("id", invite.id)
+  }
 
   return new Response(
     JSON.stringify({

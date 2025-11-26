@@ -68,12 +68,15 @@ export interface CollaborativeContextType {
 }
 
 // Color palette for participants (iMessage-style)
+// Using actual hex values for consistent display
 export const PARTICIPANT_COLORS = [
-  "var(--color-blue-600)", // Index 0: Owner (always blue)
-  "var(--color-green-600)", // Index 1: First participant
-  "var(--color-purple-600)", // Index 2: Second participant
+  "#2563eb", // Index 0: Owner (blue-600)
+  "#16a34a", // Index 1: First participant (green-600)
+  "#9333ea", // Index 2: Second participant (purple-600)
 ] as const
 
 export function getParticipantColor(colorIndex: number): string {
-  return PARTICIPANT_COLORS[colorIndex] || PARTICIPANT_COLORS[1]
+  // Ensure colorIndex is within bounds
+  const safeIndex = Math.max(0, Math.min(colorIndex, PARTICIPANT_COLORS.length - 1))
+  return PARTICIPANT_COLORS[safeIndex]
 }

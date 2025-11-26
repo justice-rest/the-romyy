@@ -146,7 +146,10 @@ export function MessageUserCollaborative({
       {!isCurrentUser && (
         <Avatar className="size-7 shrink-0 mb-1">
           <AvatarImage src={senderProfileImage || undefined} alt={senderDisplayName} />
-          <AvatarFallback className="text-xs">
+          <AvatarFallback
+            className="text-xs text-white font-medium"
+            style={{ backgroundColor: bgColor }}
+          >
             {senderDisplayName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -279,7 +282,7 @@ export function MessageUserCollaborative({
           </div>
         ) : (
           <MessageContent
-            className="text-white prose relative max-w-[70%] rounded-3xl px-5 py-2.5"
+            className="text-white prose prose-invert relative max-w-xl rounded-2xl px-4 py-2.5 break-words"
             style={{ backgroundColor: bgColor }}
             markdown={true}
             ref={contentRef}
@@ -292,7 +295,7 @@ export function MessageUserCollaborative({
               h4: ({ children }) => <p>{children}</p>,
               h5: ({ children }) => <p>{children}</p>,
               h6: ({ children }) => <p>{children}</p>,
-              p: ({ children }) => <p>{children}</p>,
+              p: ({ children }) => <p className="mb-0 leading-relaxed">{children}</p>,
               li: ({ children }) => <p>- {children}</p>,
               ul: ({ children }) => <React.Fragment>{children}</React.Fragment>,
               ol: ({ children }) => <React.Fragment>{children}</React.Fragment>,

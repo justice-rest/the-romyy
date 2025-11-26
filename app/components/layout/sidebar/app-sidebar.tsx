@@ -18,6 +18,7 @@ import {
   InstagramLogo,
   MagnifyingGlass,
   NotePencilIcon,
+  UsersThree,
   X,
 } from "@phosphor-icons/react"
 import { Pin } from "lucide-react"
@@ -34,15 +35,21 @@ import { SidebarProject } from "./sidebar-project"
 export function AppSidebar() {
   const isMobile = useBreakpoint(768)
   const { setOpenMobile } = useSidebar()
-  const { chats, pinnedChats, isLoading } = useChats()
+  const { chats, pinnedChats, collaborativeChats, isLoading } = useChats()
   const { isActive: isSplitActive } = useSplitView()
   const params = useParams<{ chatId: string }>()
   const currentChatId = params.chatId
 
+  // Filter out collaborative chats from regular grouping
+  const regularChats = useMemo(
+    () => chats.filter((c) => !c.is_collaborative),
+    [chats]
+  )
+
   const groupedChats = useMemo(() => {
-    const result = groupChatsByDate(chats, "")
+    const result = groupChatsByDate(regularChats, "")
     return result
-  }, [chats])
+  }, [regularChats])
   const hasChats = chats.length > 0
   const router = useRouter()
 
@@ -148,6 +155,17 @@ export function AppSidebar() {
                     title="Pinned"
                     icon={<Pin className="size-3" />}
                     items={pinnedChats}
+                    currentChatId={currentChatId}
+                  />
+                </div>
+              )}
+              {collaborativeChats.length > 0 && (
+                <div className="space-y-5">
+                  <SidebarList
+                    key="collaborative"
+                    title="Collaborative"
+                    icon={<UsersThree className="size-3.5" weight="bold" />}
+                    items={collaborativeChats}
                     currentChatId={currentChatId}
                   />
                 </div>

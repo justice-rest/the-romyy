@@ -8,6 +8,8 @@ import {
   useCallback,
   useRef,
 } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "@/components/ui/toast"
 import {
   CollaborativeContextType,
   Participant,
@@ -42,6 +44,7 @@ export function CollaborativeProvider({
   children,
 }: CollaborativeProviderProps) {
   const { user } = useUser()
+  const router = useRouter()
   const userId = user?.id
   const isAuthenticated = !!user && !user.anonymous
 
@@ -290,6 +293,16 @@ export function CollaborativeProvider({
           }
         }
       })
+
+      // Subscribe to removal notification
+      realtimeRef.current.subscribeToRemoval(() => {
+        toast({
+          title: "Removed from chat",
+          description: "You have been removed from this collaborative chat.",
+          status: "info",
+        })
+        router.push("/")
+      })
     }
 
     // Cleanup
@@ -302,7 +315,7 @@ export function CollaborativeProvider({
       Object.values(typingTimeoutRef.current).forEach(clearTimeout)
       typingTimeoutRef.current = {}
     }
-  }, [chatId, userId, isCollaborative, user?.display_name, user?.profile_image, refreshParticipants, refreshLockStatus])
+  }, [chatId, userId, isCollaborative, user?.display_name, user?.profile_image, refreshParticipants, refreshLockStatus, router])
 
   const value: CollaborativeContextType = {
     chatId,

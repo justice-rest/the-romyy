@@ -80,16 +80,24 @@ export async function GET(request: Request, context: RouteContext) {
     }
 
     // Transform the data to flatten user info
-    const participants = collaborators?.map((c) => ({
-      id: c.id,
-      userId: c.user_id,
-      role: c.role,
-      colorIndex: c.color_index,
-      joinedAt: c.joined_at,
-      displayName: (c.users as { display_name?: string })?.display_name || "Unknown",
-      profileImage: (c.users as { profile_image?: string })?.profile_image || null,
-      email: (c.users as { email?: string })?.email || null,
-    }))
+    const participants = collaborators?.map((c) => {
+      const userInfo = c.users as { display_name?: string; profile_image?: string; email?: string } | null
+      // Build a proper display name with fallbacks
+      const displayName = userInfo?.display_name
+        || (userInfo?.email ? userInfo.email.split("@")[0] : null)
+        || "User"
+
+      return {
+        id: c.id,
+        userId: c.user_id,
+        role: c.role,
+        colorIndex: c.color_index ?? (c.role === "owner" ? 0 : 1),
+        joinedAt: c.joined_at,
+        displayName,
+        profileImage: userInfo?.profile_image || null,
+        email: userInfo?.email || null,
+      }
+    })
 
     return new Response(
       JSON.stringify({

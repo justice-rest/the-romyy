@@ -13,6 +13,7 @@ export interface RealtimeCallbacks {
   onPresenceJoin?: (user: OnlineUser) => void
   onPresenceLeave?: (user: OnlineUser) => void
   onTyping?: (userId: string, isTyping: boolean) => void
+  onRemoved?: () => void
 }
 
 export class CollaborativeRealtimeManager {
@@ -165,6 +166,33 @@ export class CollaborativeRealtimeManager {
         ({ payload }: { payload: { user_id: string; is_typing: boolean } }) => {
           if (payload.user_id !== this.userId) {
             onTyping(payload.user_id, payload.is_typing)
+          }
+        }
+      )
+      .subscribe()
+
+    this.channels.push(channel)
+  }
+
+  // Subscribe to removal notification (when this user is removed from the chat)
+  subscribeToRemoval(onRemoved: () => void): void {
+    if (!this.supabase) return
+
+    const channel = this.supabase
+      .channel(`collab:removal:${this.chatId}:${this.userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "chat_collaborators",
+          filter: `chat_id=eq.${this.chatId}`,
+        },
+        (payload) => {
+          const updated = payload.new as { user_id: string; status: string }
+          // If this user's status changed to "removed", trigger callback
+          if (updated.user_id === this.userId && updated.status === "removed") {
+            onRemoved()
           }
         }
       )
