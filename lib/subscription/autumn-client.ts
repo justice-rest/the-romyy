@@ -276,10 +276,6 @@ export async function trackMessageUsage(userId: string): Promise<void> {
 /**
  * Get customer subscription data
  * OPTIMIZED: Cached for 5 minutes to reduce API calls
- *
- * IMPORTANT: When the API times out, this function now returns stale cached data
- * as a fallback rather than returning null. This prevents plan check failures
- * for users with valid subscriptions when the Autumn API is slow.
  */
 export async function getCustomerData(userId: string) {
   const autumn = getAutumnClient()
@@ -296,35 +292,14 @@ export async function getCustomerData(userId: string) {
 
   try {
     // OPTIMIZATION: Use timeout to prevent blocking
-    // Use a sentinel value to detect timeout vs actual null response
-    const TIMEOUT_SENTINEL = { __timeout: true } as const
     const result = await withTimeout(
       autumn.customers.get(userId),
       AUTUMN_API_TIMEOUT,
-      { data: TIMEOUT_SENTINEL, error: undefined } as any
+      { data: null, error: undefined } as any
     )
-
-    // Check if we hit a timeout
-    if (result.data && typeof result.data === 'object' && '__timeout' in result.data) {
-      console.warn("[Autumn] Customer data fetch timed out for user:", userId)
-      // Return stale cached data as fallback (even if expired) rather than null
-      // This prevents plan check failures for valid subscribers when API is slow
-      if (cached) {
-        console.log("[Autumn] Using stale cached data as fallback")
-        return cached.data
-      }
-      // No cached data available, return null
-      console.warn("[Autumn] No cached data available, returning null")
-      return null
-    }
 
     if (result.error) {
       console.error("Error fetching customer data:", result.error)
-      // Return stale cached data as fallback
-      if (cached) {
-        console.log("[Autumn] Using stale cached data due to API error")
-        return cached.data
-      }
       return null
     }
 
@@ -336,11 +311,6 @@ export async function getCustomerData(userId: string) {
     return result.data
   } catch (error) {
     console.error("Error fetching customer data:", error)
-    // Return stale cached data as fallback
-    if (cached) {
-      console.log("[Autumn] Using stale cached data due to exception")
-      return cached.data
-    }
     return null
   }
 }
