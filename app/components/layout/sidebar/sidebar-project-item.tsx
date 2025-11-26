@@ -3,6 +3,7 @@
 import { useBreakpoint } from "@/app/hooks/use-breakpoint"
 import useClickOutside from "@/app/hooks/use-click-outside"
 import { fetchClient } from "@/lib/fetch"
+import { useSplitView } from "@/lib/split-view-store/provider"
 import { cn } from "@/lib/utils"
 import { Check, FolderIcon, X } from "@phosphor-icons/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -32,6 +33,7 @@ export function SidebarProjectItem({ project }: SidebarProjectItemProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pathname = usePathname()
   const queryClient = useQueryClient()
+  const { isActive: isSplitActive, deactivateSplit } = useSplitView()
 
   if (!isEditing && lastProjectNameRef.current !== project.name) {
     lastProjectNameRef.current = project.name
@@ -197,7 +199,8 @@ export function SidebarProjectItem({ project }: SidebarProjectItemProps) {
 
   const handleLinkClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-  }, [])
+    if (isSplitActive) deactivateSplit()
+  }, [isSplitActive, deactivateSplit])
 
   // Memoize computed values
   const isActive = useMemo(

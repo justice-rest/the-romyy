@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { fetchClient } from "@/lib/fetch"
+import { useSplitView } from "@/lib/split-view-store/provider"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -34,6 +35,7 @@ export function DialogCreateProject({
   const [projectName, setProjectName] = useState("")
   const queryClient = useQueryClient()
   const router = useRouter()
+  const { isActive: isSplitActive, deactivateSplit } = useSplitView()
   const createProjectMutation = useMutation({
     mutationFn: async (name: string): Promise<CreateProjectData> => {
       const response = await fetchClient("/api/projects", {
@@ -52,6 +54,7 @@ export function DialogCreateProject({
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] })
+      if (isSplitActive) deactivateSplit()
       router.push(`/p/${data.id}`)
       setProjectName("")
       setIsOpen(false)

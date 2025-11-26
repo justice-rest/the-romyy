@@ -25,7 +25,7 @@ export function SidebarItem({ chat, currentChatId }: SidebarItemProps) {
   const lastChatTitleRef = useRef(chat.title)
   const { updateTitle } = useChats()
   const { startDrag, endDrag } = useDragDrop()
-  const { isActive: isSplitActive } = useSplitView()
+  const { isActive: isSplitActive, leftChatId, rightChatId, deactivateSplit } = useSplitView()
   const isMobile = useBreakpoint(768)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -118,13 +118,20 @@ export function SidebarItem({ chat, currentChatId }: SidebarItemProps) {
   const handleLinkClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
-      // In split mode, intercept clicks to show panel choice menu
+      // In split mode, handle navigation
       if (isSplitActive) {
-        e.preventDefault()
-        setIsPanelChoiceOpen(true)
+        // If this chat is already in one of the panels, show choice menu
+        if (chat.id === leftChatId || chat.id === rightChatId) {
+          e.preventDefault()
+          setIsPanelChoiceOpen(true)
+        } else {
+          // Otherwise, close split view and navigate normally
+          deactivateSplit()
+          // Don't prevent default - let Link navigate
+        }
       }
     },
-    [isSplitActive]
+    [isSplitActive, chat.id, leftChatId, rightChatId, deactivateSplit]
   )
 
   const handleDragStart = useCallback(

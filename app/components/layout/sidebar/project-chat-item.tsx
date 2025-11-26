@@ -4,6 +4,7 @@ import { useBreakpoint } from "@/app/hooks/use-breakpoint"
 import useClickOutside from "@/app/hooks/use-click-outside"
 import { useChats } from "@/lib/chat-store/chats/provider"
 import { Chat } from "@/lib/chat-store/types"
+import { useSplitView } from "@/lib/split-view-store/provider"
 import { cn } from "@/lib/utils"
 import { ChatCircleIcon, Check, X } from "@phosphor-icons/react"
 import Link from "next/link"
@@ -24,6 +25,7 @@ export function ProjectChatItem({ chat, formatDate }: ProjectChatItemProps) {
   const { updateTitle } = useChats()
   const isMobile = useBreakpoint(768)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const { isActive: isSplitActive, deactivateSplit } = useSplitView()
 
   if (!isEditing && lastChatTitleRef.current !== chat.title) {
     lastChatTitleRef.current = chat.title
@@ -113,7 +115,8 @@ export function ProjectChatItem({ chat, formatDate }: ProjectChatItemProps) {
 
   const handleLinkClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-  }, [])
+    if (isSplitActive) deactivateSplit()
+  }, [isSplitActive, deactivateSplit])
 
   // Memoize computed values
   const displayTitle = useMemo(
