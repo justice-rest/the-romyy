@@ -32,7 +32,8 @@ export function SplitViewProvider({ children }: { children: React.ReactNode }) {
     splitRatio: 0.5,
   })
 
-  // Initialize from URL on mount
+  // Initialize from URL on mount - only activate if split param exists
+  // If split param is removed (e.g., navigating away), deactivate
   useEffect(() => {
     const splitParam = searchParams?.get("split")
     if (splitParam) {
@@ -45,10 +46,23 @@ export function SplitViewProvider({ children }: { children: React.ReactNode }) {
           splitRatio: 0.5,
         })
       }
+    } else {
+      // No split param in URL - ensure split view is deactivated
+      setState((prev) => {
+        if (prev.isActive) {
+          return {
+            isActive: false,
+            leftChatId: null,
+            rightChatId: null,
+            splitRatio: 0.5,
+          }
+        }
+        return prev
+      })
     }
   }, [searchParams])
 
-  // Sync state to URL
+  // Sync state to URL - use router for proper Next.js integration
   const updateUrl = useCallback(
     (newState: SplitViewState) => {
       const url = new URL(window.location.href)
@@ -60,7 +74,8 @@ export function SplitViewProvider({ children }: { children: React.ReactNode }) {
       } else {
         url.searchParams.delete("split")
       }
-      window.history.replaceState({}, "", url.toString())
+      // Use replaceState for immediate update, Next.js will sync on navigation
+      window.history.replaceState({}, "", url.pathname + url.search)
     },
     []
   )
